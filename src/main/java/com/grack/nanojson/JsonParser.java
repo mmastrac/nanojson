@@ -21,8 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import javax.print.DocFlavor.STRING;
-
 /**
  * Simple JSON parser.
  */
@@ -372,18 +370,25 @@ public class JsonParser {
 	 */
 	private int stringHexChar() throws JsonParserException {
 		int c = stringChar();
-		if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')
-				|| (c >= 'A' && c <= 'F'))
+		if (isHexCharacter(c))
 			return c;
 		throw createParseException("Expected unicode hex escape character");
+	}
+
+	/**
+	 * Quick test for hex digit characters.
+	 */
+	private boolean isHexCharacter(int c) {
+		return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')
+				|| (c >= 'A' && c <= 'F');
 	}
 
 	/**
 	 * Quick test for digit characters.
 	 */
 	private boolean isDigitCharacter(int c) {
-		return ((c >= '0' && c <= '9') || c == 'e' || c == 'E' || c == '.'
-				|| c == '+' || c == '-');
+		return (c >= '0' && c <= '9') || c == 'e' || c == 'E' || c == '.'
+				|| c == '+' || c == '-';
 	}
 
 	/**

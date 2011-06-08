@@ -20,8 +20,20 @@ package com.grack.nanojson;
  */
 public class JsonParserException extends Exception {
 	private static final long serialVersionUID = 1L;
+	private final int linePos;
+	private final int charPos;
 	
-	public JsonParserException(String string) {
-		super(string);
+	public JsonParserException(String message, int linePos, int charPos) {
+		super(message);
+		this.linePos = linePos;
+		this.charPos = charPos;
+	}
+	
+	public int getLinePosition() {
+		return linePos;
+	}
+	
+	public int getCharPosition() {
+		return charPos;
 	}
 }

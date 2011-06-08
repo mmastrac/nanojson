@@ -21,15 +21,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import javax.print.DocFlavor.STRING;
+
 /**
  * Simple JSON parser.
  */
 public class JsonParser {
 	private final String input;
-	private int index;
+	private int index, linePos = 1, charPos = 0;
 
 	private Token token;
-	private int tokenStart;
+	private int tokenStart, tokenLinePos, tokenCharPos;
 
 	/**
 	 * Regex representation of http://json.org/number.gif.
@@ -62,7 +64,7 @@ public class JsonParser {
 		advanceToken();
 		Object value = parseJsonValue();
 		if (advanceToken() != Token.EOF)
-			throw new JsonParserException("Expected end of input, got " + token);
+			throw createParseException("Expected end of input, got " + token);
 		return value;
 	}
 
@@ -78,7 +80,7 @@ public class JsonParser {
 		case OBJECT_END:
 			// None of these should appear when we're in the context of parsing
 			// a JSON value
-			throw new JsonParserException("Expected JSON value, got " + token);
+			throw createParseException("Expected JSON value, got " + token);
 		case TRUE:
 			return Boolean.TRUE;
 		case FALSE:
@@ -95,7 +97,7 @@ public class JsonParser {
 			return parseObject();
 		}
 
-		throw new JsonParserException("Internal error. Unhandled token "
+		throw createParseException("Internal error. Unhandled token "
 				+ token);
 	}
 
@@ -109,12 +111,12 @@ public class JsonParser {
 		// Special zero handling to match JSON spec. Leading zero only allowed
 		// if next character is . or e or E.
 		if (!NUMBER_PATTERN.matcher(number).matches())
-			throw new JsonParserException("Mailformed number: " + number);
+			throw createParseException("Mailformed number: " + number);
 
 		try {
 			return Double.parseDouble(number);
 		} catch (NumberFormatException e) {
-			throw new JsonParserException("Malformed number: " + number);
+			throw createParseException("Malformed number: " + number);
 		}
 	}
 
@@ -175,14 +177,17 @@ public class JsonParser {
 				first = false;
 			else {
 				if (token != Token.COMMA)
-					throw new JsonParserException("Expected a comma, got "
+					throw createParseException("Expected COMMA, got "
 							+ token);
 				advanceToken();
 			}
 
+			if (token != Token.STRING)
+				throw createParseException("Expected STRING, got " + token);
+			
 			String key = tokenAsString();
 			if (advanceToken() != Token.COLON)
-				throw new JsonParserException("Expected COLON, got " + token);
+				throw createParseException("Expected COLON, got " + token);
 			advanceToken();
 			Object value = parseJsonValue();
 
@@ -205,7 +210,7 @@ public class JsonParser {
 				first = false;
 			else {
 				if (token != Token.COMMA)
-					throw new JsonParserException("Expected a comma, got "
+					throw createParseException("Expected a comma, got "
 							+ token);
 				advanceToken();
 			}
@@ -224,7 +229,7 @@ public class JsonParser {
 				// Consume the whole pseudo-token to make a better error message
 				while (isAsciiLetter(peekChar()))
 					advanceChar();
-				throw new JsonParserException("Unexpected token '"
+				throw createParseException("Unexpected token '"
 						+ input.substring(tokenStart,
 								Math.min(index, input.length()))
 						+ "'. Did you mean '" + expected + "'?");
@@ -236,7 +241,7 @@ public class JsonParser {
 			// Consume the whole pseudo-token to make a better error message
 			while (isAsciiLetter(peekChar()))
 				advanceChar();
-			throw new JsonParserException("Unexpected token '"
+			throw createParseException("Unexpected token '"
 					+ input.substring(tokenStart,
 							Math.min(index, input.length()))
 					+ "'. Did you mean '" + expected + "'?");
@@ -254,6 +259,8 @@ public class JsonParser {
 		} while (isWhitespace(c));
 
 		tokenStart = index - 1;
+		tokenLinePos = linePos;
+		tokenCharPos = charPos;
 
 		switch (c) {
 		case -1:
@@ -283,6 +290,8 @@ public class JsonParser {
 			advanceTokenString();
 			return token = Token.STRING;
 		case '-':
+		case '+':
+		case '.':
 		case '0':
 		case '1':
 		case '2':
@@ -301,12 +310,12 @@ public class JsonParser {
 			// Consume the whole pseudo-token to make a better error message
 			while (isAsciiLetter(peekChar()))
 				advanceChar();
-			throw new JsonParserException("Unexpected unquoted token '"
+			throw createParseException("Unexpected unquoted token '"
 					+ input.substring(tokenStart,
 							Math.min(index, input.length())) + "'");
 		}
 
-		throw new JsonParserException("Unexpected character: " + (char) c);
+		throw createParseException("Unexpected character: " + (char) c);
 	}
 
 	/**
@@ -333,7 +342,7 @@ public class JsonParser {
 					for (int i = 0; i < 4; i++)
 						stringHexChar();
 				} else if ("bfnrt/\\\"".indexOf(escape) == -1)
-					throw new JsonParserException("Invalid escape: \\"
+					throw createParseException("Invalid escape: \\"
 							+ (char) escape);
 			}
 		}
@@ -346,10 +355,10 @@ public class JsonParser {
 	private int stringChar() throws JsonParserException {
 		int c = advanceChar();
 		if (c == -1)
-			throw new JsonParserException(
+			throw createParseException(
 					"String was not terminated before end of input");
 		if (c < 32)
-			throw new JsonParserException(
+			throw createParseException(
 					"Strings may not contain control characters: 0x" + Integer.toString(c, 16));
 		return c;
 	}
@@ -363,7 +372,7 @@ public class JsonParser {
 		if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')
 				|| (c >= 'A' && c <= 'F'))
 			return c;
-		throw new JsonParserException("Expected unicode hex escape character");
+		throw createParseException("Expected unicode hex escape character");
 	}
 
 	/**
@@ -406,6 +415,21 @@ public class JsonParser {
 		int i = index++;
 		if (i >= input.length())
 			return -1;
-		return input.charAt(i);
+		char c = input.charAt(i);
+		if (c == '\n') {
+			linePos++;
+			charPos = 0;
+		} else {
+			charPos++;
+		}
+		
+		return c;
+	}
+
+	/**
+	 * Creates a {@link JsonParserException} and fills it from the current line and char position.
+	 */
+	private JsonParserException createParseException(String message) {
+		return new JsonParserException(message + " on line " + tokenLinePos + ", char " + tokenCharPos, tokenLinePos, tokenCharPos);
 	}
 }

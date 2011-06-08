@@ -111,6 +111,7 @@ public class JsonParserTest {
 				JsonParser.parse(edgeCase);
 				fail("Should have failed to parse: " + edgeCase);
 			} catch (JsonParserException e) {
+				testException(e, 1, 1);
 			}
 		}
 	}
@@ -118,10 +119,11 @@ public class JsonParserTest {
 	@Test
 	public void testFailBustedNumber1() {
 		try {
-			// There's no 'f' in double
+			// There's no 'f' in double, but it treats it as a new token
 			JsonParser.parse("123f");
 			fail();
 		} catch (JsonParserException e) {
+			testException(e, 1, 4);
 		}
 	}
 
@@ -132,6 +134,7 @@ public class JsonParserTest {
 			JsonParser.parse("-1-1");
 			fail();
 		} catch (JsonParserException e) {
+			testException(e, 1, 1);
 		}
 	}
 
@@ -142,6 +145,7 @@ public class JsonParserTest {
 			JsonParser.parse("\"abc");
 			fail();
 		} catch (JsonParserException e) {
+			testException(e, 1, 1);
 		}
 	}
 
@@ -152,6 +156,7 @@ public class JsonParserTest {
 			JsonParser.parse("\"abc\n\"");
 			fail();
 		} catch (JsonParserException e) {
+			testException(e, 1, 1);
 		}
 	}
 
@@ -162,6 +167,7 @@ public class JsonParserTest {
 			JsonParser.parse("\"abc\\x\"");
 			fail();
 		} catch (JsonParserException e) {
+			testException(e, 1, 1);
 		}
 	}
 
@@ -171,6 +177,7 @@ public class JsonParserTest {
 			JsonParser.parse("[,]");
 			fail();
 		} catch (JsonParserException e) {
+			testException(e, 1, 2);
 		}
 	}
 
@@ -180,6 +187,7 @@ public class JsonParserTest {
 			JsonParser.parse("[1,]");
 			fail();
 		} catch (JsonParserException e) {
+			testException(e, 1, 4);
 		}
 	}
 
@@ -189,6 +197,7 @@ public class JsonParserTest {
 			JsonParser.parse("{,}");
 			fail();
 		} catch (JsonParserException e) {
+			testException(e, 1, 2);
 		}
 	}
 
@@ -198,6 +207,7 @@ public class JsonParserTest {
 			JsonParser.parse("{\"abc\":123,}");
 			fail();
 		} catch (JsonParserException e) {
+			testException(e, 1, 12);
 		}
 	}
 
@@ -207,6 +217,7 @@ public class JsonParserTest {
 			JsonParser.parse("{\"abc\":}");
 			fail();
 		} catch (JsonParserException e) {
+			testException(e, 1, 8);
 		}
 	}
 
@@ -216,6 +227,7 @@ public class JsonParserTest {
 			JsonParser.parse("{\"abc\":1:}");
 			fail();
 		} catch (JsonParserException e) {
+			testException(e, 1, 9);
 		}
 	}
 
@@ -225,6 +237,7 @@ public class JsonParserTest {
 			JsonParser.parse("{:\"abc\":1}");
 			fail();
 		} catch (JsonParserException e) {
+			testException(e, 1, 2);
 		}
 	}
 
@@ -234,6 +247,7 @@ public class JsonParserTest {
 			JsonParser.parse("truef");
 			fail();
 		} catch (JsonParserException e) {
+			testException(e, 1, 1);
 		}
 	}
 
@@ -243,6 +257,7 @@ public class JsonParserTest {
 			JsonParser.parse("true1");
 			fail();
 		} catch (JsonParserException e) {
+			testException(e, 1, 5);
 		}
 	}
 
@@ -252,6 +267,7 @@ public class JsonParserTest {
 			JsonParser.parse("tru");
 			fail();
 		} catch (JsonParserException e) {
+			testException(e, 1, 1);
 		}
 	}
 
@@ -261,6 +277,7 @@ public class JsonParserTest {
 			JsonParser.parse("[truef,true]");
 			fail();
 		} catch (JsonParserException e) {
+			testException(e, 1, 2);
 		}
 	}
 
@@ -356,5 +373,10 @@ public class JsonParserTest {
 		Charset utf8 = Charset.forName("UTF8");
 		String s = new String(out.toByteArray(), utf8);
 		return s;
+	}
+
+	private void testException(JsonParserException e, int linePos, int charPos) {
+		assertEquals("line " + linePos + " char " + charPos,
+				"line " + e.getLinePosition() + " char " + e.getCharPosition());
 	}
 }

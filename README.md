@@ -15,6 +15,15 @@ nanojson is easy to use. There's one entry point: `JsonParser.parse()`. It eithe
 
     Map<String, Object> map = (Map<String, Object>)JsonParser.parse("{\"abc\":123}");
 
+Errors can be quickly located by using `getLinePosition` and `getCharPosition` on `JsonParserException`:
+
+    {
+      "abc":123,
+      "def":456,
+    }
+
+    com.grack.nanojson.JsonParserException: Trailing comma in object on line 4, char 1
+
 ## Compliance
 
   * Passes all of the http://www.json.org/JSON_checker/ tests, minus the test that enforces results not be a string and one that tests nesting depth for arrays

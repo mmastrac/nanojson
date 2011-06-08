@@ -235,7 +235,7 @@ public class JsonParser {
 				advanceChar();
 			throw new JsonParserException("Unexpected token '"
 					+ input.substring(tokenStart,
-							Math.min(index + 1, input.length()))
+							Math.min(index, input.length()))
 					+ "'. Did you mean '" + expected + "'?");
 		}
 	}

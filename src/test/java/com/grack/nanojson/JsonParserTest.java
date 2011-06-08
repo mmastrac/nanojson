@@ -231,6 +231,15 @@ public class JsonParserTest {
 	}
 
 	@Test
+	public void testFailBadKeywords4() {
+		try {
+			JsonParser.parse("[truef,true]");
+			fail();
+		} catch (JsonParserException e) {
+		}
+	}
+
+	@Test
 	public void failureTestsFromYui() throws IOException {
 		InputStream input = getClass()
 				.getResourceAsStream("yui_fail_cases.txt");
@@ -241,7 +250,6 @@ public class JsonParserTest {
 				JsonParser.parse(failCase);
 				fail("Should have failed, but didn't: " + failCase);
 			} catch (JsonParserException e) {
-				System.out.println(failCase + " " + e);
 			}
 		}
 	}

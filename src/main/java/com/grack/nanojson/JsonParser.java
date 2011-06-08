@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Simple JSON parser.
@@ -29,6 +30,12 @@ public class JsonParser {
 
 	private Token token;
 	private int tokenStart;
+
+	/**
+	 * Regex representation of http://json.org/number.gif.
+	 */
+	private static final Pattern NUMBER_PATTERN = Pattern
+			.compile("-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?");
 
 	/**
 	 * The tokens available in JSON.
@@ -101,14 +108,8 @@ public class JsonParser {
 
 		// Special zero handling to match JSON spec. Leading zero only allowed
 		// if next character is . or e or E.
-		if (number.charAt(0) == '0') {
-			if (number.length() == 1)
-				return 0.0;
-
-			char c1 = number.charAt(1);
-			if (c1 != '.' && c1 != 'e' && c1 != 'E')
-				throw new JsonParserException("Mailformed number: " + number);
-		}
+		if (!NUMBER_PATTERN.matcher(number).matches())
+			throw new JsonParserException("Mailformed number: " + number);
 
 		try {
 			return Double.parseDouble(number);
@@ -174,7 +175,8 @@ public class JsonParser {
 				first = false;
 			else {
 				if (token != Token.COMMA)
-					throw new JsonParserException("Expected a comma, got " + token);
+					throw new JsonParserException("Expected a comma, got "
+							+ token);
 				advanceToken();
 			}
 
@@ -203,7 +205,8 @@ public class JsonParser {
 				first = false;
 			else {
 				if (token != Token.COMMA)
-					throw new JsonParserException("Expected a comma, got " + token);
+					throw new JsonParserException("Expected a comma, got "
+							+ token);
 				advanceToken();
 			}
 
@@ -300,8 +303,7 @@ public class JsonParser {
 				advanceChar();
 			throw new JsonParserException("Unexpected unquoted token '"
 					+ input.substring(tokenStart,
-							Math.min(index, input.length()))
-					+ "'");
+							Math.min(index, input.length())) + "'");
 		}
 
 		throw new JsonParserException("Unexpected character: " + (char) c);
@@ -348,7 +350,7 @@ public class JsonParser {
 					"String was not terminated before end of input");
 		if (c < 32)
 			throw new JsonParserException(
-					"Strings may not contain control characters");
+					"Strings may not contain control characters: 0x" + Integer.toString(c, 16));
 		return c;
 	}
 

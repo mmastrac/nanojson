@@ -27,6 +27,8 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.junit.Test;
 
@@ -88,6 +90,29 @@ public class JsonParserTest {
 				"all together: \\/\n\r\t\b\f (fin)",
 				JsonParser
 						.parse("\"all together: \\\\\\/\\n\\r\\t\\b\\f (fin)\""));
+	}
+
+	@Test
+	public void testNumbers() throws JsonParserException {
+		String[] testCases = new String[] { "0", "1", "-0", "-1", "0.1", "1.1",
+				"-0.1", "0.10", "-0.10" };
+		for (String testCase : testCases) {
+			double d = (Double) JsonParser.parse(testCase);
+			assertEquals(Double.parseDouble(testCase), d, Double.MIN_NORMAL);
+		}
+	}
+
+	@Test
+	public void testFailNumberEdgeCases() {
+		String[] edgeCases = { "01", "-01", "+01", ".1", "-.1", "+.1", "+1",
+				"0.", "-0." };
+		for (String edgeCase : edgeCases) {
+			try {
+				JsonParser.parse(edgeCase);
+				fail("Should have failed to parse: " + edgeCase);
+			} catch (JsonParserException e) {
+			}
+		}
 	}
 
 	@Test
@@ -262,6 +287,61 @@ public class JsonParserTest {
 
 		Map<String, Object> map = (Map<String, Object>) o;
 		assertNotNull(map.get("a"));
+	}
+
+	/**
+	 * Tests from json.org: http://www.json.org/JSON_checker/
+	 * 
+	 * Skips two tests that don't match reality (ie: Chrome).
+	 */
+	@Test
+	public void jsonOrgTest() throws JsonParserException, IOException {
+		InputStream input = getClass().getResourceAsStream("json_org_test.zip");
+		ZipInputStream zip = new ZipInputStream(input);
+		ZipEntry ze;
+
+		while ((ze = zip.getNextEntry()) != null) {
+			if (ze.isDirectory())
+				continue;
+
+			// skip "A JSON payload should be an object or array, not a string."
+			if (ze.getName().contains("fail1.json"))
+				continue;
+
+			// skip "Too deep"
+			if (ze.getName().contains("fail18.json"))
+				continue;
+
+			boolean positive = ze.getName().startsWith("test/pass");
+			int offset = 0;
+			int size = (int) ze.getSize();
+			byte[] buffer = new byte[size];
+			while (size > 0) {
+				int r = zip.read(buffer, offset, buffer.length - offset);
+				if (r <= 0)
+					break;
+				size -= r;
+				offset += r;
+			}
+
+			String testCase = new String(buffer, "ASCII");
+			if (positive)
+				try {
+					JsonParser.parse(testCase);
+				} catch (JsonParserException e) {
+					e.printStackTrace();
+					fail("Should not have failed " + ze.getName() + ": "
+							+ testCase);
+				}
+			else {
+				try {
+					JsonParser.parse(testCase);
+					fail("Should have failed " + ze.getName() + ": " + testCase);
+				} catch (JsonParserException e) {
+				}
+			}
+
+		}
 	}
 
 	private String readAsUtf8(InputStream input) throws IOException {

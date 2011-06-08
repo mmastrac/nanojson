@@ -180,6 +180,9 @@ public class JsonParser {
 					throw createParseException("Expected COMMA, got "
 							+ token);
 				advanceToken();
+
+				if (token == Token.OBJECT_END)
+					throw createParseException("Trailing comma in object");
 			}
 
 			if (token != Token.STRING)

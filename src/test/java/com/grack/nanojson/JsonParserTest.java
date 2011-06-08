@@ -280,6 +280,17 @@ public class JsonParserTest {
 			testException(e, 1, 2);
 		}
 	}
+	
+	@Test
+	public void testFailTrailingCommaMultiline() {
+		String testString = "{\n\"abc\":123,\n\"def\":456,\n}";
+		try {
+			JsonParser.parse(testString);
+			fail();
+		} catch (JsonParserException e) {
+			testException(e, 4, 1);
+		}
+	}
 
 	@Test
 	public void failureTestsFromYui() throws IOException {

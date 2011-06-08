@@ -15,12 +15,13 @@
  */
 package com.grack.nanojson;
 
+/**
+ * Thrown when the {@link JsonParser} encounters malformed JSON.
+ */
 public class JsonParserException extends Exception {
-	public enum Error {
-		
-	}
+	private static final long serialVersionUID = 1L;
+	
 	public JsonParserException(String string) {
 		super(string);
 	}
-
 }

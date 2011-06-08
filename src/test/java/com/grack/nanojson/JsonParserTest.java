@@ -16,6 +16,7 @@
 package com.grack.nanojson;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
@@ -25,6 +26,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -47,6 +49,8 @@ public class JsonParserTest {
 		assertEquals("false", JsonParser.parse("false").toString());
 		assertNull(JsonParser.parse("null"));
 		assertEquals("1.0", JsonParser.parse("1").toString());
+		assertEquals("1.0", JsonParser.parse("1.0").toString());
+		assertEquals("", JsonParser.parse("\"\"").toString());
 		assertEquals("a", JsonParser.parse("\"a\"").toString());
 	}
 
@@ -80,9 +84,32 @@ public class JsonParserTest {
 		assertEquals("\\", JsonParser.parse("\"\\\\\""));
 		assertEquals("\"", JsonParser.parse("\"\\\"\""));
 
-		assertEquals("\n\r\t\b\f", JsonParser.parse("\"\\n\\r\\t\\b\\f\""));
+		assertEquals(
+				"all together: \\/\n\r\t\b\f (fin)",
+				JsonParser
+						.parse("\"all together: \\\\\\/\\n\\r\\t\\b\\f (fin)\""));
 	}
-	
+
+	@Test
+	public void testFailBustedNumber1() {
+		try {
+			// There's no 'f' in double
+			JsonParser.parse("123f");
+			fail();
+		} catch (JsonParserException e) {
+		}
+	}
+
+	@Test
+	public void testFailBustedNumber2() {
+		try {
+			// Badly formed number
+			JsonParser.parse("-1-1");
+			fail();
+		} catch (JsonParserException e) {
+		}
+	}
+
 	@Test
 	public void testFailBustedString1() {
 		try {
@@ -98,6 +125,16 @@ public class JsonParserTest {
 		try {
 			// \n in middle of string
 			JsonParser.parse("\"abc\n\"");
+			fail();
+		} catch (JsonParserException e) {
+		}
+	}
+
+	@Test
+	public void testFailBustedString3() {
+		try {
+			// Bad escape "\x" in middle of string
+			JsonParser.parse("\"abc\\x\"");
 			fail();
 		} catch (JsonParserException e) {
 		}
@@ -138,10 +175,88 @@ public class JsonParserTest {
 		} catch (JsonParserException e) {
 		}
 	}
-	
+
+	@Test
+	public void testFailObjectBadColon1() {
+		try {
+			JsonParser.parse("{\"abc\":}");
+			fail();
+		} catch (JsonParserException e) {
+		}
+	}
+
+	@Test
+	public void testFailObjectBadColon2() {
+		try {
+			JsonParser.parse("{\"abc\":1:}");
+			fail();
+		} catch (JsonParserException e) {
+		}
+	}
+
+	@Test
+	public void testFailObjectBadColon3() {
+		try {
+			JsonParser.parse("{:\"abc\":1}");
+			fail();
+		} catch (JsonParserException e) {
+		}
+	}
+
+	@Test
+	public void testFailBadKeywords1() {
+		try {
+			JsonParser.parse("truef");
+			fail();
+		} catch (JsonParserException e) {
+		}
+	}
+
+	@Test
+	public void testFailBadKeywords2() {
+		try {
+			JsonParser.parse("true1");
+			fail();
+		} catch (JsonParserException e) {
+		}
+	}
+
+	@Test
+	public void testFailBadKeywords3() {
+		try {
+			JsonParser.parse("tru");
+			fail();
+		} catch (JsonParserException e) {
+		}
+	}
+
+	@Test
+	public void failureTestsFromYui() throws IOException {
+		InputStream input = getClass()
+				.getResourceAsStream("yui_fail_cases.txt");
+
+		String[] failCases = readAsUtf8(input).split("\n");
+		for (String failCase : failCases) {
+			try {
+				JsonParser.parse(failCase);
+				fail("Should have failed, but didn't: " + failCase);
+			} catch (JsonParserException e) {
+				System.out.println(failCase + " " + e);
+			}
+		}
+	}
+
+	@SuppressWarnings("unchecked")
 	@Test
 	public void tortureTest() throws JsonParserException, IOException {
 		InputStream input = getClass().getResourceAsStream("sample.json");
+		Object o = JsonParser.parse(readAsUtf8(input));
+
+		Map<String, Object> map = (Map<String, Object>) o;
+		assertNotNull(map.get("a"));
+	}
+
+	private String readAsUtf8(InputStream input) throws IOException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		byte[] b = new byte[1024 * 1024];
 		while (true) {
@@ -151,6 +266,7 @@ public class JsonParserTest {
 			out.write(b, 0, r);
 		}
 		Charset utf8 = Charset.forName("UTF8");
-		JsonParser.parse(new String(out.toByteArray(), utf8));
+		String s = new String(out.toByteArray(), utf8);
+		return s;
 	}
 }

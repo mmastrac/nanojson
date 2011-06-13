@@ -1,0 +1,266 @@
+/**
+ * Copyright 2010 The nanojson Authors
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+package com.grack.nanojson;
+
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.Writer;
+import java.nio.CharBuffer;
+import java.util.Stack;
+
+/**
+ * Light-weight JSON emitter with state checking. Emits JSON to an
+ * {@link Appendable} such as a {@link StringBuilder}, a {@link Writer} a
+ * {@link PrintStream} or a {@link CharBuffer}.
+ */
+public class JsonEmitter {
+	private final Appendable appendable;
+	private Stack<State> states = new Stack<State>();
+
+	private enum State {
+		EMPTY, ARRAY_START, ARRAY, OBJECT_START, OBJECT, FINI
+	}
+
+	public JsonEmitter(Appendable appendable) {
+		this.appendable = appendable;
+		states.push(State.EMPTY);
+	}
+
+	public JsonEmitter value(String s) {
+		preValue();
+		if (s == null)
+			raw("null");
+		else
+			emitStringValue(s);
+		post();
+		return this;
+	}
+
+	public JsonEmitter value(int i) {
+		preValue();
+		raw(Integer.toString(i));
+		post();
+		return this;
+	}
+
+	public JsonEmitter value(boolean b) {
+		preValue();
+		raw(Boolean.toString(b));
+		post();
+		return this;
+	}
+
+	public JsonEmitter value(double d) {
+		preValue();
+		raw(Double.toString(d));
+		post();
+		return this;
+	}
+
+	public JsonEmitter value(String key, String s) {
+		preValue(key);
+		if (s == null)
+			raw("null");
+		else
+			emitStringValue(s);
+		post();
+		return this;
+	}
+
+	public JsonEmitter value(String key, int i) {
+		preValue(key);
+		raw(Integer.toString(i));
+		post();
+		return this;
+	}
+
+	public JsonEmitter value(String key, boolean b) {
+		preValue(key);
+		raw(Boolean.toString(b));
+		post();
+		return this;
+	}
+
+	public JsonEmitter value(String key, double d) {
+		preValue(key);
+		raw(Double.toString(d));
+		post();
+		return this;
+	}
+
+	public JsonEmitter startArray() {
+		preValue();
+		states.push(State.ARRAY_START);
+		raw("[");
+		return this;
+	}
+
+	public JsonEmitter startObject() {
+		preValue();
+		states.push(State.OBJECT_START);
+		raw("{");
+		return this;
+	}
+
+	public JsonEmitter startArray(String key) {
+		preValue(key);
+		states.push(State.ARRAY_START);
+		raw("[");
+		return this;
+	}
+
+	public JsonEmitter startObject(String key) {
+		preValue(key);
+		states.push(State.OBJECT_START);
+		raw("{");
+		return this;
+	}
+
+	public JsonEmitter endArray() {
+		raw("]");
+		states.pop();
+		post();
+		return this;
+	}
+
+	public JsonEmitter endObject() {
+		raw("}");
+		states.pop();
+		post();
+		return this;
+	}
+	
+	public void end() {
+		if (states.peek() != State.FINI)
+			throw new JsonEmitterException("JSON was not properly balanced");
+	}
+
+	private void raw(String s) {
+		try {
+			appendable.append(s);
+		} catch (IOException e) {
+			throw new JsonEmitterException(e);
+		}
+	}
+
+	private void raw(char c) {
+		try {
+			appendable.append(c);
+		} catch (IOException e) {
+			throw new JsonEmitterException(e);
+		}
+	}
+
+	private void pre() {
+		switch (states.peek()) {
+		case ARRAY_START:
+			states.pop();
+			states.push(State.ARRAY);
+			break;
+		case ARRAY:
+			raw(",");
+			break;
+		case OBJECT_START:
+			states.pop();
+			states.push(State.OBJECT);
+			break;
+		case OBJECT:
+			raw(",");
+			break;
+		case FINI:
+			throw new JsonEmitterException(
+					"Invalid call to emit a value in a finished JSON writer");
+		}
+	}
+
+	private void post() {
+		switch (states.peek()) {
+		case EMPTY:
+			states.pop();
+			states.push(State.FINI);
+		}
+	}
+
+	private void preValue() {
+		pre();
+
+		if (states.peek() == State.OBJECT_START
+				|| states.peek() == State.OBJECT) {
+			throw new JsonEmitterException(
+					"Invalid call to emit a keyless value while writing an object");
+		}
+	}
+
+	private void preValue(String key) {
+		pre();
+
+		emitStringValue(key);
+		raw(":");
+
+		if (states.peek() != State.OBJECT_START
+				&& states.peek() != State.OBJECT) {
+			throw new JsonEmitterException(
+					"Invalid call to emit a key value while not writing an object");
+		}
+	}
+
+	private void emitStringValue(String s) {
+		raw('"');
+		char b = 0, c = 0;
+		for (int i = 0; i < s.length(); i++) {
+			b = c;
+			c = s.charAt(i);
+			switch (c) {
+			case '\\':
+			case '"':
+				raw('\\');
+				raw(c);
+				break;
+			case '/':
+				if (b == '<') {
+					raw('\\');
+				}
+				raw(c);
+				break;
+			case '\b':
+				raw("\\b");
+				break;
+			case '\t':
+				raw("\\t");
+				break;
+			case '\n':
+				raw("\\n");
+				break;
+			case '\f':
+				raw("\\f");
+				break;
+			case '\r':
+				raw("\\r");
+				break;
+			default:
+				if (c < ' ' || (c >= '\u0080' && c < '\u00a0')
+						|| (c >= '\u2000' && c < '\u2100')) {
+					String t = "000" + Integer.toHexString(c);
+					raw("\\u" + t.substring(t.length() - 4));
+				} else {
+					raw(c);
+				}
+			}
+		}
+
+		raw('"');
+	}
+}

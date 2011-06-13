@@ -2,38 +2,25 @@ package com.grack.nanojson;
 
 import java.io.IOException;
 
+/**
+ * {@link JsonWriter} is a more structured JSON writer that uses generics to
+ * ensure that you can't write invalid JSON. This class is useful for writing
+ * JSON with well-known structure.
+ * 
+ * Caveat: because of its use of generics, it cannot be used to write JSON where
+ * the object/array nesting structure is not known at compile time.
+ * 
+ * This class wraps a {@link JsonEmitter} internally.
+ */
 public class JsonWriter {
-	public interface Context {
+	private interface Context {
 	}
 
-	interface RootContext extends Context, Appendable {
+	private interface RootContext extends Context, Appendable {
 	}
 
-	public static class RootStringContext implements Context, RootContext {
-		private StringBuilder builder = new StringBuilder();
-
-		private RootStringContext() {
-		}
-
-		public String end() {
-			return builder.toString();
-		}
-
-		@Override
-		public Appendable append(CharSequence csq) throws IOException {
-			return builder.append(csq);
-		}
-
-		@Override
-		public Appendable append(char c) throws IOException {
-			return builder.append(c);
-		}
-
-		@Override
-		public Appendable append(CharSequence csq, int start, int end)
-				throws IOException {
-			return builder.append(csq, start, end);
-		}
+	public interface RootStringContext extends RootContext {
+		String end();
 	}
 
 	public interface RootValueContext<T extends RootContext> extends Context {
@@ -100,27 +87,55 @@ public class JsonWriter {
 		T end();
 	}
 
+	private static class RootStringContextImpl implements RootStringContext {
+		private StringBuilder builder = new StringBuilder();
+
+		private RootStringContextImpl() {
+		}
+
+		public String end() {
+			return builder.toString();
+		}
+
+		@Override
+		public Appendable append(CharSequence csq) throws IOException {
+			return builder.append(csq);
+		}
+
+		@Override
+		public Appendable append(char c) throws IOException {
+			return builder.append(c);
+		}
+
+		@Override
+		public Appendable append(CharSequence csq, int start, int end)
+				throws IOException {
+			return builder.append(csq, start, end);
+		}
+	}
+
 	/**
 	 * Implementation for the various emit methods. Generics handle the
 	 * specialization of this class into {@link RootValueContext},
 	 * {@link ObjectContext} and {@link ArrayContext}.
 	 */
-	private abstract static class ContextImpl<T extends Context> {
+	private abstract static class ContextImpl<T extends Context> implements
+			Context {
 		protected final JsonEmitter emitter;
 		private final T t;
 
+		/**
+		 * Workaround for inability to pass "this" to a superconstructor.
+		 */
+		@SuppressWarnings("unchecked")
 		public ContextImpl(JsonEmitter emitter) {
-			this.t = getChain();
+			this.t = (T) this;
 			this.emitter = emitter;
 		}
 
 		public ContextImpl(T t, JsonEmitter emitter) {
 			this.t = t;
 			this.emitter = emitter;
-		}
-
-		protected T getChain() {
-			return null;
 		}
 
 		public T value(String s) {
@@ -201,11 +216,6 @@ public class JsonWriter {
 		}
 
 		@Override
-		protected ArrayContext<T> getChain() {
-			return this;
-		}
-
-		@Override
 		public T end() {
 			emitter.endArray();
 			return t;
@@ -222,19 +232,17 @@ public class JsonWriter {
 		}
 
 		@Override
-		protected ObjectContext<T> getChain() {
-			return this;
-		}
-
-		@Override
 		public T end() {
 			emitter.endObject();
 			return t;
 		}
 	}
 
+	/**
+	 * Starts writing a {@link String}.
+	 */
 	public static RootValueContext<RootStringContext> string() {
 		return new RootValueContextImpl<RootStringContext>(
-				new RootStringContext());
+				new RootStringContextImpl());
 	}
 }

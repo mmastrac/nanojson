@@ -4,15 +4,10 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import com.grack.nanojson.JsonWriter.RootStringContext;
-import com.grack.nanojson.JsonWriter.RootValueContext;
-
 public class JsonWriterTest {
 	@Test
 	public void testJsonWriter() {
-		RootValueContext<RootStringContext> r = JsonWriter.string();
-
-		String json = r.array()
+		String json = JsonWriter.string().array()
 			.value(true)
 			.value(true)
 			.end()
@@ -23,9 +18,7 @@ public class JsonWriterTest {
 	
 	@Test
 	public void testArrayAndObject() {
-		RootValueContext<RootStringContext> r = JsonWriter.string();
-
-		String json = r
+		String json = JsonWriter.string()
 			.array()
 				.value(true)
 				.object()

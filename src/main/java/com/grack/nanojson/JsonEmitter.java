@@ -39,6 +39,9 @@ public class JsonEmitter {
 		states.push(State.EMPTY);
 	}
 
+	/**
+	 * Emits a string value (or null).
+	 */
 	public JsonEmitter value(String s) {
 		preValue();
 		if (s == null)
@@ -49,6 +52,9 @@ public class JsonEmitter {
 		return this;
 	}
 
+	/**
+	 * Emits an integer value.
+	 */
 	public JsonEmitter value(int i) {
 		preValue();
 		raw(Integer.toString(i));
@@ -56,6 +62,9 @@ public class JsonEmitter {
 		return this;
 	}
 
+	/**
+	 * Emits a boolean value.
+	 */
 	public JsonEmitter value(boolean b) {
 		preValue();
 		raw(Boolean.toString(b));
@@ -63,6 +72,9 @@ public class JsonEmitter {
 		return this;
 	}
 
+	/**
+	 * Emits a double value.
+	 */
 	public JsonEmitter value(double d) {
 		preValue();
 		raw(Double.toString(d));
@@ -70,6 +82,9 @@ public class JsonEmitter {
 		return this;
 	}
 
+	/**
+	 * Emits a string value (or null) with a key.
+	 */
 	public JsonEmitter value(String key, String s) {
 		preValue(key);
 		if (s == null)
@@ -80,6 +95,9 @@ public class JsonEmitter {
 		return this;
 	}
 
+	/**
+	 * Emits an integer value with a key.
+	 */
 	public JsonEmitter value(String key, int i) {
 		preValue(key);
 		raw(Integer.toString(i));
@@ -87,6 +105,9 @@ public class JsonEmitter {
 		return this;
 	}
 
+	/**
+	 * Emits a boolean value with a key.
+	 */
 	public JsonEmitter value(String key, boolean b) {
 		preValue(key);
 		raw(Boolean.toString(b));
@@ -94,6 +115,9 @@ public class JsonEmitter {
 		return this;
 	}
 
+	/**
+	 * Emits a double value with a key.
+	 */
 	public JsonEmitter value(String key, double d) {
 		preValue(key);
 		raw(Double.toString(d));
@@ -101,6 +125,9 @@ public class JsonEmitter {
 		return this;
 	}
 
+	/**
+	 * Starts an array.
+	 */
 	public JsonEmitter startArray() {
 		preValue();
 		states.push(State.ARRAY_START);
@@ -108,6 +135,9 @@ public class JsonEmitter {
 		return this;
 	}
 
+	/**
+	 * Starts an object.
+	 */
 	public JsonEmitter startObject() {
 		preValue();
 		states.push(State.OBJECT_START);
@@ -115,6 +145,9 @@ public class JsonEmitter {
 		return this;
 	}
 
+	/**
+	 * Starts an array within an object, prefixed with a key.
+	 */
 	public JsonEmitter startArray(String key) {
 		preValue(key);
 		states.push(State.ARRAY_START);
@@ -122,6 +155,9 @@ public class JsonEmitter {
 		return this;
 	}
 
+	/**
+	 * Starts an object within an object, prefixed with a key.
+	 */
 	public JsonEmitter startObject(String key) {
 		preValue(key);
 		states.push(State.OBJECT_START);
@@ -129,6 +165,9 @@ public class JsonEmitter {
 		return this;
 	}
 
+	/**
+	 * Ends the current array.
+	 */
 	public JsonEmitter endArray() {
 		raw("]");
 		states.pop();
@@ -136,13 +175,23 @@ public class JsonEmitter {
 		return this;
 	}
 
+	/**
+	 * Ends the current object.
+	 */
 	public JsonEmitter endObject() {
 		raw("}");
 		states.pop();
 		post();
 		return this;
 	}
-	
+
+	/**
+	 * Ensures that the object is in the finished state.
+	 * 
+	 * @throws JsonEmitterException
+	 *             if the written JSON is not properly balanced, ie: all arrays
+	 *             and objects that were started have been properly ended.
+	 */
 	public void end() {
 		if (states.peek() != State.FINI)
 			throw new JsonEmitterException("JSON was not properly balanced");
@@ -223,6 +272,7 @@ public class JsonEmitter {
 		for (int i = 0; i < s.length(); i++) {
 			b = c;
 			c = s.charAt(i);
+
 			switch (c) {
 			case '\\':
 			case '"':
@@ -230,9 +280,9 @@ public class JsonEmitter {
 				raw(c);
 				break;
 			case '/':
-				if (b == '<') {
+				// Special case to ensure that </script> doesn't appear in JSON output
+				if (b == '<')
 					raw('\\');
-				}
 				raw(c);
 				break;
 			case '\b':
@@ -251,8 +301,7 @@ public class JsonEmitter {
 				raw("\\r");
 				break;
 			default:
-				if (c < ' ' || (c >= '\u0080' && c < '\u00a0')
-						|| (c >= '\u2000' && c < '\u2100')) {
+				if (shouldBeEscaped(c)) {
 					String t = "000" + Integer.toHexString(c);
 					raw("\\u" + t.substring(t.length() - 4));
 				} else {
@@ -262,5 +311,13 @@ public class JsonEmitter {
 		}
 
 		raw('"');
+	}
+
+	/**
+	 * json.org spec says that all control characters must be escaped.
+	 */
+	private boolean shouldBeEscaped(char c) {
+		return c < ' ' || (c >= '\u0080' && c < '\u00a0')
+				|| (c >= '\u2000' && c < '\u2100');
 	}
 }

@@ -6,7 +6,7 @@ nanojson is a tiny, compliant JSON parser and writer for Java.
 
   * Strict error checking, reasonable error messages
   * Minimal object allocation
-  * One file, barely more than 400 lines
+  * Minimal number of source lines: parser is barely more than 400 lines, emitter is barely more than 300
   * Apache licensed
 
 ## Parsing example
@@ -48,7 +48,8 @@ objects and the other for writing raw JSON values or within an array.
 			.value("c", true)
 		.endObject()
 	.end();
-	assertEquals("{\"a\":true,\"b\":false,\"c\":true}", builder.toString());
+	
+	-> {"a":[1,2],"b":false,"c":true}
 
 If you attempt to write invalid JSON, `JsonEmitter` will throw a runtime `JsonEmitterException`.
 
@@ -72,7 +73,7 @@ Caveat: because of its use of generics, it cannot be used to write JSON where th
 		.end()
 	.end();
 	
-	[true,{a:[true,false],b:"string"}]
+	-> [true,{a:[true,false],b:"string"}]
 
 ## Compliance
 

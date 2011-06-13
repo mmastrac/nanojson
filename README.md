@@ -59,17 +59,20 @@ with well-known structure.
 
 Caveat: because of its use of generics, it cannot be used to write JSON where the object/array nesting structure is not known at compile time.
 
-	String json = JsonWriter.string().array()
-		.value(true)
-		.object()
-			.array("a")
-				.value(true)
-				.value(false)
+	String json = JsonWriter.string()
+		.array()
+			.value(true)
+			.object()
+				.array("a")
+					.value(true)
+					.value(false)
+				.end()
+				.value("b", "string")
 			.end()
-			.value("b", "string")
-		.end()
 		.end()
 	.end();
+	
+	[true,{a:[true,false],b:"string"}]
 
 ## Compliance
 

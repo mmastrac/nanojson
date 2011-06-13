@@ -25,15 +25,16 @@ public class JsonWriterTest {
 	public void testArrayAndObject() {
 		RootValueContext<RootStringContext> r = JsonWriter.string();
 
-		String json = r.array()
-			.value(true)
-			.object()
-				.array("a")
-					.value(true)
-					.value(false)
+		String json = r
+			.array()
+				.value(true)
+				.object()
+					.array("a")
+						.value(true)
+						.value(false)
+					.end()
+					.value("b", "string")
 				.end()
-				.value("b", "string")
-			.end()
 			.end()
 		.end();
 		

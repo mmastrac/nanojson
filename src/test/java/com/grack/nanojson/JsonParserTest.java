@@ -103,6 +103,11 @@ public class JsonParserTest {
 	}
 
 	@Test
+	public void testBigint() throws JsonParserException {
+		JsonParser.parse("{\"v\":123456789123456789123456789}");
+	}
+
+	@Test
 	public void testFailNumberEdgeCases() {
 		String[] edgeCases = { "01", "-01", "+01", ".1", "-.1", "+.1", "+1",
 				"0.", "-0." };
@@ -280,7 +285,7 @@ public class JsonParserTest {
 			testException(e, 1, 2);
 		}
 	}
-	
+
 	@Test
 	public void testFailTrailingCommaMultiline() {
 		String testString = "{\n\"abc\":123,\n\"def\":456,\n}";
@@ -294,8 +299,8 @@ public class JsonParserTest {
 
 	@Test
 	public void failureTestsFromYui() throws IOException {
-		InputStream input = getClass()
-				.getResourceAsStream("yui_fail_cases.txt");
+		InputStream input = getClass().getClassLoader().getResourceAsStream(
+				"yui_fail_cases.txt");
 
 		String[] failCases = readAsUtf8(input).split("\n");
 		for (String failCase : failCases) {
@@ -310,7 +315,8 @@ public class JsonParserTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void tortureTest() throws JsonParserException, IOException {
-		InputStream input = getClass().getResourceAsStream("sample.json");
+		InputStream input = getClass().getClassLoader().getResourceAsStream(
+				"sample.json");
 		Object o = JsonParser.parse(readAsUtf8(input));
 
 		Map<String, Object> map = (Map<String, Object>) o;
@@ -324,7 +330,8 @@ public class JsonParserTest {
 	 */
 	@Test
 	public void jsonOrgTest() throws JsonParserException, IOException {
-		InputStream input = getClass().getResourceAsStream("json_org_test.zip");
+		InputStream input = getClass().getClassLoader().getResourceAsStream(
+				"json_org_test.zip");
 		ZipInputStream zip = new ZipInputStream(input);
 		ZipEntry ze;
 

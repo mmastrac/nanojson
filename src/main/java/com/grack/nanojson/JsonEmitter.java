@@ -21,11 +21,26 @@ import java.io.Writer;
 import java.nio.CharBuffer;
 import java.util.Stack;
 
+//@formatter:off
 /**
  * Light-weight JSON emitter with state checking. Emits JSON to an
  * {@link Appendable} such as a {@link StringBuilder}, a {@link Writer} a
  * {@link PrintStream} or a {@link CharBuffer}.
+ * <pre>
+ * StringBuilder builder = new StringBuilder();
+ * new JsonEmitter(builder)
+ *     .startObject()
+ *         .startArray("a")
+ *             .value(1)
+ *             .value(2)
+ *         .endArray()
+ *         .value("b", false)
+ *         .value("c", true)
+ *     .endObject()
+ * .end();
+ * </pre>
  */
+//@formatter:on
 public class JsonEmitter {
 	private final Appendable appendable;
 	private Stack<State> states = new Stack<State>();

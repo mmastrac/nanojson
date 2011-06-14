@@ -23,6 +23,10 @@ import java.util.regex.Pattern;
 
 /**
  * Simple JSON parser.
+ * 
+ * <pre>
+ * Object json = {@link JsonParser}.parse("{\"a\":[true,false], \"b\":1}");
+ * </pre>
  */
 public class JsonParser {
 	private final String input;

@@ -2,6 +2,7 @@ package com.grack.nanojson;
 
 import java.io.IOException;
 
+//@formatter:off
 /**
  * {@link JsonWriter} is a more structured JSON writer that uses generics to
  * ensure that you can't write invalid JSON. This class is useful for writing
@@ -11,23 +12,52 @@ import java.io.IOException;
  * the object/array nesting structure is not known at compile time.
  * 
  * This class wraps a {@link JsonEmitter} internally.
+ * 
+ * <pre>
+ * String json = JsonWriter
+ *                 .string()
+ *                   .array()
+ *                     .value(true)
+ *                     .object()
+ *                       .array("a")
+ *                         .value(true)
+ *                         .value(false)
+ *                       .end()
+ *                       .value("b", "string")
+ *                     .end()
+ *                   .end()
+ *                 .end();
+ * </pre>
+ * 
+ * Yields:
+ * 
+ * <pre>
+ * [true,{"a":[true,false],"b":"string"}]
+ * </pre>
  */
+//@formatter:on
 public class JsonWriter {
+	/**
+	 * Marker interface for writer contexts.
+	 */
 	private interface Context {
 	}
 
+	/**
+	 * Marker interface for root writer contexts.
+	 */
 	private interface RootContext extends Context, Appendable {
 	}
 
 	/**
-	 * The context used when writing to a {@link String}.
+	 * Context used when writing to a {@link String}.
 	 */
 	public interface RootStringContext extends RootContext {
 		String end();
 	}
 
 	/**
-	 * This context is used at the top level of the {@link JsonWriter}. A single
+	 * Context used at the top level of the {@link JsonWriter}. A single
 	 * value may be written to it.
 	 */
 	public interface RootValueContext<T extends RootContext> extends Context {
@@ -63,7 +93,7 @@ public class JsonWriter {
 	}
 
 	/**
-	 * This context is used when the values inside of an array are being
+	 * Context used when the values inside of an array are being
 	 * written.
 	 */
 	public interface ArrayContext<T extends Context> extends Context {
@@ -104,7 +134,7 @@ public class JsonWriter {
 	}
 
 	/**
-	 * This context is used when the key/value pairs of a JSON object are being
+	 * Context used when the key/value pairs of a JSON object are being
 	 * written.
 	 */
 	public interface ObjectContext<T extends Context> extends Context {
@@ -145,7 +175,7 @@ public class JsonWriter {
 	}
 
 	/**
-	 * Implementation of {@link Context} for writing to a {@link String}.
+	 * Implementation of context for writing to a {@link String}.
 	 */
 	private static class RootStringContextImpl implements RootStringContext {
 		private StringBuilder builder = new StringBuilder();

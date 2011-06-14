@@ -19,74 +19,134 @@ public class JsonWriter {
 	private interface RootContext extends Context, Appendable {
 	}
 
+	/**
+	 * The context used when writing to a {@link String}.
+	 */
 	public interface RootStringContext extends RootContext {
 		String end();
 	}
 
+	/**
+	 * This context is used at the top level of the {@link JsonWriter}. A single
+	 * value may be written to it.
+	 */
 	public interface RootValueContext<T extends RootContext> extends Context {
 		/**
-		 * Writes the only value for this writer context.
+		 * Writes a {@link String} value, then ends this JSON value.
 		 */
 		T value(String s);
 
 		/**
-		 * Writes the only value for this writer context.
+		 * Writes an {@link Integer} value, then ends this JSON value.
 		 */
 		T value(int i);
 
 		/**
-		 * Writes the only value for this writer context.
+		 * Writes a {@link Boolean} value, then ends this JSON value.
 		 */
 		T value(boolean b);
 
 		/**
-		 * Writes the only value for this writer context.
+		 * Writes a {@link Double} value, then ends this JSON value.
 		 */
 		T value(double d);
 
 		/**
-		 * Starts writing the root array value for this writer context.
+		 * Starts writing the root array.
 		 */
 		ArrayContext<T> array();
 
 		/**
-		 * Starts writing the root object value for this writer context.
+		 * Starts writing the root object.
 		 */
 		ObjectContext<T> object();
 	}
 
+	/**
+	 * This context is used when the values inside of an array are being
+	 * written.
+	 */
 	public interface ArrayContext<T extends Context> extends Context {
+		/**
+		 * Writes a {@link String} to this array.
+		 */
 		ArrayContext<T> value(String s);
 
+		/**
+		 * Writes an {@link Integer} to this array.
+		 */
 		ArrayContext<T> value(int i);
 
+		/**
+		 * Writes a {@link Boolean} to this array.
+		 */
 		ArrayContext<T> value(boolean b);
 
+		/**
+		 * Writes a {@link Double} to this array.
+		 */
 		ArrayContext<T> value(double d);
 
+		/**
+		 * Starts writing a nested array inside of this array.
+		 */
 		ArrayContext<ArrayContext<T>> array();
 
+		/**
+		 * Starts writing a nested object inside of this array.
+		 */
 		ObjectContext<ArrayContext<T>> object();
 
+		/**
+		 * Ends this array and moves back to the parent JSON array or object.
+		 */
 		T end();
 	}
 
+	/**
+	 * This context is used when the key/value pairs of a JSON object are being
+	 * written.
+	 */
 	public interface ObjectContext<T extends Context> extends Context {
+		/**
+		 * Writes a {@link String} to this object.
+		 */
 		ObjectContext<T> value(String key, String s);
 
+		/**
+		 * Writes an {@link Integer} to this object.
+		 */
 		ObjectContext<T> value(String key, int i);
 
+		/**
+		 * Writes a {@link Boolean} to this object.
+		 */
 		ObjectContext<T> value(String key, boolean b);
 
+		/**
+		 * Writes a {@link Double} to this object.
+		 */
 		ObjectContext<T> value(String key, double d);
 
+		/**
+		 * Starts writing a nested array inside of this object.
+		 */
 		ArrayContext<ObjectContext<T>> array(String key);
 
+		/**
+		 * Starts writing a nested object inside of this object.
+		 */
 		ObjectContext<ObjectContext<T>> object(String key);
 
+		/**
+		 * Ends this array and moves back to the parent JSON array or object.
+		 */
 		T end();
 	}
 
+	/**
+	 * Implementation of {@link Context} for writing to a {@link String}.
+	 */
 	private static class RootStringContextImpl implements RootStringContext {
 		private StringBuilder builder = new StringBuilder();
 

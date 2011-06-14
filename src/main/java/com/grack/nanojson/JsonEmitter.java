@@ -266,6 +266,10 @@ public class JsonEmitter {
 		}
 	}
 
+	/**
+	 * Emits a quoted string value, escaping characters that are required to be
+	 * escaped.
+	 */
 	private void emitStringValue(String s) {
 		raw('"');
 		char b = 0, c = 0;
@@ -280,7 +284,8 @@ public class JsonEmitter {
 				raw(c);
 				break;
 			case '/':
-				// Special case to ensure that </script> doesn't appear in JSON output
+				// Special case to ensure that </script> doesn't appear in JSON
+				// output
 				if (b == '<')
 					raw('\\');
 				raw(c);

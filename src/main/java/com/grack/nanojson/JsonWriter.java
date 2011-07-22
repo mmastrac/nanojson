@@ -57,6 +57,13 @@ public class JsonWriter {
 	}
 
 	/**
+	 * Context used when writing to an {@link Appendable}.
+	 */
+	public interface RootAppendableContext<T extends Appendable> extends RootContext {
+		T end();
+	}
+
+	/**
 	 * Context used at the top level of the {@link JsonWriter}. A single
 	 * value may be written to it.
 	 */
@@ -205,6 +212,37 @@ public class JsonWriter {
 	}
 
 	/**
+	 * Implementation of context for writing to an {@link Appendable}.
+	 */
+	private static class RootAppendableContextImpl<T extends Appendable> implements RootAppendableContext<T> {
+		private T appendable;
+
+		private RootAppendableContextImpl(T appendable) {
+			this.appendable = appendable;
+		}
+
+		public T end() {
+			return appendable;
+		}
+
+		@Override
+		public Appendable append(CharSequence csq) throws IOException {
+			return appendable.append(csq);
+		}
+
+		@Override
+		public Appendable append(char c) throws IOException {
+			return appendable.append(c);
+		}
+
+		@Override
+		public Appendable append(CharSequence csq, int start, int end)
+				throws IOException {
+			return appendable.append(csq, start, end);
+		}
+	}
+
+	/**
 	 * Implementation for the various emit methods. Generics handle the
 	 * specialization of this class into {@link RootValueContext},
 	 * {@link ObjectContext} and {@link ArrayContext}.
@@ -334,5 +372,13 @@ public class JsonWriter {
 	public static RootValueContext<RootStringContext> string() {
 		return new RootValueContextImpl<RootStringContext>(
 				new RootStringContextImpl());
+	}
+
+	/**
+	 * Starts writing a {@link String}.
+	 */
+	public static <T extends Appendable> RootValueContext<RootAppendableContext<T>> write(T appendable) {
+		return new RootValueContextImpl<RootAppendableContext<T>>(
+				new RootAppendableContextImpl(appendable));
 	}
 }

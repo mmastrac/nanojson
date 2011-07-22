@@ -15,10 +15,6 @@
  */
 package com.grack.nanojson;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -26,6 +22,8 @@ import java.util.regex.Pattern;
  * 
  * <pre>
  * Object json = {@link JsonParser}.parse("{\"a\":[true,false], \"b\":1}");
+ * JsonObject json = {@link JsonParser}.parseObject("{\"a\":[true,false], \"b\":1}");
+ * JsonArray json = {@link JsonParser}.parseArray("[1, {\"a\":[true,false], \"b\":1}]");
  * </pre>
  */
 public class JsonParser {
@@ -57,6 +55,27 @@ public class JsonParser {
 	 */
 	public static Object parse(String input) throws JsonParserException {
 		return new JsonParser(input).parse();
+	}
+
+	/**
+	 * Parses a string into a {@link JsonObject}.
+	 */
+	public static JsonObject parseObject(String input) throws JsonParserException {
+		Object o = new JsonParser(input).parse();
+		if (o instanceof JsonObject)
+			return ((JsonObject)o);
+		
+		throw new JsonParserException("JSON did not contain an object", 0, 0);
+	}
+	/**
+	 * Parses a string into a {@link JsonArray}.
+	 */
+	public static JsonArray parseArray(String input) throws JsonParserException {
+		Object o = new JsonParser(input).parse();
+		if (o instanceof JsonArray)
+			return ((JsonArray)o);
+		
+		throw new JsonParserException("JSON did not contain an array", 0, 0);
 	}
 
 	/**
@@ -168,8 +187,8 @@ public class JsonParser {
 	 * Parses a JSON object from the current token. Assumes that a
 	 * {@link Token#OBJECT_START} has been consumed.
 	 */
-	private Map<String, Object> parseObject() throws JsonParserException {
-		Map<String, Object> map = new HashMap<String, Object>();
+	private JsonObject parseObject() throws JsonParserException {
+		JsonObject map = new JsonObject();
 		boolean first = true;
 		while (true) {
 			if (advanceToken() == Token.OBJECT_END)
@@ -204,8 +223,8 @@ public class JsonParser {
 	 * Parses a JSON array from the current token. Assumes that a
 	 * {@link Token#ARRAY_START} has been consumed.
 	 */
-	private List<Object> parseArray() throws JsonParserException {
-		List<Object> list = new ArrayList<Object>();
+	private JsonArray parseArray() throws JsonParserException {
+		JsonArray list = new JsonArray();
 		boolean first = true;
 		while (true) {
 			if (advanceToken() == Token.ARRAY_END)

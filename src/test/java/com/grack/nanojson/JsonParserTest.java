@@ -16,16 +16,16 @@
 package com.grack.nanojson;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -35,13 +35,13 @@ import org.junit.Test;
 public class JsonParserTest {
 	@Test
 	public void testEmptyObject() throws JsonParserException {
-		assertEquals(HashMap.class, JsonParser.parse("{}").getClass());
+		assertEquals(JsonObject.class, JsonParser.parse("{}").getClass());
 		assertEquals("{}", JsonParser.parse("{}").toString());
 	}
 
 	@Test
 	public void testEmptyArray() throws JsonParserException {
-		assertEquals(ArrayList.class, JsonParser.parse("[]").getClass());
+		assertEquals(JsonArray.class, JsonParser.parse("[]").getClass());
 		assertEquals("[]", JsonParser.parse("[]").toString());
 	}
 
@@ -58,21 +58,38 @@ public class JsonParserTest {
 
 	@Test
 	public void testArrayWithEverything() throws JsonParserException {
+		JsonArray a = JsonParser
+				.parseArray("[1, -1.0e6, \"abc\", [1,2,3], {\"abc\":123}, true, false]");
 		assertEquals(
 				"[1.0, -1000000.0, abc, [1.0, 2.0, 3.0], {abc=123.0}, true, false]",
-				JsonParser
-						.parse("[1, -1.0e6, \"abc\", [1,2,3], {\"abc\":123}, true, false]")
-						.toString());
+				a.toString());
+		assertEquals(1.0, a.getDouble(0), 0.001f);
+		assertEquals(1, a.getInt(0));
+		assertEquals(-1000000, a.getInt(1));
+		assertEquals(-1000000, a.getDouble(1), 0.001f);
+		assertEquals("abc", a.getString(2));
+		assertEquals(1, a.getArray(3).getInt(0));
+		assertEquals(123, a.getObject(4).getInt("abc"));
+		assertTrue(a.getBoolean(5));
+		assertFalse(a.getBoolean(6));
 	}
 
 	@Test
 	public void testObjectWithEverything() throws JsonParserException {
 		// TODO: Is this deterministic if we use string keys?
+		JsonObject o = JsonParser
+				.parseObject("{\"abc\":123, \"def\":456, \"ghi\":[true, false], \"jkl\":null, \"mno\":true}");
+
 		assertEquals(
 				"{jkl=null, abc=123.0, ghi=[true, false], def=456.0, mno=true}",
-				JsonParser
-						.parse("{\"abc\":123, \"def\":456, \"ghi\":[true, false], \"jkl\":null, \"mno\":true}")
-						.toString());
+				o.toString());
+		
+		assertEquals(123, o.getInt("abc"));
+		assertEquals(456, o.getInt("def"));
+		assertEquals(true, o.getArray("ghi").getBoolean(0));
+		assertEquals(null, o.get("jkl"));
+		assertTrue(o.isNull("jkl"));
+		assertTrue(o.getBoolean("mno"));
 	}
 
 	@Test

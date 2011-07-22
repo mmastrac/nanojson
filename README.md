@@ -13,12 +13,13 @@ nanojson is a tiny, compliant JSON parser and writer for Java.
   * Minimal object allocation
   * Minimal number of source lines: parser is barely more than 400 lines, emitter is barely more than 300
   * Apache licensed
+  * Well-documented
 
 ## Parsing example
 
-There is one entry point for parsing: `JsonParser.parse()`. It either returns the parsed object or throws a `JsonParserException`.
+There are three entry points for parsing: `JsonParser.parse()`, `JsonParser.parseObject`, and `JsonParser.parseArray`. They either return the parsed object or throw a `JsonParserException`.
 
-    Map<String, Object> map = (Map<String, Object>)JsonParser.parse("{\"abc\":123}");
+    JsonObject obj = JsonParser.parseObject("{\"abc\":123}");
 
 Errors can be quickly located by using `getLinePosition` and `getCharPosition` on `JsonParserException`:
 

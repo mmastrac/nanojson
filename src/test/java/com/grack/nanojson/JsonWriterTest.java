@@ -17,6 +17,18 @@ public class JsonWriterTest {
 	}
 	
 	@Test
+	public void testJsonWriterAppendable() {
+		StringBuilder sb = new StringBuilder();
+		String json = JsonWriter.write(sb).array()
+			.value(true)
+			.value(true)
+			.end()
+		.end().toString();
+		
+		assertEquals("[true,true]", json);
+	}
+	
+	@Test
 	public void testArrayAndObject() {
 		String json = JsonWriter.string()
 			.array()

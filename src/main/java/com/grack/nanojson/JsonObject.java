@@ -205,4 +205,32 @@ public class JsonObject extends HashMap<String, Object> {
 	public boolean isString(String key) {
 		return get(key) instanceof String;
 	}
+	
+	void emit(String key, JsonEmitter emitter) {
+		if (key == null)
+			emitter.startObject();
+		else
+			emitter.startObject(key);
+		
+		for (Map.Entry<String, Object> entry : this.entrySet()) {
+			Object o = entry.getValue();
+			String k = entry.getKey();
+			if (o instanceof String)
+				emitter.value(k, (String)o);
+			else if (o instanceof Integer)
+				emitter.value(k, (Integer)o);
+			else if (o instanceof Number)
+				emitter.value(k, ((Number)o).doubleValue());
+			else if (o instanceof Boolean)
+				emitter.value(k, (Boolean)o);
+			else if (o instanceof JsonArray)
+				((JsonArray)o).emit(k, emitter);
+			else if (o instanceof JsonObject)
+				((JsonObject)o).emit(k, emitter);
+			else
+				emitter.nul(k);
+		}
+		
+		emitter.endObject();
+	}
 }

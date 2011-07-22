@@ -97,6 +97,16 @@ public class JsonWriter {
 		 * Starts writing the root object.
 		 */
 		ObjectContext<T> object();
+
+		/**
+		 * Writes the root array.
+		 */
+		T array(JsonArray a);
+
+		/**
+		 * Writes the root object.
+		 */
+		T object(JsonObject o);
 	}
 
 	/**
@@ -128,11 +138,21 @@ public class JsonWriter {
 		 * Starts writing a nested array inside of this array.
 		 */
 		ArrayContext<ArrayContext<T>> array();
+		
+		/**
+		 * Writes an entire {@link JsonArray} inside of this array.
+		 */
+		ArrayContext<T> array(JsonArray array);
 
 		/**
 		 * Starts writing a nested object inside of this array.
 		 */
 		ObjectContext<ArrayContext<T>> object();
+		
+		/**
+		 * Writes an entire {@link JsonObject} instead of this array.
+		 */
+		ArrayContext<T> object(JsonObject o);
 
 		/**
 		 * Ends this array and moves back to the parent JSON array or object.
@@ -171,9 +191,19 @@ public class JsonWriter {
 		ArrayContext<ObjectContext<T>> array(String key);
 
 		/**
+		 * Writes an entire {@link JsonArray} inside of this object.
+		 */
+		ObjectContext<T> array(String key, JsonArray array);
+		
+		/**
 		 * Starts writing a nested object inside of this object.
 		 */
 		ObjectContext<ObjectContext<T>> object(String key);
+		
+		/**
+		 * Writes an entire {@link JsonObject} instead of this object.
+		 */
+		ObjectContext<T> object(String key, JsonObject o);
 
 		/**
 		 * Ends this array and moves back to the parent JSON array or object.
@@ -316,6 +346,16 @@ public class JsonWriter {
 			return new ObjectContextImpl<T>(t, emitter);
 		}
 
+		public T object(JsonObject o) {
+			o.emit(null, emitter);
+			return t;
+		}
+
+		public T array(JsonArray a) {
+			a.emit(null, emitter);
+			return t;
+		}
+
 		public ArrayContext<T> array(String key) {
 			emitter.startArray(key);
 			return new ArrayContextImpl<T>(t, emitter);
@@ -324,6 +364,16 @@ public class JsonWriter {
 		public ObjectContext<T> object(String key) {
 			emitter.startObject(key);
 			return new ObjectContextImpl<T>(t, emitter);
+		}
+
+		public T object(String key, JsonObject o) {
+			o.emit(key, emitter);
+			return t;
+		}
+
+		public T array(String key, JsonArray a) {
+			a.emit(key, emitter);
+			return t;
 		}
 	}
 

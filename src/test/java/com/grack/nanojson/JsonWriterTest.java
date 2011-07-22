@@ -45,4 +45,51 @@ public class JsonWriterTest {
 		
 		assertEquals("[true,{\"a\":[true,false],\"b\":\"string\"}]", json);
 	}
+	
+	@Test
+	public void testJsonArray() {
+		JsonArray a = new JsonArray();
+		a.add("abc");
+		a.add("def");
+		String json = JsonWriter.string()
+			.array()
+				.array(a)
+				.object()
+					.value("b", "string")
+				.end()
+			.end()
+		.end();
+		
+		assertEquals("[[\"abc\",\"def\"],{\"b\":\"string\"}]", json);
+	}
+	
+	@Test
+	public void testJsonObject() {
+		JsonObject o = new JsonObject();
+		o.put("abc", "def");
+		String json = JsonWriter.string()
+			.array()
+				.object(o)
+				.object()
+					.value("b", "string")
+				.end()
+			.end()
+		.end();
+		
+		assertEquals("[{\"abc\":\"def\"},{\"b\":\"string\"}]", json);
+	}
+	
+	@Test
+	public void testObjectStructure() {
+		JsonArray a = new JsonArray();
+		a.add("abc");
+		a.add("def");
+
+		JsonObject o = new JsonObject();
+		o.put("abc", a);
+		
+		String json = JsonWriter.string().object(o).end();
+			
+		assertEquals("{\"abc\":[\"abc\",\"def\"]}", json);
+	}
 }

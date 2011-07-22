@@ -329,15 +329,17 @@ public class JsonParserTest {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void tortureTest() throws JsonParserException, IOException {
 		InputStream input = getClass().getClassLoader().getResourceAsStream(
 				"sample.json");
-		Object o = JsonParser.parse(readAsUtf8(input));
-
-		Map<String, Object> map = (Map<String, Object>) o;
-		assertNotNull(map.get("a"));
+		JsonObject o = JsonParser.parseObject(readAsUtf8(input));
+		assertNotNull(o.get("a"));
+		String json = JsonWriter.string().object(o).end();
+		JsonObject o2 = JsonParser.parseObject(json);
+		String json2 = JsonWriter.string().object(o2).end();
+		
+		assertEquals(json, json2);
 	}
 
 	/**

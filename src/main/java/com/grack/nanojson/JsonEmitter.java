@@ -55,6 +55,20 @@ public class JsonEmitter {
 	}
 
 	/**
+	 * Emits a 'null' token.
+	 */
+	public JsonEmitter nul() {
+		return value(null);
+	}
+
+	/**
+	 * Emits a 'null' token with a key.
+	 */
+	public JsonEmitter nul(String key) {
+		return value(key, null);
+	}
+
+	/**
 	 * Emits a string value (or null).
 	 */
 	public JsonEmitter value(String s) {

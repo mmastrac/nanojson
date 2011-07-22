@@ -84,8 +84,8 @@ Caveat: because of its use of generics, it cannot be used to write JSON where th
 
 You can also emit `JsonObject` and `JsonArray` objects into the tree using the object(...) and array(...) methods like so:
 
-  JsonObject obj = JsonParser.parseObject("{\"a\":1}");
-  JsonArray array = JsonParser.parseArray("[1,2,3]");
+    JsonObject obj = JsonParser.parseObject("{\"a\":1}");
+    JsonArray array = JsonParser.parseArray("[1,2,3]");
 	String json = JsonWriter.string()
 		.array()
 			.object(obj)

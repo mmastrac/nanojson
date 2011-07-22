@@ -429,6 +429,6 @@ public class JsonWriter {
 	 */
 	public static <T extends Appendable> RootValueContext<RootAppendableContext<T>> write(T appendable) {
 		return new RootValueContextImpl<RootAppendableContext<T>>(
-				new RootAppendableContextImpl(appendable));
+				new RootAppendableContextImpl<T>(appendable));
 	}
 }

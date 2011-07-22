@@ -54,6 +54,26 @@ public class JsonEmitter {
 		states.push(State.EMPTY);
 	}
 
+	public JsonEmitter array(JsonArray a) {
+		a.emit(null, this);
+		return this;
+	}
+	
+	public JsonEmitter array(String key, JsonArray a) {
+		a.emit(key, this);
+		return this;
+	}
+	
+	public JsonEmitter object(JsonObject o) {
+		o.emit(null, this);
+		return this;
+	}
+	
+	public JsonEmitter object(String key, JsonObject o) {
+		o.emit(key, this);
+		return this;
+	}
+	
 	/**
 	 * Emits a 'null' token.
 	 */

@@ -49,7 +49,7 @@ public class JsonParserTest {
 		assertEquals("true", JsonParser.parse("true").toString());
 		assertEquals("false", JsonParser.parse("false").toString());
 		assertNull(JsonParser.parse("null"));
-		assertEquals("1.0", JsonParser.parse("1").toString());
+		assertEquals("1", JsonParser.parse("1").toString());
 		assertEquals("1.0", JsonParser.parse("1.0").toString());
 		assertEquals("", JsonParser.parse("\"\"").toString());
 		assertEquals("a", JsonParser.parse("\"a\"").toString());
@@ -58,7 +58,7 @@ public class JsonParserTest {
 	@Test
 	public void testArrayWithEverything() throws JsonParserException {
 		JsonArray a = JsonParser.parseArray("[1, -1.0e6, \"abc\", [1,2,3], {\"abc\":123}, true, false]");
-		assertEquals("[1.0, -1000000.0, abc, [1.0, 2.0, 3.0], {abc=123.0}, true, false]", a.toString());
+		assertEquals("[1, -1000000.0, abc, [1, 2, 3], {abc=123}, true, false]", a.toString());
 		assertEquals(1.0, a.getDouble(0), 0.001f);
 		assertEquals(1, a.getInt(0));
 		assertEquals(-1000000, a.getInt(1));
@@ -74,9 +74,9 @@ public class JsonParserTest {
 	public void testObjectWithEverything() throws JsonParserException {
 		// TODO: Is this deterministic if we use string keys?
 		JsonObject o = JsonParser
-				.parseObject("{\"abc\":123, \"def\":456, \"ghi\":[true, false], \"jkl\":null, \"mno\":true}");
+				.parseObject("{\"abc\":123, \"def\":456.0, \"ghi\":[true, false], \"jkl\":null, \"mno\":true}");
 
-		assertEquals("{jkl=null, abc=123.0, ghi=[true, false], def=456.0, mno=true}", o.toString());
+		assertEquals("{jkl=null, abc=123, ghi=[true, false], def=456.0, mno=true}", o.toString());
 
 		assertEquals(123, o.getInt("abc"));
 		assertEquals(456, o.getInt("def"));
@@ -105,8 +105,8 @@ public class JsonParserTest {
 	public void testNumbers() throws JsonParserException {
 		String[] testCases = new String[] { "0", "1", "-0", "-1", "0.1", "1.1", "-0.1", "0.10", "-0.10" };
 		for (String testCase : testCases) {
-			double d = (Double)JsonParser.parse(testCase);
-			assertEquals(Double.parseDouble(testCase), d, Double.MIN_NORMAL);
+			Number n = (Number)JsonParser.parse(testCase);
+			assertEquals(Double.parseDouble(testCase), n.doubleValue(), Double.MIN_NORMAL);
 		}
 	}
 

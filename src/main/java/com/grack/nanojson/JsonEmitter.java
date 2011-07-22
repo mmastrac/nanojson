@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Writer;
 import java.nio.CharBuffer;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Stack;
 
 //@formatter:off
@@ -54,24 +56,69 @@ public class JsonEmitter {
 		states.push(State.EMPTY);
 	}
 
-	public JsonEmitter array(JsonArray a) {
-		a.emit(null, this);
-		return this;
+	public JsonEmitter array(Collection<?> c) {
+		return array(null, c);
 	}
 
-	public JsonEmitter array(String key, JsonArray a) {
-		a.emit(key, this);
-		return this;
+	public JsonEmitter array(String key, Collection<?> c) {
+		if (key == null)
+			startArray();
+		else
+			startArray(key);
+
+		for (Object o : c) {
+			if (o == null)
+				nul();
+			else if (o instanceof String)
+				value((String)o);
+			else if (o instanceof Number)
+				rawValue(((Number)o).toString());
+			else if (o instanceof Boolean)
+				value((Boolean)o);
+			else if (o instanceof Collection)
+				array((Collection<?>)o);
+			else if (o instanceof Map)
+				object((Map<?, ?>)o);
+			else
+				throw new JsonEmitterException("Unable to handle type: " + o.getClass());
+		}
+
+		return endArray();
 	}
 
-	public JsonEmitter object(JsonObject o) {
-		o.emit(null, this);
-		return this;
+	public JsonEmitter object(Map<?, ?> map) {
+		return object(null, map);
 	}
 
-	public JsonEmitter object(String key, JsonObject o) {
-		o.emit(key, this);
-		return this;
+	public JsonEmitter object(String key, Map<?, ?> map) {
+		if (key == null)
+			startObject();
+		else
+			startObject(key);
+
+		for (Map.Entry<?, ?> entry : map.entrySet()) {
+			Object o = entry.getValue();
+			if (!(entry.getKey() instanceof String))
+				throw new JsonEmitterException("Invalid key type for map: "
+						+ (entry.getKey() == null ? "null" : entry.getKey().getClass()));
+			String k = (String)entry.getKey();
+			if (o == null)
+				nul(k);
+			else if (o instanceof String)
+				value(k, (String)o);
+			else if (o instanceof Number)
+				rawValue(k, ((Number)o).toString());
+			else if (o instanceof Boolean)
+				value(k, (Boolean)o);
+			else if (o instanceof Collection)
+				array(k, (Collection<?>)o);
+			else if (o instanceof Map)
+				object(k, (Map<?, ?>)o);
+			else
+				throw new JsonEmitterException("Unable to handle type: " + o.getClass());
+		}
+
+		return endObject();
 	}
 
 	/**
@@ -244,6 +291,18 @@ public class JsonEmitter {
 	public void end() {
 		if (states.peek() != State.FINI)
 			throw new JsonEmitterException("JSON was not properly balanced");
+	}
+
+	private void rawValue(String s) {
+		preValue();
+		raw(s);
+		post();
+	}
+
+	private void rawValue(String key, String s) {
+		preValue(key);
+		raw(s);
+		post();
 	}
 
 	private void raw(String s) {

@@ -15,6 +15,7 @@
  */
 package com.grack.nanojson;
 
+import java.math.BigInteger;
 import java.util.regex.Pattern;
 
 /**
@@ -125,7 +126,15 @@ public class JsonParser {
 			throw createParseException("Malformed number: " + number);
 
 		try {
-			return Double.parseDouble(number);
+			if (number.contains(".") || number.contains("e") || number.contains("E"))
+				return Double.parseDouble(number);
+			// HACK: Attempt to parse using the approximate best type for this
+			int length = number.charAt(0) == '-' ? number.length() - 1 : number.length();
+			if (length < 10) // 214 748 364 7
+				return Integer.parseInt(number);
+			if (length < 19) // 9 223 372 036 854 775 807
+				return Long.parseLong(number);
+			return new BigInteger(number);
 		} catch (NumberFormatException e) {
 			throw createParseException("Malformed number: " + number);
 		}

@@ -1,6 +1,7 @@
 package com.grack.nanojson;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 /**
@@ -27,6 +28,14 @@ public class JsonArray extends ArrayList<Object> {
 	 */
 	public JsonArray(Collection<? extends Object> collection) {
 		super(collection);
+	}
+
+	/**
+	 * Creates a {@link JsonArray} from an array of contents.
+	 */
+	public static JsonArray from(Object... contents) {
+		JsonArray array = new JsonArray(Arrays.asList(contents));
+		return array;
 	}
 
 	/**
@@ -188,31 +197,5 @@ public class JsonArray extends ArrayList<Object> {
 	 */
 	public boolean isString(int key) {
 		return get(key) instanceof String;
-	}
-
-	void emit(String key, JsonEmitter emitter) {
-		if (key == null)
-			emitter.startArray();
-		else
-			emitter.startArray(key);
-
-		for (Object o : this) {
-			if (o instanceof String)
-				emitter.value((String)o);
-			else if (o instanceof Integer)
-				emitter.value((Integer)o);
-			else if (o instanceof Number)
-				emitter.value(((Number)o).doubleValue());
-			else if (o instanceof Boolean)
-				emitter.value((Boolean)o);
-			else if (o instanceof JsonArray)
-				((JsonArray)o).emit(null, emitter);
-			else if (o instanceof JsonObject)
-				((JsonObject)o).emit(null, emitter);
-			else
-				emitter.nul();
-		}
-
-		emitter.endArray();
 	}
 }

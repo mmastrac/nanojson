@@ -340,12 +340,12 @@ public class JsonWriter {
 		}
 
 		public T object(JsonObject o) {
-			o.emit(null, emitter);
+			emitter.object(o);
 			return t;
 		}
 
 		public T array(JsonArray a) {
-			a.emit(null, emitter);
+			emitter.array(a);
 			return t;
 		}
 
@@ -360,12 +360,12 @@ public class JsonWriter {
 		}
 
 		public T object(String key, JsonObject o) {
-			o.emit(key, emitter);
+			emitter.object(key, o);
 			return t;
 		}
 
 		public T array(String key, JsonArray a) {
-			a.emit(key, emitter);
+			emitter.array(key, a);
 			return t;
 		}
 	}

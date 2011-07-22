@@ -64,8 +64,7 @@ public class JsonWriter {
 	}
 
 	/**
-	 * Context used at the top level of the {@link JsonWriter}. A single
-	 * value may be written to it.
+	 * Context used at the top level of the {@link JsonWriter}. A single value may be written to it.
 	 */
 	public interface RootValueContext<T extends RootContext> extends Context {
 		/**
@@ -110,8 +109,7 @@ public class JsonWriter {
 	}
 
 	/**
-	 * Context used when the values inside of an array are being
-	 * written.
+	 * Context used when the values inside of an array are being written.
 	 */
 	public interface ArrayContext<T extends Context> extends Context {
 		/**
@@ -138,7 +136,7 @@ public class JsonWriter {
 		 * Starts writing a nested array inside of this array.
 		 */
 		ArrayContext<ArrayContext<T>> array();
-		
+
 		/**
 		 * Writes an entire {@link JsonArray} inside of this array.
 		 */
@@ -148,7 +146,7 @@ public class JsonWriter {
 		 * Starts writing a nested object inside of this array.
 		 */
 		ObjectContext<ArrayContext<T>> object();
-		
+
 		/**
 		 * Writes an entire {@link JsonObject} instead of this array.
 		 */
@@ -161,8 +159,7 @@ public class JsonWriter {
 	}
 
 	/**
-	 * Context used when the key/value pairs of a JSON object are being
-	 * written.
+	 * Context used when the key/value pairs of a JSON object are being written.
 	 */
 	public interface ObjectContext<T extends Context> extends Context {
 		/**
@@ -194,12 +191,12 @@ public class JsonWriter {
 		 * Writes an entire {@link JsonArray} inside of this object.
 		 */
 		ObjectContext<T> array(String key, JsonArray array);
-		
+
 		/**
 		 * Starts writing a nested object inside of this object.
 		 */
 		ObjectContext<ObjectContext<T>> object(String key);
-		
+
 		/**
 		 * Writes an entire {@link JsonObject} instead of this object.
 		 */
@@ -235,8 +232,7 @@ public class JsonWriter {
 		}
 
 		@Override
-		public Appendable append(CharSequence csq, int start, int end)
-				throws IOException {
+		public Appendable append(CharSequence csq, int start, int end) throws IOException {
 			return builder.append(csq, start, end);
 		}
 	}
@@ -266,19 +262,16 @@ public class JsonWriter {
 		}
 
 		@Override
-		public Appendable append(CharSequence csq, int start, int end)
-				throws IOException {
+		public Appendable append(CharSequence csq, int start, int end) throws IOException {
 			return appendable.append(csq, start, end);
 		}
 	}
 
 	/**
-	 * Implementation for the various emit methods. Generics handle the
-	 * specialization of this class into {@link RootValueContext},
-	 * {@link ObjectContext} and {@link ArrayContext}.
+	 * Implementation for the various emit methods. Generics handle the specialization of this class into
+	 * {@link RootValueContext}, {@link ObjectContext} and {@link ArrayContext}.
 	 */
-	private abstract static class ContextImpl<T extends Context> implements
-			Context {
+	private abstract static class ContextImpl<T extends Context> implements Context {
 		protected final JsonEmitter emitter;
 		private final T t;
 
@@ -287,7 +280,7 @@ public class JsonWriter {
 		 */
 		@SuppressWarnings("unchecked")
 		public ContextImpl(JsonEmitter emitter) {
-			this.t = (T) this;
+			this.t = (T)this;
 			this.emitter = emitter;
 		}
 
@@ -377,15 +370,15 @@ public class JsonWriter {
 		}
 	}
 
-	private static class RootValueContextImpl<T extends RootContext> extends
-			ContextImpl<T> implements RootValueContext<T> {
+	private static class RootValueContextImpl<T extends RootContext> extends ContextImpl<T> implements
+			RootValueContext<T> {
 		public RootValueContextImpl(T t) {
 			super(t, new JsonEmitter(t));
 		}
 	}
 
-	private static class ArrayContextImpl<T extends Context> extends
-			ContextImpl<ArrayContext<T>> implements ArrayContext<T> {
+	private static class ArrayContextImpl<T extends Context> extends ContextImpl<ArrayContext<T>> implements
+			ArrayContext<T> {
 		private final T t;
 
 		public ArrayContextImpl(T t, JsonEmitter emitter) {
@@ -400,8 +393,8 @@ public class JsonWriter {
 		}
 	}
 
-	private static class ObjectContextImpl<T extends Context> extends
-			ContextImpl<ObjectContext<T>> implements ObjectContext<T> {
+	private static class ObjectContextImpl<T extends Context> extends ContextImpl<ObjectContext<T>> implements
+			ObjectContext<T> {
 		private final T t;
 
 		public ObjectContextImpl(T t, JsonEmitter emitter) {
@@ -420,15 +413,13 @@ public class JsonWriter {
 	 * Starts writing a {@link String}.
 	 */
 	public static RootValueContext<RootStringContext> string() {
-		return new RootValueContextImpl<RootStringContext>(
-				new RootStringContextImpl());
+		return new RootValueContextImpl<RootStringContext>(new RootStringContextImpl());
 	}
 
 	/**
 	 * Starts writing a {@link String}.
 	 */
 	public static <T extends Appendable> RootValueContext<RootAppendableContext<T>> write(T appendable) {
-		return new RootValueContextImpl<RootAppendableContext<T>>(
-				new RootAppendableContextImpl<T>(appendable));
+		return new RootValueContextImpl<RootAppendableContext<T>>(new RootAppendableContextImpl<T>(appendable));
 	}
 }

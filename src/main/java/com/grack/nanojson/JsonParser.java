@@ -62,7 +62,7 @@ public class JsonParser {
 	public static JsonObject parseObject(String input) throws JsonParserException {
 		Object o = new JsonParser(input).parse();
 		if (o instanceof JsonObject)
-			return ((JsonObject) o);
+			return ((JsonObject)o);
 
 		throw new JsonParserException("JSON did not contain an object", 0, 0);
 	}
@@ -73,7 +73,7 @@ public class JsonParser {
 	public static JsonArray parseArray(String input) throws JsonParserException {
 		Object o = new JsonParser(input).parse();
 		if (o instanceof JsonArray)
-			return ((JsonArray) o);
+			return ((JsonArray)o);
 
 		throw new JsonParserException("JSON did not contain an array", 0, 0);
 	}
@@ -158,7 +158,7 @@ public class JsonParser {
 					s.append('\r');
 					break;
 				case 'u':
-					s.append((char) Integer.parseInt(input.substring(i + 1, i + 5), 16));
+					s.append((char)Integer.parseInt(input.substring(i + 1, i + 5), 16));
 					i += 4;
 					break;
 				default:
@@ -166,7 +166,7 @@ public class JsonParser {
 					s.append(escape);
 				}
 			} else
-				s.append((char) c);
+				s.append((char)c);
 		}
 
 		return s.toString();
@@ -245,9 +245,8 @@ public class JsonParser {
 		// Consume the whole pseudo-token to make a better error message
 		while (isAsciiLetter(peekChar()) && (index - tokenStart) < 15)
 			advanceChar();
-		throw createParseException("Unexpected token '"
-				+ input.substring(tokenStart, Math.min(index, input.length())) + "'" + (expected == null ? "" : ". Did you mean '" + expected
-				+ "'?"));
+		throw createParseException("Unexpected token '" + input.substring(tokenStart, Math.min(index, input.length()))
+				+ "'" + (expected == null ? "" : ". Did you mean '" + expected + "'?"));
 	}
 
 	/**
@@ -310,7 +309,7 @@ public class JsonParser {
 		if (isAsciiLetter(peekChar()))
 			throwHelpfulException(null);
 
-		throw createParseException("Unexpected character: " + (char) c);
+		throw createParseException("Unexpected character: " + (char)c);
 	}
 
 	/**
@@ -336,7 +335,7 @@ public class JsonParser {
 					for (int i = 0; i < 4; i++)
 						stringHexChar();
 				} else if ("bfnrt/\\\"".indexOf(escape) == -1)
-					throw createParseException("Invalid escape: \\" + (char) escape);
+					throw createParseException("Invalid escape: \\" + (char)escape);
 			}
 		}
 	}

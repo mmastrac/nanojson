@@ -58,22 +58,22 @@ public class JsonEmitter {
 		a.emit(null, this);
 		return this;
 	}
-	
+
 	public JsonEmitter array(String key, JsonArray a) {
 		a.emit(key, this);
 		return this;
 	}
-	
+
 	public JsonEmitter object(JsonObject o) {
 		o.emit(null, this);
 		return this;
 	}
-	
+
 	public JsonEmitter object(String key, JsonObject o) {
 		o.emit(key, this);
 		return this;
 	}
-	
+
 	/**
 	 * Emits a 'null' token.
 	 */
@@ -238,8 +238,8 @@ public class JsonEmitter {
 	 * Ensures that the object is in the finished state.
 	 * 
 	 * @throws JsonEmitterException
-	 *             if the written JSON is not properly balanced, ie: all arrays
-	 *             and objects that were started have been properly ended.
+	 *             if the written JSON is not properly balanced, ie: all arrays and objects that were started have been
+	 *             properly ended.
 	 */
 	public void end() {
 		if (states.peek() != State.FINI)
@@ -279,8 +279,7 @@ public class JsonEmitter {
 			raw(",");
 			break;
 		case FINI:
-			throw new JsonEmitterException(
-					"Invalid call to emit a value in a finished JSON writer");
+			throw new JsonEmitterException("Invalid call to emit a value in a finished JSON writer");
 		}
 	}
 
@@ -295,10 +294,8 @@ public class JsonEmitter {
 	private void preValue() {
 		pre();
 
-		if (states.peek() == State.OBJECT_START
-				|| states.peek() == State.OBJECT) {
-			throw new JsonEmitterException(
-					"Invalid call to emit a keyless value while writing an object");
+		if (states.peek() == State.OBJECT_START || states.peek() == State.OBJECT) {
+			throw new JsonEmitterException("Invalid call to emit a keyless value while writing an object");
 		}
 	}
 
@@ -308,16 +305,13 @@ public class JsonEmitter {
 		emitStringValue(key);
 		raw(":");
 
-		if (states.peek() != State.OBJECT_START
-				&& states.peek() != State.OBJECT) {
-			throw new JsonEmitterException(
-					"Invalid call to emit a key value while not writing an object");
+		if (states.peek() != State.OBJECT_START && states.peek() != State.OBJECT) {
+			throw new JsonEmitterException("Invalid call to emit a key value while not writing an object");
 		}
 	}
 
 	/**
-	 * Emits a quoted string value, escaping characters that are required to be
-	 * escaped.
+	 * Emits a quoted string value, escaping characters that are required to be escaped.
 	 */
 	private void emitStringValue(String s) {
 		raw('"');
@@ -371,7 +365,6 @@ public class JsonEmitter {
 	 * json.org spec says that all control characters must be escaped.
 	 */
 	private boolean shouldBeEscaped(char c) {
-		return c < ' ' || (c >= '\u0080' && c < '\u00a0')
-				|| (c >= '\u2000' && c < '\u2100');
+		return c < ' ' || (c >= '\u0080' && c < '\u00a0') || (c >= '\u2000' && c < '\u2100');
 	}
 }

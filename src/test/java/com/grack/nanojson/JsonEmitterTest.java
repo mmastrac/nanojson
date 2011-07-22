@@ -1,6 +1,6 @@
 package com.grack.nanojson;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
@@ -48,7 +48,13 @@ public class JsonEmitterTest {
 		JsonEmitter emitter;
 
 		emitter = new JsonEmitter(builder);
-		emitter.startArray().value(true).value(false).value(true).endArray().end();
+		emitter
+			.startArray()
+				.value(true)
+				.value(false)
+				.value(true)
+			.endArray()
+		.end();
 		assertEquals("[true,false,true]", builder.toString());
 	}
 
@@ -61,8 +67,17 @@ public class JsonEmitterTest {
 		JsonEmitter emitter;
 
 		emitter = new JsonEmitter(builder);
-		emitter.startArray().startArray().startArray().value(true).value(false)
-				.value(true).endArray().endArray().endArray().end();
+		emitter
+			.startArray()
+				.startArray()
+					.startArray()
+						.value(true)
+						.value(false)
+						.value(true)
+					.endArray()
+				.endArray()
+			.endArray()
+		.end();
 		assertEquals("[[[true,false,true]]]", builder.toString());
 	}
 
@@ -75,8 +90,15 @@ public class JsonEmitterTest {
 		JsonEmitter emitter;
 
 		emitter = new JsonEmitter(builder);
-		emitter.startArray().value(true).startArray().startArray().value(false)
-				.endArray().endArray().value(true).endArray().end();
+		emitter.startArray()
+			.value(true)
+			.startArray()
+				.startArray()
+					.value(false)
+				.endArray()
+			.endArray()
+			.value(true)
+		.endArray().end();
 		assertEquals("[true,[[false]],true]", builder.toString());
 	}
 
@@ -86,8 +108,13 @@ public class JsonEmitterTest {
 	@Test
 	public void testObject() {
 		StringBuilder builder = new StringBuilder();
-		new JsonEmitter(builder).startObject().value("a", true)
-				.value("b", false).value("c", true).endObject().end();
+		new JsonEmitter(builder)
+			.startObject()
+				.value("a", true)
+				.value("b", false)
+				.value("c", true)
+			.endObject()
+		.end();
 		assertEquals("{\"a\":true,\"b\":false,\"c\":true}", builder.toString());
 	}
 
@@ -100,8 +127,12 @@ public class JsonEmitterTest {
 		JsonEmitter emitter;
 
 		emitter = new JsonEmitter(builder);
-		emitter.startObject().startObject("a").value("b", false)
-				.value("c", true).endObject().endObject().end();
+		emitter.startObject()
+			.startObject("a")
+				.value("b", false)
+				.value("c", true)
+			.endObject()
+		.endObject().end();
 		assertEquals("{\"a\":{\"b\":false,\"c\":true}}", builder.toString());
 	}
 }

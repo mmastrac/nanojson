@@ -17,7 +17,7 @@ public class JsonTypesTest {
 		assertEquals(1.0, o.getDouble("key"), 0.0001f);
 		assertEquals(1, o.getNumber("key"));
 		assertEquals(1, o.get("key"));
-		
+
 		assertEquals(null, o.getString("key"));
 		assertEquals("foo", o.getString("key", "foo"));
 		assertFalse(o.isNull("key"));
@@ -33,7 +33,7 @@ public class JsonTypesTest {
 		assertEquals("1", o.get("key"));
 		assertFalse(o.isNull("key"));
 	}
-	
+
 	@Test
 	public void testObjectNull() {
 		JsonObject o = new JsonObject();
@@ -53,7 +53,7 @@ public class JsonTypesTest {
 		assertEquals(1.0, o.getDouble(3), 0.0001f);
 		assertEquals(1, o.getNumber(3));
 		assertEquals(1, o.get(3));
-		
+
 		assertEquals(null, o.getString(3));
 		assertEquals("foo", o.getString(3, "foo"));
 		assertFalse(o.isNull(3));
@@ -69,7 +69,7 @@ public class JsonTypesTest {
 		assertEquals("1", o.get(3));
 		assertFalse(o.isNull(3));
 	}
-	
+
 	@Test
 	public void testArrayNull() {
 		JsonArray o = new JsonArray(Arrays.asList(null, null, null, null));

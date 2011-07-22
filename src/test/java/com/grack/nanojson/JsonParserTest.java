@@ -26,7 +26,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -106,7 +105,7 @@ public class JsonParserTest {
 	public void testNumbers() throws JsonParserException {
 		String[] testCases = new String[] { "0", "1", "-0", "-1", "0.1", "1.1", "-0.1", "0.10", "-0.10" };
 		for (String testCase : testCases) {
-			double d = (Double) JsonParser.parse(testCase);
+			double d = (Double)JsonParser.parse(testCase);
 			assertEquals(Double.parseDouble(testCase), d, Double.MIN_NORMAL);
 		}
 	}
@@ -378,7 +377,7 @@ public class JsonParserTest {
 
 			boolean positive = ze.getName().startsWith("test/pass");
 			int offset = 0;
-			int size = (int) ze.getSize();
+			int size = (int)ze.getSize();
 			byte[] buffer = new byte[size];
 			while (size > 0) {
 				int r = zip.read(buffer, offset, buffer.length - offset);

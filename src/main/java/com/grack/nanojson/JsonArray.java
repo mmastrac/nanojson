@@ -4,8 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Extends an {@link ArrayList} with helper methods to determine the underlying
- * JSON type of the list element.
+ * Extends an {@link ArrayList} with helper methods to determine the underlying JSON type of the list element.
  */
 public class JsonArray extends ArrayList<Object> {
 	private static final long serialVersionUID = 1L;
@@ -15,7 +14,7 @@ public class JsonArray extends ArrayList<Object> {
 	 */
 	public JsonArray() {
 	}
-	
+
 	/**
 	 * Creates an empty {@link JsonArray} with the default initial capacity.
 	 */
@@ -29,7 +28,7 @@ public class JsonArray extends ArrayList<Object> {
 	public JsonArray(Collection<? extends Object> collection) {
 		super(collection);
 	}
-	
+
 	/**
 	 * Returns the underlying object at the given index, or null if it does not exist.
 	 */
@@ -50,10 +49,10 @@ public class JsonArray extends ArrayList<Object> {
 	public JsonArray getArray(int key, JsonArray default_) {
 		Object o = get(key);
 		if (o instanceof JsonArray)
-			return (JsonArray) get(key);
+			return (JsonArray)get(key);
 		return default_;
 	}
-	
+
 	/**
 	 * Returns the {@link Boolean} at the given index, or false if it does not exist or is the wrong type.
 	 */
@@ -70,7 +69,7 @@ public class JsonArray extends ArrayList<Object> {
 			return (Boolean)o;
 		return default_;
 	}
-	
+
 	/**
 	 * Returns the {@link Double} at the given index, or 0.0 if it does not exist or is the wrong type.
 	 */
@@ -87,7 +86,7 @@ public class JsonArray extends ArrayList<Object> {
 			return ((Number)o).doubleValue();
 		return default_;
 	}
-	
+
 	/**
 	 * Returns the {@link Integer} at the given index, or 0 if it does not exist or is the wrong type.
 	 */
@@ -104,7 +103,7 @@ public class JsonArray extends ArrayList<Object> {
 			return ((Number)o).intValue();
 		return default_;
 	}
-	
+
 	/**
 	 * Returns the {@link Number} at the given index, or null if it does not exist or is the wrong type.
 	 */
@@ -135,7 +134,7 @@ public class JsonArray extends ArrayList<Object> {
 	public JsonObject getObject(int key, JsonObject default_) {
 		Object o = get(key);
 		if (o instanceof JsonObject)
-			return (JsonObject) get(key);
+			return (JsonObject)get(key);
 		return default_;
 	}
 
@@ -152,10 +151,10 @@ public class JsonArray extends ArrayList<Object> {
 	public String getString(int key, String default_) {
 		Object o = get(key);
 		if (o instanceof String)
-			return (String) get(key);
+			return (String)get(key);
 		return default_;
 	}
-	
+
 	/**
 	 * Returns true if the array has an element at that index (even if that element is null).
 	 */
@@ -183,14 +182,14 @@ public class JsonArray extends ArrayList<Object> {
 	public boolean isNumber(int key) {
 		return get(key) instanceof Number;
 	}
-	
+
 	/**
 	 * Returns true if the array has a string element at that index.
 	 */
 	public boolean isString(int key) {
 		return get(key) instanceof String;
 	}
-	
+
 	void emit(String key, JsonEmitter emitter) {
 		if (key == null)
 			emitter.startArray();
@@ -213,7 +212,7 @@ public class JsonArray extends ArrayList<Object> {
 			else
 				emitter.nul();
 		}
-		
+
 		emitter.endArray();
 	}
 }

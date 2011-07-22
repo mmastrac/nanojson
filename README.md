@@ -20,6 +20,7 @@ nanojson is a tiny, compliant JSON parser and writer for Java.
 There are three entry points for parsing: `JsonParser.parse()`, `JsonParser.parseObject`, and `JsonParser.parseArray`. They either return the parsed object or throw a `JsonParserException`.
 
     JsonObject obj = JsonParser.parseObject("{\"abc\":123}");
+    JsonArray array = JsonParser.parseArray("[1,2,3]");
 
 Errors can be quickly located by using `getLinePosition` and `getCharPosition` on `JsonParserException`:
 
@@ -43,19 +44,19 @@ There are two styles of JSON writing in nanojson, represented by two classes.
 for managing array and object contexts. `startArray`, `startObject` and the `value` methods each have two overloads: one with a key prefix for writing
 objects and the other for writing raw JSON values or within an array.
 
-	StringBuilder builder = new StringBuilder();
-	new JsonEmitter(builder)
-     	.startObject()
-         	.startArray("a")
-             	.value(1)
-             	.value(2)
-            .endArray()
-			.value("b", false)
-			.value("c", true)
-		.endObject()
-	.end();
+    StringBuilder builder = new StringBuilder();
+    new JsonEmitter(builder)
+      .startObject()
+         .startArray("a")
+           .value(1)
+           .value(2)
+         .endArray()
+         .value("b", false)
+         .value("c", true)
+      .endObject()
+    .end();
 	
-	-> {"a":[1,2],"b":false,"c":true}
+    -> {"a":[1,2],"b":false,"c":true}
 
 If you attempt to write invalid JSON, `JsonEmitter` will throw a runtime `JsonEmitterException`.
 
@@ -80,6 +81,19 @@ Caveat: because of its use of generics, it cannot be used to write JSON where th
 	.end();
 	
 	-> [true,{a:[true,false],b:"string"}]
+
+You can also emit `JsonObject` and `JsonArray` objects into the tree using the object(...) and array(...) methods like so:
+
+    JsonObject obj = JsonParser.parseObject("{\"a\":1}");
+    JsonArray array = JsonParser.parseArray("[1,2,3]");
+	String json = JsonWriter.string()
+		.array()
+			.object(obj)
+			.array(array)
+		.end()
+	.end();
+	
+	-> [{a:1},[1,2,3]]
 
 ## Compliance
 

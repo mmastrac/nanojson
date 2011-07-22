@@ -44,19 +44,19 @@ There are two styles of JSON writing in nanojson, represented by two classes.
 for managing array and object contexts. `startArray`, `startObject` and the `value` methods each have two overloads: one with a key prefix for writing
 objects and the other for writing raw JSON values or within an array.
 
-  StringBuilder builder = new StringBuilder();
-  new JsonEmitter(builder)
-    .startObject()
-       .startArray("a")
-         .value(1)
-         .value(2)
-       .endArray()
-       .value("b", false)
-       .value("c", true)
-    .endObject()
-  .end();
+    StringBuilder builder = new StringBuilder();
+    new JsonEmitter(builder)
+      .startObject()
+         .startArray("a")
+           .value(1)
+           .value(2)
+         .endArray()
+         .value("b", false)
+         .value("c", true)
+      .endObject()
+    .end();
 	
-  -> {"a":[1,2],"b":false,"c":true}
+    -> {"a":[1,2],"b":false,"c":true}
 
 If you attempt to write invalid JSON, `JsonEmitter` will throw a runtime `JsonEmitterException`.
 

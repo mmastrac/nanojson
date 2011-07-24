@@ -96,6 +96,9 @@ public class JsonParserTest {
 		assertEquals("/", JsonParser.parse("\"/\""));
 		assertEquals("\\", JsonParser.parse("\"\\\\\""));
 		assertEquals("\"", JsonParser.parse("\"\\\"\""));
+		assertEquals("\0", JsonParser.parse("\"\\u0000\""));
+		assertEquals("\u8000", JsonParser.parse("\"\\u8000\""));
+		assertEquals("\uffff", JsonParser.parse("\"\\uffff\""));
 
 		assertEquals("all together: \\/\n\r\t\b\f (fin)",
 				JsonParser.parse("\"all together: \\\\\\/\\n\\r\\t\\b\\f (fin)\""));
@@ -103,7 +106,8 @@ public class JsonParserTest {
 
 	@Test
 	public void testNumbers() throws JsonParserException {
-		String[] testCases = new String[] { "0", "1", "-0", "-1", "0.1", "1.1", "-0.1", "0.10", "-0.10" };
+		String[] testCases = new String[] { "0", "1", "-0", "-1", "0.1", "1.1", "-0.1", "0.10", "-0.10", "0e1", "0e0",
+				"-0e-1", "0.0e0", "-0.0e0" };
 		for (String testCase : testCases) {
 			Number n = (Number)JsonParser.parse(testCase);
 			assertEquals(Double.parseDouble(testCase), n.doubleValue(), Double.MIN_NORMAL);
@@ -117,7 +121,8 @@ public class JsonParserTest {
 
 	@Test
 	public void testFailNumberEdgeCases() {
-		String[] edgeCases = { "01", "-01", "+01", ".1", "-.1", "+.1", "+1", "0.", "-0." };
+		String[] edgeCases = { "01", "-01", "+01", ".1", "-.1", "+.1", "+1", "0.", "-0.", "+0.", "0.e", "-0.e", "+0.e",
+				"0e", "-0e", "+0e" };
 		for (String edgeCase : edgeCases) {
 			try {
 				JsonParser.parse(edgeCase);
@@ -177,6 +182,50 @@ public class JsonParserTest {
 		try {
 			// Bad escape "\x" in middle of string
 			JsonParser.parse("\"abc\\x\"");
+			fail();
+		} catch (JsonParserException e) {
+			testException(e, 1, 1);
+		}
+	}
+
+	@Test
+	public void testFailBustedString4() {
+		try {
+			// Bad escape "\\u123x" in middle of string
+			JsonParser.parse("\"\\u123x\"");
+			fail();
+		} catch (JsonParserException e) {
+			testException(e, 1, 1);
+		}
+	}
+
+	@Test
+	public void testFailBustedString5() {
+		try {
+			// Incomplete unicode escape
+			JsonParser.parse("\"\\uggg\"");
+			fail();
+		} catch (JsonParserException e) {
+			testException(e, 1, 1);
+		}
+	}
+
+	@Test
+	public void testFailBustedString6() {
+		try {
+			// String that terminates halfway through a unicode escape
+			JsonParser.parse("\"\\uggg");
+			fail();
+		} catch (JsonParserException e) {
+			testException(e, 1, 1);
+		}
+	}
+
+	@Test
+	public void testFailBustedString7() {
+		try {
+			// String that terminates halfway through a regular escape
+			JsonParser.parse("\"\\");
 			fail();
 		} catch (JsonParserException e) {
 			testException(e, 1, 1);
@@ -348,7 +397,7 @@ public class JsonParserTest {
 		@SuppressWarnings("unused")
 		String json2 = JsonWriter.string().object(o2).end();
 
-		// This doesn't work yet...
+		// This doesn't work - keys don't sort properly
 		// assertEquals(json, json2);
 	}
 

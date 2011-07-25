@@ -340,7 +340,7 @@ public class JsonEmitter {
 		case FINI:
 			throw new JsonEmitterException("Invalid call to emit a value in a finished JSON writer");
 		default:
-			throw new JsonEmitterException("Invalid state");
+			// Nothing
 		}
 	}
 
@@ -351,7 +351,7 @@ public class JsonEmitter {
 			states.push(State.FINI);
 			break;
 		default:
-			throw new JsonEmitterException("Invalid state");
+			// Nothing
 		}
 	}
 

@@ -15,8 +15,9 @@
  */
 package com.grack.nanojson;
 
+import java.io.IOException;
+import java.io.Reader;
 import java.math.BigInteger;
-import java.util.regex.Pattern;
 
 /**
  * Simple JSON parser.
@@ -27,27 +28,49 @@ import java.util.regex.Pattern;
  * JsonArray json = {@link JsonParser}.parseArray("[1, {\"a\":[true,false], \"b\":1}]");
  * </pre>
  */
-public class JsonParser {
-	private final String input;
-	private int index, linePos = 1, charPos = 0;
-
+public final class JsonParser {
+	private int linePos = 1, rowPos = 0;
+	private boolean eof;
+	private int index;
+	private Object value;
 	private Token token;
 	private int tokenStart, tokenLinePos, tokenCharPos;
-
-	/**
-	 * Regex representation of http://json.org/number.gif.
-	 */
-	private static final Pattern NUMBER_PATTERN = Pattern.compile("-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?");
+	private StringBuilder stringToken = new StringBuilder(20);
+	private final Reader reader;
+	private final char[] buffer;
+	private int bufferLength;
+	private static final char[] TRUE = { 'r', 'u', 'e' };
+	private static final char[] FALSE = { 'a', 'l', 's', 'e' };
+	private static final char[] NULL = { 'u', 'l', 'l' };
 
 	/**
 	 * The tokens available in JSON.
 	 */
-	private enum Token {
-		EOF, NULL, TRUE, FALSE, STRING, NUMBER, COMMA, COLON, OBJECT_START, OBJECT_END, ARRAY_START, ARRAY_END
+	enum Token {
+		EOF(false), NULL(true), TRUE(true), FALSE(true), STRING(true), NUMBER(true), COMMA(false), COLON(false), //
+		OBJECT_START(true), OBJECT_END(false), ARRAY_START(true), ARRAY_END(false);
+		boolean isValue;
+
+		Token(boolean isValue) {
+			this.isValue = isValue;
+		}
 	}
 
-	private JsonParser(String input) {
-		this.input = input;
+	private JsonParser(Reader reader) throws JsonParserException {
+		this.reader = reader;
+		this.buffer = new char[32 * 1024];
+		try {
+			eof = refillBuffer();
+		} catch (IOException e) {
+			throw createParseException(e, "IOException");
+		}
+	}
+
+	private JsonParser(String input) throws JsonParserException {
+		this.reader = null;
+		this.buffer = input.toCharArray();
+		this.bufferLength = buffer.length;
+		eof = (bufferLength == 0);
 	}
 
 	/**
@@ -61,7 +84,7 @@ public class JsonParser {
 	 * Parses a string into a {@link JsonObject}.
 	 */
 	public static JsonObject parseObject(String input) throws JsonParserException {
-		Object o = new JsonParser(input).parse();
+		Object o = parse(input);
 		if (o instanceof JsonObject)
 			return ((JsonObject)o);
 
@@ -72,7 +95,36 @@ public class JsonParser {
 	 * Parses a string into a {@link JsonArray}.
 	 */
 	public static JsonArray parseArray(String input) throws JsonParserException {
-		Object o = new JsonParser(input).parse();
+		Object o = parse(input);
+		if (o instanceof JsonArray)
+			return ((JsonArray)o);
+
+		throw new JsonParserException("JSON did not contain an array", 0, 0);
+	}
+
+	/**
+	 * Parses a string into the appropriate root object for the given JSON.
+	 */
+	public static Object parse(Reader reader) throws JsonParserException {
+		return new JsonParser(reader).parse();
+	}
+
+	/**
+	 * Parses a string into a {@link JsonObject}.
+	 */
+	public static JsonObject parseObject(Reader reader) throws JsonParserException {
+		Object o = parse(reader);
+		if (o instanceof JsonObject)
+			return ((JsonObject)o);
+
+		throw new JsonParserException("JSON did not contain an object", 0, 0);
+	}
+
+	/**
+	 * Parses a string into a {@link JsonArray}.
+	 */
+	public static JsonArray parseArray(Reader reader) throws JsonParserException {
+		Object o = parse(reader);
 		if (o instanceof JsonArray)
 			return ((JsonArray)o);
 
@@ -82,224 +134,129 @@ public class JsonParser {
 	/**
 	 * Parse a single JSON value from the string, expecting an EOF at the end.
 	 */
-	private Object parse() throws JsonParserException {
-		advanceToken();
-		Object value = parseJsonValue();
-		if (advanceToken() != Token.EOF)
-			throw createParseException("Expected end of input, got " + token);
-		return value;
+	Object parse() throws JsonParserException {
+		try {
+			advanceToken();
+			Object value = currentValue();
+			if (advanceToken() != Token.EOF)
+				throw createParseException("Expected end of input, got " + token);
+			return value;
+		} catch (IOException e) {
+			throw createParseException(e, "IOException");
+		}
 	}
 
 	/**
 	 * Starts parsing a JSON value at the current token position.
 	 */
-	private Object parseJsonValue() throws JsonParserException {
-		switch (token) {
-		case TRUE:
-			return Boolean.TRUE;
-		case FALSE:
-			return Boolean.FALSE;
-		case NULL:
-			return null;
-		case STRING:
-			return tokenAsString();
-		case NUMBER:
-			return tokenAsNumber();
-		case ARRAY_START:
-			return parseArray();
-		case OBJECT_START:
-			return parseObject();
-		default:
-			// Nothing else should appear when we're in the context of parsing a JSON value
-			throw createParseException("Expected JSON value, got " + token);
-		}
-	}
-
-	/**
-	 * Parses the current token as a number by passing it into {@link Double#parseDouble(String)}.
-	 */
-	private Object tokenAsNumber() throws JsonParserException {
-		String number = input.substring(tokenStart, index);
-
-		// Special zero handling to match JSON spec. Leading zero is only allowed if next character is . or e or E.
-		if (!NUMBER_PATTERN.matcher(number).matches())
-			throw createParseException("Malformed number: " + number);
-
-		try {
-			if (number.contains(".") || number.contains("e") || number.contains("E"))
-				return Double.parseDouble(number);
-			// HACK: Attempt to parse using the approximate best type for this
-			int length = number.charAt(0) == '-' ? number.length() - 1 : number.length();
-			if (length < 10) // 214 748 364 7
-				return Integer.parseInt(number);
-			if (length < 19) // 9 223 372 036 854 775 807
-				return Long.parseLong(number);
-			return new BigInteger(number);
-		} catch (NumberFormatException e) {
-			throw createParseException("Malformed number: " + number);
-		}
-	}
-
-	/**
-	 * Parses the current token as a string. Assumes the tokenizer has left the quotes at the beginning and end of the
-	 * string.
-	 */
-	private String tokenAsString() throws JsonParserException {
-		StringBuilder s = new StringBuilder();
-		for (int i = tokenStart + 1; i < index - 1; i++) {
-			int c = input.charAt(i);
-			if (c == '\\') {
-				char escape = input.charAt(++i);
-				switch (escape) {
-				case 'n':
-					s.append('\n');
-					break;
-				case 't':
-					s.append('\t');
-					break;
-				case 'b':
-					s.append('\b');
-					break;
-				case 'f':
-					s.append('\f');
-					break;
-				case 'r':
-					s.append('\r');
-					break;
-				case 'u':
-					s.append((char)Integer.parseInt(input.substring(i + 1, i + 5), 16));
-					i += 4;
-					break;
-				default:
-					// Assume the tokenizer ensured that this was a valid escape
-					s.append(escape);
-				}
-			} else
-				s.append((char)c);
-		}
-
-		return s.toString();
-	}
-
-	/**
-	 * Parses a JSON object from the current token. Assumes that a {@link Token#OBJECT_START} has been consumed.
-	 */
-	private JsonObject parseObject() throws JsonParserException {
-		JsonObject map = new JsonObject();
-		boolean first = true;
-		while (true) {
-			if (advanceToken() == Token.OBJECT_END)
-				return map;
-
-			if (first)
-				first = false;
-			else {
-				if (token != Token.COMMA)
-					throw createParseException("Expected COMMA, got " + token);
-				advanceToken();
-
-				if (token == Token.OBJECT_END)
-					throw createParseException("Trailing comma in object");
-			}
-
-			if (token != Token.STRING)
-				throw createParseException("Expected STRING, got " + token);
-
-			String key = tokenAsString();
-			if (advanceToken() != Token.COLON)
-				throw createParseException("Expected COLON, got " + token);
-			advanceToken();
-			map.put(key, parseJsonValue());
-		}
-	}
-
-	/**
-	 * Parses a JSON array from the current token. Assumes that a {@link Token#ARRAY_START} has been consumed.
-	 */
-	private JsonArray parseArray() throws JsonParserException {
-		JsonArray list = new JsonArray();
-		boolean first = true;
-		while (true) {
-			if (advanceToken() == Token.ARRAY_END)
-				return list;
-
-			if (first)
-				first = false;
-			else {
-				if (token != Token.COMMA)
-					throw createParseException("Expected a comma, got " + token);
-				advanceToken();
-			}
-
-			list.add(parseJsonValue());
-		}
+	private Object currentValue() throws JsonParserException {
+		// Only a value start token should appear when we're in the context of parsing a JSON value
+		if (token.isValue)
+			return value;
+		throw createParseException("Expected JSON value, got " + token);
 	}
 
 	/**
 	 * Expects a given string at the current position.
 	 */
-	private void expect(String expected) throws JsonParserException {
-		for (int i = 0; i < expected.length() - 1; i++) {
-			int c = advanceChar();
-			if (c != expected.charAt(i + 1))
-				throwHelpfulException(expected);
+	private void expect(int first, char[] expected) throws JsonParserException, IOException {
+		for (int i = 0; i < expected.length; i++) {
+			if (advanceChar() != expected[i])
+				throwHelpfulException(first, expected, i);
 		}
 
 		// The token should end with something other than an ASCII letter
 		if (isAsciiLetter(peekChar()))
-			throwHelpfulException(expected);
+			throwHelpfulException(first, expected, expected.length);
 	}
 
-	private void throwHelpfulException(String expected) throws JsonParserException {
+	private void throwHelpfulException(int c, char[] expected, int i) throws JsonParserException, IOException {
+		// Build the first part of the token
+		String token = (char)c + (expected == null ? "" : new String(expected, 0, i));
+
 		// Consume the whole pseudo-token to make a better error message
 		while (isAsciiLetter(peekChar()) && (index - tokenStart) < 15)
-			advanceChar();
-		throw createParseException("Unexpected token '" + input.substring(tokenStart, Math.min(index, input.length()))
-				+ "'" + (expected == null ? "" : ". Did you mean '" + expected + "'?"));
+			token += (char)advanceChar();
+		throw createParseException("Unexpected token '" + token + "'"
+				+ (expected == null ? "" : ". Did you mean '" + (char)c + new String(expected) + "'?"));
 	}
 
 	/**
 	 * Consumes a token, first eating up any whitespace ahead of it. Note that number tokens are not necessarily valid
 	 * numbers.
 	 */
-	private Token advanceToken() throws JsonParserException {
+	private Token advanceToken() throws JsonParserException, IOException {
 		int c = advanceChar();
 		while (isWhitespace(c))
 			c = advanceChar();
 
 		tokenStart = index - 1;
 		tokenLinePos = linePos;
-		tokenCharPos = charPos;
+		tokenCharPos = index - rowPos;
 
 		switch (c) {
 		case -1:
 			return token = Token.EOF;
-		case '[':
+		case '[': { // Inline to avoid additional stack
+			JsonArray list = new JsonArray();
+			if (advanceToken() != Token.ARRAY_END)
+				while (true) {
+					list.add(currentValue());
+					if (advanceToken() == Token.ARRAY_END)
+						break;
+					if (token != Token.COMMA)
+						throw createParseException("Expected a comma or end of the array instead of " + token);
+					if (advanceToken() == Token.ARRAY_END)
+						throw createParseException("Trailing comma found in array");
+				}
+			value = list;
 			return token = Token.ARRAY_START;
+		}
 		case ']':
 			return token = Token.ARRAY_END;
 		case ',':
 			return token = Token.COMMA;
 		case ':':
 			return token = Token.COLON;
-		case '{':
+		case '{': { // Inline to avoid additional stack
+			JsonObject map = new JsonObject();
+			if (advanceToken() != Token.OBJECT_END)
+				while (true) {
+					if (token != Token.STRING)
+						throw createParseException("Expected STRING, got " + token);
+					String key = (String)value;
+					if (advanceToken() != Token.COLON)
+						throw createParseException("Expected COLON, got " + token);
+					advanceToken();
+					map.put(key, currentValue());
+					if (advanceToken() == Token.OBJECT_END)
+						break;
+					if (token != Token.COMMA)
+						throw createParseException("Expected a comma or end of the object instead of " + token);
+					if (advanceToken() == Token.OBJECT_END)
+						throw createParseException("Trailing object found in array");
+				}
+			value = map;
 			return token = Token.OBJECT_START;
+		}
 		case '}':
 			return token = Token.OBJECT_END;
 		case 't':
-			expect("true");
+			expect(c, TRUE);
+			value = Boolean.TRUE;
 			return token = Token.TRUE;
 		case 'f':
-			expect("false");
+			expect(c, FALSE);
+			value = Boolean.FALSE;
 			return token = Token.FALSE;
 		case 'n':
-			expect("null");
+			expect(c, NULL);
+			value = null;
 			return token = Token.NULL;
 		case '\"':
-			advanceTokenString();
+			value = advanceTokenString();
 			return token = Token.STRING;
 		case '-':
-		case '+':
 		case '.':
 		case '0':
 		case '1':
@@ -311,12 +268,14 @@ public class JsonParser {
 		case '7':
 		case '8':
 		case '9':
-			advanceTokenNumber();
+			value = advanceTokenNumber(c);
 			return token = Token.NUMBER;
+		case '+':
+			throw createParseException("Numbers may not start with '+'");
 		}
 
 		if (isAsciiLetter(peekChar()))
-			throwHelpfulException(null);
+			throwHelpfulException(c, null, 0);
 
 		throw createParseException("Unexpected character: " + (char)c);
 	}
@@ -324,58 +283,133 @@ public class JsonParser {
 	/**
 	 * Steps through to the end of the current number token (a non-digit token).
 	 */
-	private void advanceTokenNumber() {
-		while (isDigitCharacter(peekChar()))
-			advanceChar();
+	private Number advanceTokenNumber(int c) throws JsonParserException, IOException {
+		stringToken.setLength(0);
+		stringToken.append((char)c);
+		boolean isDouble = false;
+		while (isDigitCharacter(peekChar())) {
+			char next = (char)advanceChar();
+			isDouble |= next == '.' || next == 'e' || next == 'E';
+			stringToken.append(next);
+		}
+
+		String number = stringToken.toString();
+
+		try {
+			if (isDouble) {
+				// Special zero handling to match JSON spec. Leading zero is only allowed if next character is . or e
+				if (number.charAt(0) == '0') {
+					if (number.charAt(1) == '.') {
+						if (number.length() == 2)
+							throw createParseException("Malformed number: " + number);
+					} else if (number.charAt(1) != 'e' && number.charAt(1) != 'E')
+						throw createParseException("Malformed number: " + number);
+				}
+				if (number.length() > 1 && number.charAt(0) == '-') {
+					if (number.charAt(1) == '0') {
+						if (number.charAt(2) == '.') {
+							if (number.length() == 3)
+								throw createParseException("Malformed number: " + number);
+						} else if (number.charAt(2) != 'e' && number.charAt(2) != 'E')
+							throw createParseException("Malformed number: " + number);
+					} else if (number.charAt(1) == '.') {
+						throw createParseException("Malformed number: " + number);
+					}
+				}
+
+				return Double.parseDouble(number);
+			}
+
+			// Special zero handling to match JSON spec. No leading zeros allowed for integers.
+			if (number.charAt(0) == '0') {
+				if (number.length() == 1)
+					return 0;
+				throw createParseException("Malformed number: " + number);
+			}
+			if (number.length() > 1 && number.charAt(0) == '-' && number.charAt(1) == '0') {
+				if (number.length() == 2)
+					return 0;
+				throw createParseException("Malformed number: " + number);
+			}
+
+			// HACK: Attempt to parse using the approximate best type for this
+			int length = number.charAt(0) == '-' ? number.length() - 1 : number.length();
+			if (length < 10) // 214 748 364 7
+				return Integer.parseInt(number);
+			if (length < 19) // 9 223 372 036 854 775 807
+				return Long.parseLong(number);
+			return new BigInteger(number);
+		} catch (NumberFormatException e) {
+			throw createParseException(e, "Malformed number: " + number);
+		}
 	}
 
 	/**
 	 * Steps through to the end of the current string token (the unescaped double quote).
 	 */
-	private void advanceTokenString() throws JsonParserException {
+	private String advanceTokenString() throws JsonParserException, IOException {
+		stringToken.setLength(0);
 		while (true) {
-			int c = stringChar();
+			char c = stringChar();
 			if (c == '\"')
 				break;
 
 			if (c == '\\') {
-				int escape = stringChar();
-				if (escape == 'u') {
-					for (int i = 0; i < 4; i++)
-						stringHexChar();
-				} else if ("bfnrt/\\\"".indexOf(escape) == -1)
+				int escape = advanceChar();
+				switch (escape) {
+				case 'b':
+					stringToken.append('\b');
+					break;
+				case 'f':
+					stringToken.append('\f');
+					break;
+				case 'n':
+					stringToken.append('\n');
+					break;
+				case 'r':
+					stringToken.append('\r');
+					break;
+				case 't':
+					stringToken.append('\t');
+					break;
+				case '"':
+				case '/':
+				case '\\':
+					stringToken.append((char)escape);
+					break;
+				case 'u':
+					stringToken
+							.append((char)(stringHexChar() << 12 | stringHexChar() << 8 | stringHexChar() << 4 | stringHexChar()));
+					break;
+				default:
 					throw createParseException("Invalid escape: \\" + (char)escape);
-			}
+				}
+			} else
+				stringToken.append(c);
 		}
+		return stringToken.toString();
 	}
 
 	/**
 	 * Advances a character, throwing if it is illegal in the context of a JSON string.
 	 */
-	private int stringChar() throws JsonParserException {
+	private char stringChar() throws JsonParserException, IOException {
 		int c = advanceChar();
 		if (c == -1)
 			throw createParseException("String was not terminated before end of input");
 		if (c < 32)
 			throw createParseException("Strings may not contain control characters: 0x" + Integer.toString(c, 16));
-		return c;
+		return (char)c;
 	}
 
 	/**
 	 * Advances a character, throwing if it is illegal in the context of a JSON string hex unicode escape.
 	 */
-	private int stringHexChar() throws JsonParserException {
-		int c = stringChar();
-		if (isHexCharacter(c))
-			return c;
-		throw createParseException("Expected unicode hex escape character");
-	}
-
-	/**
-	 * Quick test for hex digit characters.
-	 */
-	private boolean isHexCharacter(int c) {
-		return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+	private int stringHexChar() throws JsonParserException, IOException {
+		int c = Character.digit(advanceChar(), 16);
+		if (c == -1)
+			throw createParseException("Expected unicode hex escape character");
+		return c;
 	}
 
 	/**
@@ -399,30 +433,40 @@ public class JsonParser {
 		return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 	}
 
+	private boolean refillBuffer() throws JsonParserException, IOException {
+		int r = reader.read(buffer, 0, buffer.length);
+		if (r <= 0)
+			return true;
+		bufferLength = r;
+		index = 0;
+		tokenStart = 0;
+		return false;
+	}
+
 	/**
 	 * Peek one char ahead, don't advance, returns {@link Token#EOF} on end of input.
 	 */
 	private int peekChar() {
-		int i = index;
-		if (i >= input.length())
+		if (eof)
 			return -1;
-		return input.charAt(i);
+		return buffer[index];
 	}
 
 	/**
 	 * Advance one character ahead, or return {@link Token#EOF} on end of input.
 	 */
-	private int advanceChar() {
-		int i = index++;
-		if (i >= input.length())
+	private int advanceChar() throws JsonParserException, IOException {
+		if (eof)
 			return -1;
-		char c = input.charAt(i);
+		int c = buffer[index];
 		if (c == '\n') {
 			linePos++;
-			charPos = 0;
-		} else {
-			charPos++;
+			rowPos = index + 1;
 		}
+
+		index++;
+		if (index >= bufferLength)
+			eof = (reader == null) ? true : refillBuffer();
 
 		return c;
 	}
@@ -433,5 +477,13 @@ public class JsonParser {
 	private JsonParserException createParseException(String message) {
 		return new JsonParserException(message + " on line " + tokenLinePos + ", char " + tokenCharPos, tokenLinePos,
 				tokenCharPos);
+	}
+
+	/**
+	 * Creates a {@link JsonParserException} and fills it from the current line and char position.
+	 */
+	private JsonParserException createParseException(Exception e, String message) {
+		return new JsonParserException(e, message + " on line " + tokenLinePos + ", char " + tokenCharPos,
+				tokenLinePos, tokenCharPos);
 	}
 }

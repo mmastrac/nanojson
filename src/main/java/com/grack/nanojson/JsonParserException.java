@@ -29,6 +29,12 @@ public class JsonParserException extends Exception {
 		this.charPos = charPos;
 	}
 
+	public JsonParserException(Exception e, String message, int linePos, int charPos) {
+		super(message, e);
+		this.linePos = linePos;
+		this.charPos = charPos;
+	}
+
 	public int getLinePosition() {
 		return linePos;
 	}

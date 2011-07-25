@@ -39,9 +39,33 @@ public class JsonParserTest {
 	}
 
 	@Test
+	public void testObjectOneElement() throws JsonParserException {
+		assertEquals(JsonObject.class, JsonParser.parse("{\"a\":1}").getClass());
+		assertEquals("{a=1}", JsonParser.parse("{\"a\":1}").toString());
+	}
+
+	@Test
+	public void testObjectTwoElements() throws JsonParserException {
+		assertEquals(JsonObject.class, JsonParser.parse("{\"a\":1,\"b\":1}").getClass());
+		assertEquals("{b=1, a=1}", JsonParser.parse("{\"a\":1,\"b\":1}").toString());
+	}
+
+	@Test
 	public void testEmptyArray() throws JsonParserException {
 		assertEquals(JsonArray.class, JsonParser.parse("[]").getClass());
 		assertEquals("[]", JsonParser.parse("[]").toString());
+	}
+
+	@Test
+	public void testArrayOneElement() throws JsonParserException {
+		assertEquals(JsonArray.class, JsonParser.parse("[1]").getClass());
+		assertEquals("[1]", JsonParser.parse("[1]").toString());
+	}
+
+	@Test
+	public void testArrayTwoElements() throws JsonParserException {
+		assertEquals(JsonArray.class, JsonParser.parse("[1,1]").getClass());
+		assertEquals("[1, 1]", JsonParser.parse("[1,1]").toString());
 	}
 
 	@Test
@@ -117,6 +141,36 @@ public class JsonParserTest {
 	@Test
 	public void testBigint() throws JsonParserException {
 		JsonParser.parse("{\"v\":123456789123456789123456789}");
+	}
+
+	@Test
+	public void testFailNoJson1() {
+		try {
+			JsonParser.parse("");
+			fail("Should have failed to parse");
+		} catch (JsonParserException e) {
+			testException(e, 1, 0);
+		}
+	}
+
+	@Test
+	public void testFailNoJson2() {
+		try {
+			JsonParser.parse(" ");
+			fail("Should have failed to parse");
+		} catch (JsonParserException e) {
+			testException(e, 1, 1);
+		}
+	}
+
+	@Test
+	public void testFailNoJson3() {
+		try {
+			JsonParser.parse("  ");
+			fail("Should have failed to parse");
+		} catch (JsonParserException e) {
+			testException(e, 1, 2);
+		}
 	}
 
 	@Test
@@ -273,6 +327,26 @@ public class JsonParserTest {
 	}
 
 	@Test
+	public void testFailObjectBadKey1() {
+		try {
+			JsonParser.parse("{true:1}");
+			fail();
+		} catch (JsonParserException e) {
+			testException(e, 1, 2);
+		}
+	}
+
+	@Test
+	public void testFailObjectBadKey2() {
+		try {
+			JsonParser.parse("{2:1}");
+			fail();
+		} catch (JsonParserException e) {
+			testException(e, 1, 2);
+		}
+	}
+
+	@Test
 	public void testFailObjectBadColon1() {
 		try {
 			JsonParser.parse("{\"abc\":}");
@@ -308,7 +382,7 @@ public class JsonParserTest {
 			JsonParser.parse("truef");
 			fail();
 		} catch (JsonParserException e) {
-			testException(e, 1, 1);
+			testException(e, 1, 1, "'truef'");
 		}
 	}
 
@@ -328,7 +402,7 @@ public class JsonParserTest {
 			JsonParser.parse("tru");
 			fail();
 		} catch (JsonParserException e) {
-			testException(e, 1, 1);
+			testException(e, 1, 1, "'tru'");
 		}
 	}
 
@@ -338,7 +412,7 @@ public class JsonParserTest {
 			JsonParser.parse("[truef,true]");
 			fail();
 		} catch (JsonParserException e) {
-			testException(e, 1, 2);
+			testException(e, 1, 2, "'truef'");
 		}
 	}
 
@@ -348,7 +422,7 @@ public class JsonParserTest {
 			JsonParser.parse("grue");
 			fail();
 		} catch (JsonParserException e) {
-			testException(e, 1, 1);
+			testException(e, 1, 1, "'grue'");
 		}
 	}
 
@@ -358,7 +432,7 @@ public class JsonParserTest {
 			JsonParser.parse("trueeeeeeeeeeeeeeeeeeee");
 			fail();
 		} catch (JsonParserException e) {
-			testException(e, 1, 1);
+			testException(e, 1, 1, "'trueeeeeeeeeeee'");
 		}
 	}
 
@@ -472,5 +546,11 @@ public class JsonParserTest {
 	private void testException(JsonParserException e, int linePos, int charPos) {
 		assertEquals("line " + linePos + " char " + charPos,
 				"line " + e.getLinePosition() + " char " + e.getCharPosition());
+	}
+
+	private void testException(JsonParserException e, int linePos, int charPos, String inError) {
+		assertEquals("line " + linePos + " char " + charPos,
+				"line " + e.getLinePosition() + " char " + e.getCharPosition());
+		assertTrue("Error did not contain '" + inError + "': " + e.getMessage(), e.getMessage().contains(inError));
 	}
 }

@@ -22,17 +22,13 @@ public class JsonParserException extends Exception {
 	private static final long serialVersionUID = 1L;
 	private final int linePos;
 	private final int charPos;
+	private final int charOffset;
 
-	JsonParserException(String message, int linePos, int charPos) {
-		super(message);
-		this.linePos = linePos;
-		this.charPos = charPos;
-	}
-
-	JsonParserException(Exception e, String message, int linePos, int charPos) {
+	JsonParserException(Exception e, String message, int linePos, int charPos, int charOffset) {
 		super(message, e);
 		this.linePos = linePos;
 		this.charPos = charPos;
+		this.charOffset = charOffset;
 	}
 
 	/**
@@ -47,5 +43,12 @@ public class JsonParserException extends Exception {
 	 */
 	public int getCharPosition() {
 		return charPos;
+	}
+	
+	/**
+	 * Gets the 0-based character offset of the error from the beginning of the string.
+	 */
+	public int getCharOffset() {
+		return charOffset;
 	}
 }

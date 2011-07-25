@@ -149,7 +149,7 @@ public class JsonParserTest {
 			JsonParser.object().from("null");
 			fail("Should have failed to parse");
 		} catch (JsonParserException e) {
-			testException(e, 0, 0);
+			testException(e, 1, 4, "did not contain the correct type");
 		}
 	}
 	
@@ -237,7 +237,7 @@ public class JsonParserTest {
 			JsonParser.object().from("\"abc\n\"");
 			fail();
 		} catch (JsonParserException e) {
-			testException(e, 1, 1);
+			testException(e, 2, 1);
 		}
 	}
 
@@ -248,7 +248,7 @@ public class JsonParserTest {
 			JsonParser.object().from("\"abc\\x\"");
 			fail();
 		} catch (JsonParserException e) {
-			testException(e, 1, 1);
+			testException(e, 1, 6);
 		}
 	}
 
@@ -259,7 +259,7 @@ public class JsonParserTest {
 			JsonParser.object().from("\"\\u123x\"");
 			fail();
 		} catch (JsonParserException e) {
-			testException(e, 1, 1);
+			testException(e, 1, 7);
 		}
 	}
 
@@ -267,10 +267,10 @@ public class JsonParserTest {
 	public void testFailBustedString5() {
 		try {
 			// Incomplete unicode escape
-			JsonParser.object().from("\"\\uggg\"");
+			JsonParser.object().from("\"\\u222\"");
 			fail();
 		} catch (JsonParserException e) {
-			testException(e, 1, 1);
+			testException(e, 1, 7);
 		}
 	}
 
@@ -278,10 +278,10 @@ public class JsonParserTest {
 	public void testFailBustedString6() {
 		try {
 			// String that terminates halfway through a unicode escape
-			JsonParser.object().from("\"\\uggg");
+			JsonParser.object().from("\"\\u222");
 			fail();
 		} catch (JsonParserException e) {
-			testException(e, 1, 1);
+			testException(e, 1, 6);
 		}
 	}
 
@@ -292,7 +292,7 @@ public class JsonParserTest {
 			JsonParser.object().from("\"\\");
 			fail();
 		} catch (JsonParserException e) {
-			testException(e, 1, 1);
+			testException(e, 1, 2);
 		}
 	}
 
@@ -443,6 +443,16 @@ public class JsonParserTest {
 			fail();
 		} catch (JsonParserException e) {
 			testException(e, 1, 1, "'trueeeeeeeeeeee'");
+		}
+	}
+
+	@Test
+	public void testFailBadKeywords7() {
+		try {
+			JsonParser.object().from("g");
+			fail();
+		} catch (JsonParserException e) {
+			testException(e, 1, 1, "'g'");
 		}
 	}
 

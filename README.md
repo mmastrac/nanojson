@@ -5,7 +5,7 @@ nanojson is a tiny, compliant JSON parser and writer for Java.
 ## Get started
 
   * Build: `mvn clean compile test jar:jar`
-  * Javadocs: `mvn javadoc:javadoc`, `open target/site/apidocs/index.html`
+  * Javadocs: `mvn javadoc:javadoc && open target/site/apidocs/index.html`
 
 ## Features
 

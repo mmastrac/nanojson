@@ -15,6 +15,7 @@ nanojson is a tiny, compliant JSON parser and writer for Java.
   * Minimal number of source lines: parser is under 500 lines, emitter is barely more than 300
   * Apache licensed
   * Well-documented
+  * Well-tested (passes more than 100 tests, including those from YUI and json.org)
 
 ## Parsing example
 

@@ -153,25 +153,24 @@ public final class JsonParser {
 	 * Expects a given string at the current position.
 	 */
 	private void expect(int first, char[] expected) throws JsonParserException, IOException {
-		for (int i = 0; i < expected.length; i++) {
+		for (int i = 0; i < expected.length; i++)
 			if (advanceChar() != expected[i])
 				throwHelpfulException(first, expected, i);
-		}
 
 		// The token should end with something other than an ASCII letter
 		if (isAsciiLetter(peekChar()))
 			throwHelpfulException(first, expected, expected.length);
 	}
 
-	private void throwHelpfulException(int c, char[] expected, int i) throws JsonParserException, IOException {
+	private void throwHelpfulException(int first, char[] expected, int failurePosition) throws JsonParserException, IOException {
 		// Build the first part of the token
-		String token = (char)c + (expected == null ? "" : new String(expected, 0, i));
+		String token = (char)first + (expected == null ? "" : new String(expected, 0, failurePosition));
 
 		// Consume the whole pseudo-token to make a better error message
 		while (isAsciiLetter(peekChar()) && token.length() < 15)
 			token += (char)advanceChar();
 		throw createParseException("Unexpected token '" + token + "'"
-				+ (expected == null ? "" : ". Did you mean '" + (char)c + new String(expected) + "'?"));
+				+ (expected == null ? "" : ". Did you mean '" + (char)first + new String(expected) + "'?"));
 	}
 
 	/**
@@ -249,7 +248,6 @@ public final class JsonParser {
 			value = advanceTokenString();
 			return token = Token.STRING;
 		case '-':
-		case '.':
 		case '0':
 		case '1':
 		case '2':
@@ -263,7 +261,8 @@ public final class JsonParser {
 			value = advanceTokenNumber(c);
 			return token = Token.NUMBER;
 		case '+':
-			throw createParseException("Numbers may not start with '+'");
+		case '.':
+			throw createParseException("Numbers may not start with '" + c + "'");
 		}
 
 		if (isAsciiLetter(peekChar()))

@@ -186,7 +186,7 @@ public class JsonParserTest {
 	@Test
 	public void testFailNumberEdgeCases() {
 		String[] edgeCases = { "01", "-01", "+01", ".1", "-.1", "+.1", "+1", "0.", "-0.", "+0.", "0.e", "-0.e", "+0.e",
-				"0e", "-0e", "+0e" };
+				"0e", "-0e", "+0e", "0e-", "-0e-", "+0e-", "0e+", "-0e+", "+0e+" };
 		for (String edgeCase : edgeCases) {
 			try {
 				JsonParser.object().from(edgeCase);

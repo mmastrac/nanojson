@@ -46,13 +46,48 @@ public final class JsonParser {
 	/**
 	 * The tokens available in JSON.
 	 */
-	enum Token {
+	private enum Token {
 		EOF(false), NULL(true), TRUE(true), FALSE(true), STRING(true), NUMBER(true), COMMA(false), COLON(false), //
 		OBJECT_START(true), OBJECT_END(false), ARRAY_START(true), ARRAY_END(false);
 		boolean isValue;
 
 		Token(boolean isValue) {
 			this.isValue = isValue;
+		}
+	}
+
+	/**
+	 * Returns a type-safe parser context for a {@link JsonObject}, {@link JsonArray} or "any" type from which you can
+	 * parse a {@link String} or a {@link Reader}.
+	 */
+	public static class JsonParserContext<T> {
+		private final Class<T> clazz;
+		private final boolean nullOk;
+
+		private JsonParserContext(Class<T> clazz, boolean nullOk) {
+			this.clazz = clazz;
+			this.nullOk = nullOk;
+		}
+
+		/**
+		 * Parses the current JSON type from a {@link String}.
+		 */
+		public T from(String s) throws JsonParserException {
+			return safeCast(new JsonParser(s).parse());
+		}
+
+		/**
+		 * Parses the current JSON type from a {@link Reader}.
+		 */
+		public T from(Reader r) throws JsonParserException {
+			return safeCast(new JsonParser(r).parse());
+		}
+
+		private T safeCast(Object o) throws JsonParserException {
+			// This would be easier with reflection, but avoiding until I know what Android is capable of
+			if ((o == null && !nullOk) || (o != null && !clazz.isAssignableFrom(o.getClass())))
+				throw new JsonParserException("JSON did not contain the correct type", 0, 0);
+			return clazz.cast(o);
 		}
 	}
 
@@ -74,61 +109,24 @@ public final class JsonParser {
 	}
 
 	/**
-	 * Parses a string into the appropriate root object for the given JSON.
+	 * Parses a {@link JsonObject} from a source.
 	 */
-	public static Object parse(String input) throws JsonParserException {
-		return new JsonParser(input).parse();
+	public static JsonParserContext<JsonObject> object() {
+		return new JsonParserContext<JsonObject>(JsonObject.class, false);
 	}
 
 	/**
-	 * Parses a string into a {@link JsonObject}.
+	 * Parses a {@link JsonArray} from a source.
 	 */
-	public static JsonObject parseObject(String input) throws JsonParserException {
-		Object o = parse(input);
-		if (o instanceof JsonObject)
-			return ((JsonObject)o);
-
-		throw new JsonParserException("JSON did not contain an object", 0, 0);
+	public static JsonParserContext<JsonArray> array() {
+		return new JsonParserContext<JsonArray>(JsonArray.class, false);
 	}
 
 	/**
-	 * Parses a string into a {@link JsonArray}.
+	 * Parses any object from a source.
 	 */
-	public static JsonArray parseArray(String input) throws JsonParserException {
-		Object o = parse(input);
-		if (o instanceof JsonArray)
-			return ((JsonArray)o);
-
-		throw new JsonParserException("JSON did not contain an array", 0, 0);
-	}
-
-	/**
-	 * Parses a string into the appropriate root object for the given JSON.
-	 */
-	public static Object parse(Reader reader) throws JsonParserException {
-		return new JsonParser(reader).parse();
-	}
-
-	/**
-	 * Parses a string into a {@link JsonObject}.
-	 */
-	public static JsonObject parseObject(Reader reader) throws JsonParserException {
-		Object o = parse(reader);
-		if (o instanceof JsonObject)
-			return ((JsonObject)o);
-
-		throw new JsonParserException("JSON did not contain an object", 0, 0);
-	}
-
-	/**
-	 * Parses a string into a {@link JsonArray}.
-	 */
-	public static JsonArray parseArray(Reader reader) throws JsonParserException {
-		Object o = parse(reader);
-		if (o instanceof JsonArray)
-			return ((JsonArray)o);
-
-		throw new JsonParserException("JSON did not contain an array", 0, 0);
+	public static JsonParserContext<Object> any() {
+		return new JsonParserContext<Object>(Object.class, true);
 	}
 
 	/**

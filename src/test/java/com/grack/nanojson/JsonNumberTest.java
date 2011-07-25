@@ -12,7 +12,7 @@ import org.junit.Test;
 public class JsonNumberTest {
 	@Test
 	public void testBasicNumberRead() throws JsonParserException {
-		JsonArray array = JsonParser.parseArray("[1, 1.0, 1.00]");
+		JsonArray array = JsonParser.array().from("[1, 1.0, 1.00]");
 		assertEquals(Integer.class, array.get(0).getClass());
 		assertEquals(Double.class, array.get(1).getClass());
 		assertEquals(Double.class, array.get(2).getClass());
@@ -26,7 +26,7 @@ public class JsonNumberTest {
 
 	@Test
 	public void testLargeIntRead() throws JsonParserException {
-		JsonArray array = JsonParser.parseArray("[-300000000,300000000]");
+		JsonArray array = JsonParser.array().from("[-300000000,300000000]");
 		assertEquals(Integer.class, array.get(0).getClass());
 		assertEquals(-300000000, array.get(0));
 		assertEquals(Integer.class, array.get(1).getClass());
@@ -41,7 +41,7 @@ public class JsonNumberTest {
 
 	@Test
 	public void testLongRead() throws JsonParserException {
-		JsonArray array = JsonParser.parseArray("[-3000000000,3000000000]");
+		JsonArray array = JsonParser.array().from("[-3000000000,3000000000]");
 		assertEquals(Long.class, array.get(0).getClass());
 		assertEquals(-3000000000L, array.get(0));
 		assertEquals(Long.class, array.get(1).getClass());
@@ -56,7 +56,7 @@ public class JsonNumberTest {
 
 	@Test
 	public void testBigIntRead() throws JsonParserException {
-		JsonArray array = JsonParser.parseArray("[-30000000000000000000,30000000000000000000]");
+		JsonArray array = JsonParser.array().from("[-30000000000000000000,30000000000000000000]");
 		assertEquals(BigInteger.class, array.get(0).getClass());
 		assertEquals(new BigInteger("-30000000000000000000"), array.get(0));
 		assertEquals(BigInteger.class, array.get(1).getClass());
@@ -80,7 +80,7 @@ public class JsonNumberTest {
 				Long.MIN_VALUE, BigInteger.valueOf(Long.MIN_VALUE).subtract(BigInteger.ONE));
 		String json = JsonWriter.string().array(array).end();
 		assertEquals("[2147483647,2147483648,-2147483648,-2147483649,9223372036854775807,9223372036854775808,-9223372036854775808,-9223372036854775809]", json);
-		JsonArray array2 = JsonParser.parseArray(json);
+		JsonArray array2 = JsonParser.array().from(json);
 		String json2 = JsonWriter.string().array(array2).end();
 		assertEquals(json, json2);
 	}

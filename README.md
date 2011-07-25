@@ -18,10 +18,12 @@ nanojson is a tiny, compliant JSON parser and writer for Java.
 
 ## Parsing example
 
-There are three entry points for parsing: `JsonParser.parse()`, `JsonParser.parseObject`, and `JsonParser.parseArray`. They either return the parsed object or throw a `JsonParserException`.
+There are three entry points for parsing: `JsonParser.object().parse()`, `JsonParser.array().parse()`, and `JsonParser.any().parse()`. 
+You pass them a `String` or a `Reader` and they will either return the parsed object of a given type or throw a `JsonParserException`.
 
-    JsonObject obj = JsonParser.parseObject("{\"abc\":123}");
-    JsonArray array = JsonParser.parseArray("[1,2,3]");
+    JsonObject obj = JsonParser.object().from("{\"abc\":123}");
+    JsonArray array = JsonParser.array().from("[1,2,3]");
+    Number number = (Number)JsonParser.any().from("123.456e7");
 
 Errors can be quickly located by using `getLinePosition` and `getCharPosition` on `JsonParserException`:
 

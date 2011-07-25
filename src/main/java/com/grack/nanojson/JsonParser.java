@@ -25,6 +25,7 @@ import java.math.BigInteger;
  * 
  * <pre>
  * Object json = {@link JsonParser}.any().from("{\"a\":[true,false], \"b\":1}");
+ * Number json = ({@link Number}){@link JsonParser}.any().from("123.456e7");
  * JsonObject json = {@link JsonParser}.object().from("{\"a\":[true,false], \"b\":1}");
  * JsonArray json = {@link JsonParser}.array().from("[1, {\"a\":[true,false], \"b\":1}]");
  * </pre>
@@ -95,15 +96,15 @@ public final class JsonParser {
 	private JsonParser(Reader reader) throws JsonParserException {
 		this.reader = reader;
 		this.buffer = new char[32 * 1024];
-		try {
-			eof = refillBuffer();
-		} catch (IOException e) {
-			throw createParseException(e, "IOException");
-		}
+		eof = refillBuffer();
 	}
 
 	/**
 	 * Parses a {@link JsonObject} from a source.
+	 * 
+	 * <pre>
+	 * JsonObject json = {@link JsonParser}.object().from("{\"a\":[true,false], \"b\":1}");
+	 * </pre>
 	 */
 	public static JsonParserContext<JsonObject> object() {
 		return new JsonParserContext<JsonObject>(JsonObject.class, false);
@@ -111,6 +112,10 @@ public final class JsonParser {
 
 	/**
 	 * Parses a {@link JsonArray} from a source.
+	 * 
+	 * <pre>
+	 * JsonArray json = {@link JsonParser}.array().from("[1, {\"a\":[true,false], \"b\":1}]");
+	 * </pre>
 	 */
 	public static JsonParserContext<JsonArray> array() {
 		return new JsonParserContext<JsonArray>(JsonArray.class, false);
@@ -119,6 +124,11 @@ public final class JsonParser {
 	/**
 	 * Parses any object from a source. For any valid JSON, returns either a null (for the JSON string 'null'), a
 	 * {@link String}, a {@link Number}, a {@link Boolean}, a {@link JsonObject} or a {@link JsonArray}.
+	 * 
+	 * <pre>
+	 * Object json = {@link JsonParser}.any().from("{\"a\":[true,false], \"b\":1}");
+	 * Number json = ({@link Number}){@link JsonParser}.any().from("123.456e7");
+	 * </pre>
 	 */
 	public static JsonParserContext<Object> any() {
 		return new JsonParserContext<Object>(Object.class, true);
@@ -128,15 +138,11 @@ public final class JsonParser {
 	 * Parse a single JSON value from the string, expecting an EOF at the end.
 	 */
 	Object parse() throws JsonParserException {
-		try {
-			advanceToken();
-			Object value = currentValue();
-			if (advanceToken() != Token.EOF)
-				throw createParseException("Expected end of input, got " + token);
-			return value;
-		} catch (IOException e) {
-			throw createParseException(e, "IOException");
-		}
+		advanceToken();
+		Object value = currentValue();
+		if (advanceToken() != Token.EOF)
+			throw createParseException("Expected end of input, got " + token);
+		return value;
 	}
 
 	/**
@@ -152,7 +158,7 @@ public final class JsonParser {
 	/**
 	 * Expects a given string at the current position.
 	 */
-	private void expect(int first, char[] expected) throws JsonParserException, IOException {
+	private void expect(int first, char[] expected) throws JsonParserException {
 		for (int i = 0; i < expected.length; i++)
 			if (advanceChar() != expected[i])
 				throwHelpfulException(first, expected, i);
@@ -162,7 +168,7 @@ public final class JsonParser {
 			throwHelpfulException(first, expected, expected.length);
 	}
 
-	private void throwHelpfulException(int first, char[] expected, int failurePosition) throws JsonParserException, IOException {
+	private void throwHelpfulException(int first, char[] expected, int failurePosition) throws JsonParserException {
 		// Build the first part of the token
 		String token = (char)first + (expected == null ? "" : new String(expected, 0, failurePosition));
 
@@ -177,7 +183,7 @@ public final class JsonParser {
 	 * Consumes a token, first eating up any whitespace ahead of it. Note that number tokens are not necessarily valid
 	 * numbers.
 	 */
-	private Token advanceToken() throws JsonParserException, IOException {
+	private Token advanceToken() throws JsonParserException {
 		int c = advanceChar();
 		while (isWhitespace(c))
 			c = advanceChar();
@@ -274,7 +280,7 @@ public final class JsonParser {
 	/**
 	 * Steps through to the end of the current number token (a non-digit token).
 	 */
-	private Number advanceTokenNumber(int c) throws JsonParserException, IOException {
+	private Number advanceTokenNumber(int c) throws JsonParserException {
 		stringToken.setLength(0);
 		stringToken.append((char)c);
 		boolean isDouble = false;
@@ -338,7 +344,7 @@ public final class JsonParser {
 	/**
 	 * Steps through to the end of the current string token (the unescaped double quote).
 	 */
-	private String advanceTokenString() throws JsonParserException, IOException {
+	private String advanceTokenString() throws JsonParserException {
 		stringToken.setLength(0);
 		while (true) {
 			char c = stringChar();
@@ -384,7 +390,7 @@ public final class JsonParser {
 	/**
 	 * Advances a character, throwing if it is illegal in the context of a JSON string.
 	 */
-	private char stringChar() throws JsonParserException, IOException {
+	private char stringChar() throws JsonParserException {
 		int c = advanceChar();
 		if (c == -1)
 			throw createParseException("String was not terminated before end of input");
@@ -396,7 +402,7 @@ public final class JsonParser {
 	/**
 	 * Advances a character, throwing if it is illegal in the context of a JSON string hex unicode escape.
 	 */
-	private int stringHexChar() throws JsonParserException, IOException {
+	private int stringHexChar() throws JsonParserException {
 		int c = Character.digit(advanceChar(), 16);
 		if (c == -1)
 			throw createParseException("Expected unicode hex escape character");
@@ -424,8 +430,13 @@ public final class JsonParser {
 		return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 	}
 
-	private boolean refillBuffer() throws JsonParserException, IOException {
-		int r = reader.read(buffer, 0, buffer.length);
+	private boolean refillBuffer() throws JsonParserException {
+		int r;
+		try {
+			r = reader.read(buffer, 0, buffer.length);
+		} catch (IOException e) {
+			throw createParseException(e, "IOException");
+		}
 		if (r <= 0)
 			return true;
 		bufferLength = r;
@@ -445,7 +456,7 @@ public final class JsonParser {
 	/**
 	 * Advance one character ahead, or return {@link Token#EOF} on end of input.
 	 */
-	private int advanceChar() throws JsonParserException, IOException {
+	private int advanceChar() throws JsonParserException {
 		if (eof)
 			return -1;
 		int c = buffer[index];

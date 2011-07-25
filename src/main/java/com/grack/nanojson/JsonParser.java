@@ -15,10 +15,15 @@
  */
 package com.grack.nanojson;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.math.BigInteger;
+import java.net.URL;
+import java.nio.charset.Charset;
 
 /**
  * Simple JSON parser.
@@ -83,6 +88,77 @@ public final class JsonParser {
 		 */
 		public T from(Reader r) throws JsonParserException {
 			return new JsonParser(r).parse(clazz);
+		}
+
+		/**
+		 * Parses the current JSON type from a {@link URL}.
+		 */
+		public T from(URL url) throws JsonParserException {
+			try {
+				InputStream stm = url.openStream();
+				try {
+					return from(stm);
+				} finally {
+					stm.close();
+				}
+			} catch (IOException e) {
+				throw new JsonParserException(e, "IOException opening URL", 1, 1, 0);
+			}
+		}
+
+		/**
+		 * Parses the current JSON type from a {@link InputStream}. Detects the encoding from the input stream.
+		 */
+		public T from(InputStream stm) throws JsonParserException {
+			Charset charset;
+			int[] sig;
+			BufferedInputStream buffered = new BufferedInputStream(stm);
+			buffered.mark(4);
+
+			try {
+				// Encoding detection based on http://www.ietf.org/rfc/rfc4627.txt
+				sig = new int[] { buffered.read(), buffered.read(), buffered.read(), buffered.read() };
+				if (sig[0] == 0xEF && sig[1] == 0xBB && sig[2] == 0xBF) {
+					charset = Charset.forName("UTF8");
+					buffered.reset();
+					buffered.read();
+					buffered.read();
+					buffered.read();
+				} else if (sig[0] == 0x00 && sig[1] == 0x00 && sig[2] == 0xFE && sig[3] == 0xFF) {
+					charset = Charset.forName("UTF-32BE");
+				} else if (sig[0] == 0xFF && sig[1] == 0xFE && sig[2] == 0x00 && sig[3] == 0x00) {
+					charset = Charset.forName("UTF-32LE");
+				} else if (sig[0] == 0xFE && sig[1] == 0xFF) {
+					charset = Charset.forName("UTF-16BE");
+					buffered.reset();
+					buffered.read();
+					buffered.read();
+				} else if (sig[0] == 0xFF && sig[1] == 0xFE) {
+					charset = Charset.forName("UTF-16LE");
+					buffered.reset();
+					buffered.read();
+					buffered.read();
+				} else if (sig[0] == 0 && sig[1] == 0 && sig[2] == 0 && sig[3] != 0) {
+					charset = Charset.forName("UTF-32BE");
+					buffered.reset();
+				} else if (sig[0] != 0 && sig[1] == 0 && sig[2] == 0 && sig[3] == 0) {
+					charset = Charset.forName("UTF-32LE");
+					buffered.reset();
+				} else if (sig[0] == 0 && sig[1] != 0 && sig[2] == 0 && sig[3] != 0) {
+					charset = Charset.forName("UTF-16BE");
+					buffered.reset();
+				} else if (sig[0] != 0 && sig[1] == 0 && sig[2] != 0 && sig[3] == 0) {
+					charset = Charset.forName("UTF-16LE");
+					buffered.reset();
+				} else {
+					charset = Charset.forName("UTF8");
+					buffered.reset();
+				}
+			} catch (IOException e) {
+				throw new JsonParserException(e, "IOException while detecting charset", 1, 1, 0);
+			}
+
+			return new JsonParser(new InputStreamReader(buffered, charset)).parse(clazz);
 		}
 	}
 

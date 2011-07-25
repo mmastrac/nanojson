@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -152,7 +153,7 @@ public class JsonParserTest {
 			testException(e, 1, 4, "did not contain the correct type");
 		}
 	}
-	
+
 	@Test
 	public void testFailNoJson1() {
 		try {
@@ -468,6 +469,53 @@ public class JsonParserTest {
 	}
 
 	@Test
+	public void testEncodingUTF8() throws JsonParserException {
+		Charset charset = Charset.forName("UTF8");
+		testEncoding(charset);
+		testEncodingBOM(charset);
+	}
+
+	@Test
+	public void testEncodingUTF16LE() throws JsonParserException {
+		Charset charset = Charset.forName("UTF-16LE");
+		testEncoding(charset);
+		testEncodingBOM(charset);
+	}
+
+	@Test
+	public void testEncodingUTF16BE() throws JsonParserException {
+		Charset charset = Charset.forName("UTF-16BE");
+		testEncoding(charset);
+		testEncodingBOM(charset);
+	}
+
+	@Test
+	public void testEncodingUTF32LE() throws JsonParserException {
+		Charset charset = Charset.forName("UTF-32LE");
+		testEncoding(charset);
+		testEncodingBOM(charset);
+	}
+
+	@Test
+	public void testEncodingUTF32BE() throws JsonParserException {
+		Charset charset = Charset.forName("UTF-32BE");
+		testEncoding(charset);
+		testEncodingBOM(charset);
+	}
+
+	private void testEncoding(Charset charset) throws JsonParserException {
+		ByteArrayInputStream in = new ByteArrayInputStream("{\"\u2222\":\"\uf000\"}".getBytes(charset));
+		JsonObject obj = JsonParser.object().from(in);
+		assertEquals("\uf000", obj.getString("\u2222"));
+	}
+
+	private void testEncodingBOM(Charset charset) throws JsonParserException {
+		ByteArrayInputStream in = new ByteArrayInputStream("\ufeff{\"\u2222\":\"\uf000\"}".getBytes(charset));
+		JsonObject obj = JsonParser.object().from(in);
+		assertEquals("\uf000", obj.getString("\u2222"));
+	}
+
+	@Test
 	public void failureTestsFromYui() throws IOException {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("yui_fail_cases.txt");
 
@@ -487,12 +535,25 @@ public class JsonParserTest {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("sample.json");
 		JsonObject o = JsonParser.object().from(readAsUtf8(input));
 		assertNotNull(o.get("a"));
+		assertNotNull(o.getObject("a").getArray("b\uecee\u8324\u007a\\\ue768.N"));
 		String json = JsonWriter.string().object(o).end();
 		JsonObject o2 = JsonParser.object().from(json);
-		/*String json2 = */JsonWriter.string().object(o2).end();
+		/* String json2 = */JsonWriter.string().object(o2).end();
 
 		// This doesn't work - keys don't sort properly
 		// assertEquals(json, json2);
+	}
+
+	@Test
+	public void tortureTestUrl() throws JsonParserException {
+		JsonObject o = JsonParser.object().from(getClass().getClassLoader().getResource("sample.json"));
+		assertNotNull(o.getObject("a").getArray("b\uecee\u8324\u007a\\\ue768.N"));
+	}
+
+	@Test
+	public void tortureTestStream() throws JsonParserException {
+		JsonObject o = JsonParser.object().from(getClass().getClassLoader().getResourceAsStream("sample.json"));
+		assertNotNull(o.getObject("a").getArray("b\uecee\u8324\u007a\\\ue768.N"));
 	}
 
 	/**

@@ -1,5 +1,5 @@
 /**
- * Copyright 2010 The nanojson Authors
+ * Copyright 2011 The nanojson Authors
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -137,7 +137,7 @@ public final class JsonParser {
 	/**
 	 * Parse a single JSON value from the string, expecting an EOF at the end.
 	 */
-	Object parse() throws JsonParserException {
+	private Object parse() throws JsonParserException {
 		advanceToken();
 		Object value = currentValue();
 		if (advanceToken() != Token.EOF)
@@ -156,30 +156,6 @@ public final class JsonParser {
 	}
 
 	/**
-	 * Expects a given string at the current position.
-	 */
-	private void expect(int first, char[] expected) throws JsonParserException {
-		for (int i = 0; i < expected.length; i++)
-			if (advanceChar() != expected[i])
-				throwHelpfulException(first, expected, i);
-
-		// The token should end with something other than an ASCII letter
-		if (isAsciiLetter(peekChar()))
-			throwHelpfulException(first, expected, expected.length);
-	}
-
-	private void throwHelpfulException(int first, char[] expected, int failurePosition) throws JsonParserException {
-		// Build the first part of the token
-		String token = (char)first + (expected == null ? "" : new String(expected, 0, failurePosition));
-
-		// Consume the whole pseudo-token to make a better error message
-		while (isAsciiLetter(peekChar()) && token.length() < 15)
-			token += (char)advanceChar();
-		throw createParseException("Unexpected token '" + token + "'"
-				+ (expected == null ? "" : ". Did you mean '" + (char)first + new String(expected) + "'?"));
-	}
-
-	/**
 	 * Consumes a token, first eating up any whitespace ahead of it. Note that number tokens are not necessarily valid
 	 * numbers.
 	 */
@@ -194,7 +170,7 @@ public final class JsonParser {
 		switch (c) {
 		case -1:
 			return token = Token.EOF;
-		case '[': { // Inline to avoid additional stack
+		case '[': { // Inlined function to avoid additional stack
 			JsonArray list = new JsonArray();
 			if (advanceToken() != Token.ARRAY_END)
 				while (true) {
@@ -215,7 +191,7 @@ public final class JsonParser {
 			return token = Token.COMMA;
 		case ':':
 			return token = Token.COLON;
-		case '{': { // Inline to avoid additional stack
+		case '{': { // Inlined function to avoid additional stack
 			JsonObject map = new JsonObject();
 			if (advanceToken() != Token.OBJECT_END)
 				while (true) {
@@ -239,19 +215,19 @@ public final class JsonParser {
 		case '}':
 			return token = Token.OBJECT_END;
 		case 't':
-			expect(c, TRUE);
+			consumeKeyword((char)c, TRUE);
 			value = Boolean.TRUE;
 			return token = Token.TRUE;
 		case 'f':
-			expect(c, FALSE);
+			consumeKeyword((char)c, FALSE);
 			value = Boolean.FALSE;
 			return token = Token.FALSE;
 		case 'n':
-			expect(c, NULL);
+			consumeKeyword((char)c, NULL);
 			value = null;
 			return token = Token.NULL;
 		case '\"':
-			value = advanceTokenString();
+			value = consumeTokenString();
 			return token = Token.STRING;
 		case '-':
 		case '0':
@@ -264,25 +240,38 @@ public final class JsonParser {
 		case '7':
 		case '8':
 		case '9':
-			value = advanceTokenNumber(c);
+			value = consumeTokenNumber((char)c);
 			return token = Token.NUMBER;
 		case '+':
 		case '.':
-			throw createParseException("Numbers may not start with '" + c + "'");
+			throw createParseException("Numbers may not start with '" + (char)c + "'");
 		}
 
 		if (isAsciiLetter(peekChar()))
-			throwHelpfulException(c, null, 0);
+			throwHelpfulException((char)c, null, 0);
 
 		throw createParseException("Unexpected character: " + (char)c);
 	}
 
 	/**
+	 * Expects a given string at the current position.
+	 */
+	private void consumeKeyword(char first, char[] expected) throws JsonParserException {
+		for (int i = 0; i < expected.length; i++)
+			if (advanceChar() != expected[i])
+				throwHelpfulException(first, expected, i);
+
+		// The token should end with something other than an ASCII letter
+		if (isAsciiLetter(peekChar()))
+			throwHelpfulException(first, expected, expected.length);
+	}
+
+	/**
 	 * Steps through to the end of the current number token (a non-digit token).
 	 */
-	private Number advanceTokenNumber(int c) throws JsonParserException {
+	private Number consumeTokenNumber(char c) throws JsonParserException {
 		stringToken.setLength(0);
-		stringToken.append((char)c);
+		stringToken.append(c);
 		boolean isDouble = false;
 		while (isDigitCharacter(peekChar())) {
 			char next = (char)advanceChar();
@@ -331,7 +320,7 @@ public final class JsonParser {
 
 			// HACK: Attempt to parse using the approximate best type for this
 			int length = number.charAt(0) == '-' ? number.length() - 1 : number.length();
-			if (length < 10) // 214 748 364 7
+			if (length < 10) // 2 147 483 647
 				return Integer.parseInt(number);
 			if (length < 19) // 9 223 372 036 854 775 807
 				return Long.parseLong(number);
@@ -344,7 +333,7 @@ public final class JsonParser {
 	/**
 	 * Steps through to the end of the current string token (the unescaped double quote).
 	 */
-	private String advanceTokenString() throws JsonParserException {
+	private String consumeTokenString() throws JsonParserException {
 		stringToken.setLength(0);
 		while (true) {
 			char c = stringChar();
@@ -431,26 +420,23 @@ public final class JsonParser {
 	}
 
 	private boolean refillBuffer() throws JsonParserException {
-		int r;
 		try {
-			r = reader.read(buffer, 0, buffer.length);
+			int r = reader.read(buffer, 0, buffer.length);
+			if (r <= 0)
+				return true;
+			bufferLength = r;
+			index = 0;
+			return false;
 		} catch (IOException e) {
 			throw createParseException(e, "IOException");
 		}
-		if (r <= 0)
-			return true;
-		bufferLength = r;
-		index = 0;
-		return false;
 	}
 
 	/**
 	 * Peek one char ahead, don't advance, returns {@link Token#EOF} on end of input.
 	 */
 	private int peekChar() {
-		if (eof)
-			return -1;
-		return buffer[index];
+		return eof ? -1 : buffer[index];
 	}
 
 	/**
@@ -470,6 +456,20 @@ public final class JsonParser {
 			eof = (reader == null) ? true : refillBuffer();
 
 		return c;
+	}
+
+	/**
+	 * Throws a helpful exception based on the current alphanumeric token.
+	 */
+	private void throwHelpfulException(char first, char[] expected, int failurePosition) throws JsonParserException {
+		// Build the first part of the token
+		String token = first + (expected == null ? "" : new String(expected, 0, failurePosition));
+
+		// Consume the whole pseudo-token to make a better error message
+		while (isAsciiLetter(peekChar()) && token.length() < 15)
+			token += (char)advanceChar();
+		throw createParseException("Unexpected token '" + token + "'"
+				+ (expected == null ? "" : ". Did you mean '" + first + new String(expected) + "'?"));
 	}
 
 	/**

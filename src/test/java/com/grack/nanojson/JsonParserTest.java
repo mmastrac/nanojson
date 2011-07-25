@@ -1,5 +1,5 @@
 /**
- * Copyright 2010 The nanojson Authors
+ * Copyright 2011 The nanojson Authors
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -467,6 +467,7 @@ public class JsonParserTest {
 				JsonParser.object().from(failCase);
 				fail("Should have failed, but didn't: " + failCase);
 			} catch (JsonParserException e) {
+				// expected
 			}
 		}
 	}
@@ -478,8 +479,7 @@ public class JsonParserTest {
 		assertNotNull(o.get("a"));
 		String json = JsonWriter.string().object(o).end();
 		JsonObject o2 = JsonParser.object().from(json);
-		@SuppressWarnings("unused")
-		String json2 = JsonWriter.string().object(o2).end();
+		/*String json2 = */JsonWriter.string().object(o2).end();
 
 		// This doesn't work - keys don't sort properly
 		// assertEquals(json, json2);
@@ -491,7 +491,7 @@ public class JsonParserTest {
 	 * Skips two tests that don't match reality (ie: Chrome).
 	 */
 	@Test
-	public void jsonOrgTest() throws JsonParserException, IOException {
+	public void jsonOrgTest() throws IOException {
 		InputStream input = getClass().getClassLoader().getResourceAsStream("json_org_test.zip");
 		ZipInputStream zip = new ZipInputStream(input);
 		ZipEntry ze;
@@ -533,6 +533,7 @@ public class JsonParserTest {
 					JsonParser.object().from(testCase);
 					fail("Should have failed " + ze.getName() + ": " + testCase);
 				} catch (JsonParserException e) {
+					// expected
 				}
 			}
 

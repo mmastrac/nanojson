@@ -1,5 +1,5 @@
 /**
- * Copyright 2010 The nanojson Authors
+ * Copyright 2011 The nanojson Authors
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -339,6 +339,8 @@ public class JsonEmitter {
 			break;
 		case FINI:
 			throw new JsonEmitterException("Invalid call to emit a value in a finished JSON writer");
+		default:
+			throw new JsonEmitterException("Invalid state");
 		}
 	}
 
@@ -347,6 +349,9 @@ public class JsonEmitter {
 		case EMPTY:
 			states.pop();
 			states.push(State.FINI);
+			break;
+		default:
+			throw new JsonEmitterException("Invalid state");
 		}
 	}
 

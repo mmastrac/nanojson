@@ -51,6 +51,7 @@ public final class JsonParser {
 	private static final char[] TRUE = { 'r', 'u', 'e' };
 	private static final char[] FALSE = { 'a', 'l', 's', 'e' };
 	private static final char[] NULL = { 'u', 'l', 'l' };
+	private final boolean utf8;
 
 	/**
 	 * The tokens available in JSON.
@@ -62,6 +63,27 @@ public final class JsonParser {
 
 		Token(boolean isValue) {
 			this.isValue = isValue;
+		}
+	}
+
+	private static final class PseudoUtf8Reader extends Reader {
+		private final BufferedInputStream buffered;
+		byte[] buf = new byte[32 * 1024];
+
+		private PseudoUtf8Reader(BufferedInputStream buffered) {
+			this.buffered = buffered;
+		}
+
+		@Override
+		public int read(char[] cbuf, int off, int len) throws IOException {
+			int r = buffered.read(buf);
+			for (int i = 0; i < r; i++)
+				cbuf[i] = (char)buf[i];
+			return r;
+		}
+
+		@Override
+		public void close() throws IOException {
 		}
 	}
 
@@ -80,14 +102,14 @@ public final class JsonParser {
 		 * Parses the current JSON type from a {@link String}.
 		 */
 		public T from(String s) throws JsonParserException {
-			return new JsonParser(new StringReader(s)).parse(clazz);
+			return new JsonParser(false, new StringReader(s)).parse(clazz);
 		}
 
 		/**
 		 * Parses the current JSON type from a {@link Reader}.
 		 */
 		public T from(Reader r) throws JsonParserException {
-			return new JsonParser(r).parse(clazz);
+			return new JsonParser(false, r).parse(clazz);
 		}
 
 		/**
@@ -110,20 +132,20 @@ public final class JsonParser {
 		 * Parses the current JSON type from a {@link InputStream}. Detects the encoding from the input stream.
 		 */
 		public T from(InputStream stm) throws JsonParserException {
-			Charset charset;
-			int[] sig;
-			BufferedInputStream buffered = new BufferedInputStream(stm);
+			final BufferedInputStream buffered = stm instanceof BufferedInputStream ? (BufferedInputStream)stm
+					: new BufferedInputStream(stm);
 			buffered.mark(4);
 
 			try {
+				Charset charset;
+				int[] sig = new int[] { buffered.read(), buffered.read(), buffered.read(), buffered.read() };
 				// Encoding detection based on http://www.ietf.org/rfc/rfc4627.txt
-				sig = new int[] { buffered.read(), buffered.read(), buffered.read(), buffered.read() };
 				if (sig[0] == 0xEF && sig[1] == 0xBB && sig[2] == 0xBF) {
-					charset = Charset.forName("UTF8");
 					buffered.reset();
 					buffered.read();
 					buffered.read();
 					buffered.read();
+					return new JsonParser(true, new PseudoUtf8Reader(buffered)).parse(clazz);
 				} else if (sig[0] == 0x00 && sig[1] == 0x00 && sig[2] == 0xFE && sig[3] == 0xFF) {
 					charset = Charset.forName("UTF-32BE");
 				} else if (sig[0] == 0xFF && sig[1] == 0xFE && sig[2] == 0x00 && sig[3] == 0x00) {
@@ -151,18 +173,19 @@ public final class JsonParser {
 					charset = Charset.forName("UTF-16LE");
 					buffered.reset();
 				} else {
-					charset = Charset.forName("UTF8");
 					buffered.reset();
+					return new JsonParser(true, new PseudoUtf8Reader(buffered)).parse(clazz);
 				}
+
+				return new JsonParser(false, new InputStreamReader(buffered, charset)).parse(clazz);
 			} catch (IOException e) {
 				throw new JsonParserException(e, "IOException while detecting charset", 1, 1, 0);
 			}
-
-			return new JsonParser(new InputStreamReader(buffered, charset)).parse(clazz);
 		}
 	}
 
-	private JsonParser(Reader reader) throws JsonParserException {
+	private JsonParser(boolean utf8, Reader reader) throws JsonParserException {
+		this.utf8 = utf8;
 		this.reader = reader;
 		this.buffer = new char[32 * 1024];
 		eof = refillBuffer();
@@ -412,6 +435,24 @@ public final class JsonParser {
 		reusableBuffer.setLength(0);
 		while (true) {
 			char c = stringChar();
+			// Hand-UTF8-decoding
+			if (utf8) {
+				switch ((c & 0xff) >> 4) {
+				case 12:
+				case 13:
+					c = (char)((c & 0x1f) << 6 | (advanceChar() & 0x3f));
+					break;
+				case 14:
+					c = (char)((c & 0x0f) << 12 | (advanceChar() & 0x3f) << 6 | (advanceChar() & 0x3f));
+					break;
+				case 15:
+					// ? throw?
+					break;
+				default:
+					break;
+				}
+			}
+
 			switch (c) {
 			case '\"':
 				return reusableBuffer.toString();

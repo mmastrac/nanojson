@@ -504,15 +504,15 @@ public class JsonParserTest {
 	}
 
 	private void testEncoding(Charset charset) throws JsonParserException {
-		ByteArrayInputStream in = new ByteArrayInputStream("{\"\u2222\":\"\uf000\"}".getBytes(charset));
+		ByteArrayInputStream in = new ByteArrayInputStream("{\"\u2222\":\"\u007f\u07ff\uffff\"}".getBytes(charset));
 		JsonObject obj = JsonParser.object().from(in);
-		assertEquals("\uf000", obj.getString("\u2222"));
+		assertEquals("\u007f\u07ff\uffff", obj.getString("\u2222"));
 	}
 
 	private void testEncodingBOM(Charset charset) throws JsonParserException {
-		ByteArrayInputStream in = new ByteArrayInputStream("\ufeff{\"\u2222\":\"\uf000\"}".getBytes(charset));
+		ByteArrayInputStream in = new ByteArrayInputStream("\ufeff{\"\u2222\":\"\u007f\u07ff\uffff\"}".getBytes(charset));
 		JsonObject obj = JsonParser.object().from(in);
-		assertEquals("\uf000", obj.getString("\u2222"));
+		assertEquals("\u007f\u07ff\uffff", obj.getString("\u2222"));
 	}
 
 	@Test

@@ -18,7 +18,7 @@ nanojson is a tiny, compliant JSON parser and writer for Java.
 
 ## Parsing example
 
-There are three entry points for parsing: `JsonParser.object().parse()`, `JsonParser.array().parse()`, and `JsonParser.any().parse()`. 
+There are three entry points for parsing, depending on the type of JSON object you expect to parse: `JsonParser.object().from()`, `JsonParser.array().from()`, and `JsonParser.any().from()`. 
 You pass them a `String` or a `Reader` and they will either return the parsed object of a given type or throw a `JsonParserException`.
 
     JsonObject obj = JsonParser.object().from("{\"abc\":123}");

@@ -17,15 +17,16 @@ package com.grack.nanojson;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
 import java.math.BigInteger;
 
 /**
  * Simple JSON parser.
  * 
  * <pre>
- * Object json = {@link JsonParser}.parse("{\"a\":[true,false], \"b\":1}");
- * JsonObject json = {@link JsonParser}.parseObject("{\"a\":[true,false], \"b\":1}");
- * JsonArray json = {@link JsonParser}.parseArray("[1, {\"a\":[true,false], \"b\":1}]");
+ * Object json = {@link JsonParser}.any().from("{\"a\":[true,false], \"b\":1}");
+ * JsonObject json = {@link JsonParser}.object().from("{\"a\":[true,false], \"b\":1}");
+ * JsonArray json = {@link JsonParser}.array().from("[1, {\"a\":[true,false], \"b\":1}]");
  * </pre>
  */
 public final class JsonParser {
@@ -34,7 +35,7 @@ public final class JsonParser {
 	private int index;
 	private Object value;
 	private Token token;
-	private int tokenStart, tokenLinePos, tokenCharPos;
+	private int tokenLinePos, tokenCharPos;
 	private StringBuilder stringToken = new StringBuilder(20);
 	private final Reader reader;
 	private final char[] buffer;
@@ -73,7 +74,7 @@ public final class JsonParser {
 		 * Parses the current JSON type from a {@link String}.
 		 */
 		public T from(String s) throws JsonParserException {
-			return safeCast(new JsonParser(s).parse());
+			return safeCast(new JsonParser(new StringReader(s)).parse());
 		}
 
 		/**
@@ -101,13 +102,6 @@ public final class JsonParser {
 		}
 	}
 
-	private JsonParser(String input) throws JsonParserException {
-		this.reader = null;
-		this.buffer = input.toCharArray();
-		this.bufferLength = buffer.length;
-		eof = (bufferLength == 0);
-	}
-
 	/**
 	 * Parses a {@link JsonObject} from a source.
 	 */
@@ -123,7 +117,8 @@ public final class JsonParser {
 	}
 
 	/**
-	 * Parses any object from a source.
+	 * Parses any object from a source. For any valid JSON, returns either a null (for the JSON string 'null'), a
+	 * {@link String}, a {@link Number}, a {@link Boolean}, a {@link JsonObject} or a {@link JsonArray}.
 	 */
 	public static JsonParserContext<Object> any() {
 		return new JsonParserContext<Object>(Object.class, true);
@@ -173,7 +168,7 @@ public final class JsonParser {
 		String token = (char)c + (expected == null ? "" : new String(expected, 0, i));
 
 		// Consume the whole pseudo-token to make a better error message
-		while (isAsciiLetter(peekChar()) && (index - tokenStart) < 15)
+		while (isAsciiLetter(peekChar()) && token.length() < 15)
 			token += (char)advanceChar();
 		throw createParseException("Unexpected token '" + token + "'"
 				+ (expected == null ? "" : ". Did you mean '" + (char)c + new String(expected) + "'?"));
@@ -188,7 +183,6 @@ public final class JsonParser {
 		while (isWhitespace(c))
 			c = advanceChar();
 
-		tokenStart = index - 1;
 		tokenLinePos = linePos;
 		tokenCharPos = index - rowPos;
 
@@ -437,7 +431,6 @@ public final class JsonParser {
 			return true;
 		bufferLength = r;
 		index = 0;
-		tokenStart = 0;
 		return false;
 	}
 

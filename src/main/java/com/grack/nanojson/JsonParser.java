@@ -433,12 +433,22 @@ public final class JsonParser {
 	 */
 	private String consumeTokenString() throws JsonParserException {
 		reusableBuffer.setLength(0);
+		outer:
 		while (true) {
 			char c = stringChar();
 			// Hand-UTF8-decoding
 			if (utf8) {
 				switch ((c & 0xff) >> 4) {
+				case 8:
+				case 9:
+				case 10:
+				case 11:
+					throw createParseException(null, "Illegal UTF-8 continuation byte: 0x" + Integer.toHexString(c & 0xff), false);
 				case 12:
+					// Check for illegal C0 and C1 bytes
+					if ((c & 0xe) == 0)
+						throw createParseException(null, "Illegal UTF-8 byte: 0x" + Integer.toHexString(c & 0xff), false);
+					//$FALL-THROUGH$
 				case 13:
 					c = (char)((c & 0x1f) << 6 | (advanceChar() & 0x3f));
 					break;
@@ -446,7 +456,23 @@ public final class JsonParser {
 					c = (char)((c & 0x0f) << 12 | (advanceChar() & 0x3f) << 6 | (advanceChar() & 0x3f));
 					break;
 				case 15:
-					// ? throw?
+					if ((c & 0xf) >= 5)
+						throw createParseException(null, "Illegal UTF-8 byte: 0x" + Integer.toHexString(c & 0xff), false);
+					
+					// Extended char
+					switch ((c & 0xc) >> 2) {
+					case 0:
+					case 1:
+						reusableBuffer.appendCodePoint((c & 7) << 18 | (advanceChar() & 0x3f) << 12 | (advanceChar() & 0x3f) << 6 | (advanceChar() & 0x3f));
+						continue outer;
+					case 2:
+						// TODO: \uFFFD (replacement char)
+						int codepoint = (c & 3) << 24 | (advanceChar() & 0x3f) << 18 | (advanceChar() & 0x3f) << 12 | (advanceChar() & 0x3f) << 6 | (advanceChar() & 0x3f);
+						throw createParseException(null, "Unable to represent codepoint 0x" + Integer.toHexString(codepoint) + " in a Java string", false);
+					case 3:
+						codepoint = (c & 1) << 30 | (advanceChar() & 0x3f) << 24 | (advanceChar() & 0x3f) << 18 | (advanceChar() & 0x3f) << 12 | (advanceChar() & 0x3f) << 6 | (advanceChar() & 0x3f);
+						throw createParseException(null, "Unable to represent codepoint 0x" + Integer.toHexString(codepoint) + " in a Java string", false);
+					}
 					break;
 				default:
 					break;

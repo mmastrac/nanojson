@@ -503,16 +503,42 @@ public class JsonParserTest {
 		testEncodingBOM(charset);
 	}
 
+	@Test
+	public void testIllegalUTF8Bytes() {
+		// Test the always-illegal bytes 
+		int[] failures = new int[] { 0xc0, 0xc1, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff };
+		for (int i = 0; i < failures.length; i++) {
+			try {
+				JsonParser.object().from(new ByteArrayInputStream(new byte[] { '"', (byte)failures[i], '"' }));
+			} catch (JsonParserException e) {
+				testException(e, 1, 2, "UTF-8");
+			}
+		}
+		
+		// Test the continuation bytes outside of a continuation
+		for (int i = 0x80; i <= 0xBF; i++) {
+			try {
+				JsonParser.object().from(new ByteArrayInputStream(new byte[] { '"', (byte)i, '"' }));
+			} catch (JsonParserException e) {
+				testException(e, 1, 2, "UTF-8");
+			}
+		}
+	}
+
 	private void testEncoding(Charset charset) throws JsonParserException {
-		ByteArrayInputStream in = new ByteArrayInputStream("{\"\u2222\":\"\u007f\u07ff\uffff\"}".getBytes(charset));
+		String unicodeKeyFromHell = new String(new int[] { 0x7f, 0x80, 0x7ff, 0x800, 0xffff, 0x10000, 0x10ffff }, 0, 7);
+		ByteArrayInputStream in = new ByteArrayInputStream(
+				("{\"" + unicodeKeyFromHell + "\":\"\u007f\u07ff\uffff\"}").getBytes(charset));
 		JsonObject obj = JsonParser.object().from(in);
-		assertEquals("\u007f\u07ff\uffff", obj.getString("\u2222"));
+		assertEquals("\u007f\u07ff\uffff", obj.getString(unicodeKeyFromHell));
 	}
 
 	private void testEncodingBOM(Charset charset) throws JsonParserException {
-		ByteArrayInputStream in = new ByteArrayInputStream("\ufeff{\"\u2222\":\"\u007f\u07ff\uffff\"}".getBytes(charset));
+		String unicodeKeyFromHell = new String(new int[] { 0x7f, 0x80, 0x7ff, 0x800, 0xffff, 0x10000, 0x10ffff }, 0, 7);
+		ByteArrayInputStream in = new ByteArrayInputStream(
+				("\ufeff{\"" + unicodeKeyFromHell + "\":\"\u007f\u07ff\uffff\"}").getBytes(charset));
 		JsonObject obj = JsonParser.object().from(in);
-		assertEquals("\u007f\u07ff\uffff", obj.getString("\u2222"));
+		assertEquals("\u007f\u07ff\uffff", obj.getString(unicodeKeyFromHell));
 	}
 
 	@Test

@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class JsonEmitterTest {
+public class JsonWriterTest {
 	/**
 	 * Test emitting simple values.
 	 */

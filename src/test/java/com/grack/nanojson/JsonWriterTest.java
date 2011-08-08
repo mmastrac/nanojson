@@ -65,6 +65,33 @@ public class JsonWriterTest {
 		assertEquals("{\"a\":{\"b\":false,\"c\":true}}", json);
 	}
 
+	/**
+	 * Test a nested object and array.
+	 */
+	@Test
+	public void testNestedObjectArray() {
+		//@formatter:off
+		String json = JsonWriter.string()
+				.object()
+					.object("a")
+						.array("b")
+							.object()
+								.value("a", 1)
+								.value("b", 2)
+							.end()
+							.object()
+								.value("c", 1)
+								.value("d", 2)
+							.end()
+						.end()
+						.value("c", JsonArray.from("a", "b", "c"))
+					.end()
+				.end()
+			.close();
+		//@formatter:on
+		assertEquals("{\"a\":{\"b\":[{\"a\":1,\"b\":2},{\"c\":1,\"d\":2}],\"c\":[\"a\",\"b\",\"c\"]}}", json);
+	}
+
 	@Test
 	public void testFailureNoKeyInObject() {
 		try {
@@ -124,11 +151,41 @@ public class JsonWriterTest {
 			// OK
 		}
 	}
-	
+
 	@Test
 	public void testFailureEmpty() {
 		try {
 			JsonWriter.string().close();
+			fail();
+		} catch (JsonWriterException e) {
+			// OK
+		}
+	}
+
+	@Test
+	public void testFailureMoreThanOneRoot() {
+		try {
+			JsonWriter.string().value(1).value(1).close();
+			fail();
+		} catch (JsonWriterException e) {
+			// OK
+		}
+	}
+
+	@Test
+	public void testFailureMoreThanOneRoot2() {
+		try {
+			JsonWriter.string().array().value(1).end().value(1).close();
+			fail();
+		} catch (JsonWriterException e) {
+			// OK
+		}
+	}
+
+	@Test
+	public void testFailureMoreThanOneRoot3() {
+		try {
+			JsonWriter.string().array().value(1).end().array().value(1).end().close();
 			fail();
 		} catch (JsonWriterException e) {
 			// OK

@@ -1,12 +1,12 @@
 /**
  * Copyright 2011 The nanojson Authors
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -43,7 +43,10 @@ import java.util.Map;
  * </pre>
  */
 //@formatter:on
-public class JsonWriter<T> {
+public final class JsonWriter {
+	private JsonWriter() {
+	}
+
 	//@formatter:off
 	/**
 	 * Creates a new {@link JsonStringWriter}.
@@ -73,7 +76,7 @@ public class JsonWriter<T> {
 	 * Emit a {@link String}, JSON-escaped:
 	 * 
 	 * <pre>
-	 * JsonEmitter.string("abc\n\"") // "\"abc\\n\\"\""
+	 * JsonEmitter.string(&quot;abc\n\&quot;&quot;) // &quot;\&quot;abc\\n\\&quot;\&quot;&quot;
 	 * </pre>
 	 * 
 	 * <pre>
@@ -86,10 +89,19 @@ public class JsonWriter<T> {
 		return new JsonStringWriter().value(value).close();
 	}
 
+	/**
+	 * Creates a {@link JsonAppendableWriter} that can output to an {@link Appendable} subclass, such as a
+	 * {@link StringBuilder}, a {@link Writer} a {@link PrintStream} or a {@link CharBuffer}.
+	 */
 	public static JsonAppendableWriter on(Appendable appendable) {
 		return new JsonAppendableWriter(appendable);
 	}
 
+	/**
+	 * Creates a {@link JsonAppendableWriter} that can output to an {@link OutputStream} subclass. Uses the UTF-8
+	 * {@link Charset}. To specify a different charset, use the {@link JsonWriter#on(Appendable)} method with an
+	 * {@link OutputStreamWriter}.
+	 */
 	public static JsonAppendableWriter on(OutputStream out) {
 		return new JsonAppendableWriter(new OutputStreamWriter(out, Charset.forName("UTF-8")));
 	}

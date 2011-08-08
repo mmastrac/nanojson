@@ -1,12 +1,12 @@
 /**
  * Copyright 2011 The nanojson Authors
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -40,7 +40,7 @@ public final class JsonParser {
 	private int tokenLinePos, tokenCharPos, tokenCharOffset;
 	private Object value;
 	private Token token;
-	private StringBuilder reusableBuffer = new StringBuilder(20);
+	private StringBuilder reusableBuffer = new StringBuilder();
 
 	private boolean eof;
 	private int index;
@@ -59,16 +59,19 @@ public final class JsonParser {
 	private enum Token {
 		EOF(false), NULL(true), TRUE(true), FALSE(true), STRING(true), NUMBER(true), COMMA(false), COLON(false), //
 		OBJECT_START(true), OBJECT_END(false), ARRAY_START(true), ARRAY_END(false);
-		boolean isValue;
+		public boolean isValue;
 
 		Token(boolean isValue) {
 			this.isValue = isValue;
 		}
 	}
 
+	/**
+	 * A {@link Reader} that reads a UTF8 stream without decoding it for performance.
+	 */
 	private static final class PseudoUtf8Reader extends Reader {
 		private final BufferedInputStream buffered;
-		byte[] buf = new byte[32 * 1024];
+		private byte[] buf = new byte[32 * 1024];
 
 		private PseudoUtf8Reader(BufferedInputStream buffered) {
 			this.buffered = buffered;
@@ -91,7 +94,7 @@ public final class JsonParser {
 	 * Returns a type-safe parser context for a {@link JsonObject}, {@link JsonArray} or "any" type from which you can
 	 * parse a {@link String} or a {@link Reader}.
 	 */
-	public static class JsonParserContext<T> {
+	public static final class JsonParserContext<T> {
 		private final Class<T> clazz;
 
 		private JsonParserContext(Class<T> clazz) {
@@ -231,13 +234,13 @@ public final class JsonParser {
 	 */
 	private <T> T parse(Class<T> clazz) throws JsonParserException {
 		advanceToken();
-		Object value = currentValue();
+		Object parsed = currentValue();
 		if (advanceToken() != Token.EOF)
 			throw createParseException(null, "Expected end of input, got " + token, true);
-		if (clazz != Object.class && (value == null || !clazz.isAssignableFrom(value.getClass())))
+		if (clazz != Object.class && (parsed == null || !clazz.isAssignableFrom(parsed.getClass())))
 			throw createParseException(null, "JSON did not contain the correct type, expected " + clazz.getSimpleName()
 					+ ".", true);
-		return clazz.cast(value);
+		return clazz.cast(parsed);
 	}
 
 	/**
@@ -266,7 +269,7 @@ public final class JsonParser {
 		switch (c) {
 		case -1:
 			return token = Token.EOF;
-		case '[': { // Inlined function to avoid additional stack
+		case '[': // Inlined function to avoid additional stack
 			JsonArray list = new JsonArray();
 			if (advanceToken() != Token.ARRAY_END)
 				while (true) {
@@ -281,14 +284,13 @@ public final class JsonParser {
 				}
 			value = list;
 			return token = Token.ARRAY_START;
-		}
 		case ']':
 			return token = Token.ARRAY_END;
 		case ',':
 			return token = Token.COMMA;
 		case ':':
 			return token = Token.COLON;
-		case '{': { // Inlined function to avoid additional stack
+		case '{': // Inlined function to avoid additional stack
 			JsonObject map = new JsonObject();
 			if (advanceToken() != Token.OBJECT_END)
 				while (true) {
@@ -309,7 +311,6 @@ public final class JsonParser {
 				}
 			value = map;
 			return token = Token.OBJECT_START;
-		}
 		case '}':
 			return token = Token.OBJECT_END;
 		case 't':
@@ -343,6 +344,7 @@ public final class JsonParser {
 		case '+':
 		case '.':
 			throw createParseException(null, "Numbers may not start with '" + (char)c + "'", true);
+		default:
 		}
 
 		if (isAsciiLetter(c))
@@ -433,8 +435,7 @@ public final class JsonParser {
 	 */
 	private String consumeTokenString() throws JsonParserException {
 		reusableBuffer.setLength(0);
-		outer:
-		while (true) {
+		outer: while (true) {
 			char c = stringChar();
 			// Hand-UTF8-decoding
 			if (utf8) {
@@ -443,11 +444,13 @@ public final class JsonParser {
 				case 9:
 				case 10:
 				case 11:
-					throw createParseException(null, "Illegal UTF-8 continuation byte: 0x" + Integer.toHexString(c & 0xff), false);
+					throw createParseException(null,
+							"Illegal UTF-8 continuation byte: 0x" + Integer.toHexString(c & 0xff), false);
 				case 12:
 					// Check for illegal C0 and C1 bytes
 					if ((c & 0xe) == 0)
-						throw createParseException(null, "Illegal UTF-8 byte: 0x" + Integer.toHexString(c & 0xff), false);
+						throw createParseException(null, "Illegal UTF-8 byte: 0x" + Integer.toHexString(c & 0xff),
+								false);
 					//$FALL-THROUGH$
 				case 13:
 					c = (char)((c & 0x1f) << 6 | (advanceChar() & 0x3f));
@@ -457,21 +460,31 @@ public final class JsonParser {
 					break;
 				case 15:
 					if ((c & 0xf) >= 5)
-						throw createParseException(null, "Illegal UTF-8 byte: 0x" + Integer.toHexString(c & 0xff), false);
-					
+						throw createParseException(null, "Illegal UTF-8 byte: 0x" + Integer.toHexString(c & 0xff),
+								false);
+
 					// Extended char
 					switch ((c & 0xc) >> 2) {
 					case 0:
 					case 1:
-						reusableBuffer.appendCodePoint((c & 7) << 18 | (advanceChar() & 0x3f) << 12 | (advanceChar() & 0x3f) << 6 | (advanceChar() & 0x3f));
+						reusableBuffer.appendCodePoint((c & 7) << 18 | (advanceChar() & 0x3f) << 12
+								| (advanceChar() & 0x3f) << 6 | (advanceChar() & 0x3f));
 						continue outer;
 					case 2:
 						// TODO: \uFFFD (replacement char)
-						int codepoint = (c & 3) << 24 | (advanceChar() & 0x3f) << 18 | (advanceChar() & 0x3f) << 12 | (advanceChar() & 0x3f) << 6 | (advanceChar() & 0x3f);
-						throw createParseException(null, "Unable to represent codepoint 0x" + Integer.toHexString(codepoint) + " in a Java string", false);
+						int codepoint = (c & 3) << 24 | (advanceChar() & 0x3f) << 18 | (advanceChar() & 0x3f) << 12
+								| (advanceChar() & 0x3f) << 6 | (advanceChar() & 0x3f);
+						throw createParseException(null,
+								"Unable to represent codepoint 0x" + Integer.toHexString(codepoint)
+										+ " in a Java string", false);
 					case 3:
-						codepoint = (c & 1) << 30 | (advanceChar() & 0x3f) << 24 | (advanceChar() & 0x3f) << 18 | (advanceChar() & 0x3f) << 12 | (advanceChar() & 0x3f) << 6 | (advanceChar() & 0x3f);
-						throw createParseException(null, "Unable to represent codepoint 0x" + Integer.toHexString(codepoint) + " in a Java string", false);
+						codepoint = (c & 1) << 30 | (advanceChar() & 0x3f) << 24 | (advanceChar() & 0x3f) << 18
+								| (advanceChar() & 0x3f) << 12 | (advanceChar() & 0x3f) << 6 | (advanceChar() & 0x3f);
+						throw createParseException(null,
+								"Unable to represent codepoint 0x" + Integer.toHexString(codepoint)
+										+ " in a Java string", false);
+					default:
+						assert false : "Impossible";
 					}
 					break;
 				default:
@@ -508,8 +521,8 @@ public final class JsonParser {
 					reusableBuffer.append((char)escape);
 					break;
 				case 'u':
-					char escapee = (char)(stringHexChar() << 12 | stringHexChar() << 8 | stringHexChar() << 4 | stringHexChar());
-					reusableBuffer.append(escapee);
+					reusableBuffer.append((char)(stringHexChar() << 12 | stringHexChar() << 8 //
+							| stringHexChar() << 4 | stringHexChar()));
 					break;
 				default:
 					throw createParseException(null, "Invalid escape: \\" + (char)escape, false);
@@ -608,19 +621,16 @@ public final class JsonParser {
 	/**
 	 * Throws a helpful exception based on the current alphanumeric token.
 	 */
-	private JsonParserException createHelpfulException(char first, char[] expected, int failurePosition) {
+	private JsonParserException createHelpfulException(char first, char[] expected, int failurePosition)
+			throws JsonParserException {
 		// Build the first part of the token
-		String token = first + (expected == null ? "" : new String(expected, 0, failurePosition));
+		String errorToken = first + (expected == null ? "" : new String(expected, 0, failurePosition));
 
-		try {
-			// Consume the whole pseudo-token to make a better error message
-			while (isAsciiLetter(peekChar()) && token.length() < 15)
-				token += (char)advanceChar();
-		} catch (JsonParserException e) {
-			// Ignore exceptions while handling exception
-		}
+		// Consume the whole pseudo-token to make a better error message
+		while (isAsciiLetter(peekChar()) && errorToken.length() < 15)
+			errorToken += (char)advanceChar();
 
-		return createParseException(null, "Unexpected token '" + token + "'"
+		return createParseException(null, "Unexpected token '" + errorToken + "'"
 				+ (expected == null ? "" : ". Did you mean '" + first + new String(expected) + "'?"), true);
 	}
 

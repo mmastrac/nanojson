@@ -1,12 +1,12 @@
 /**
  * Copyright 2011 The nanojson Authors
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -23,11 +23,17 @@ import java.util.Stack;
 /**
  * Internal class that handles emitting to an {@link Appendable}. Users only see the public subclasses,
  * {@link JsonStringWriter} and {@link JsonAppendableWriter}.
+ * 
+ * @param <SELF>
+ *            A subclass of {@link JsonWriterBase}.
  */
 class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	protected final Appendable appendable;
 	private Stack<State> states = new Stack<State>();
 
+	/**
+	 * The various states we can be in while writing JSON.
+	 */
 	private enum State {
 		EMPTY, ARRAY_START, ARRAY, OBJECT_START, OBJECT, FINI
 	}
@@ -109,8 +115,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		else if (o instanceof Number) {
 			rawValue(((Number)o).toString());
 			return castThis();
-		}
-		else if (o instanceof Boolean)
+		} else if (o instanceof Boolean)
 			return value((boolean)(Boolean)o);
 		else if (o instanceof Collection)
 			return array((Collection<?>)o);
@@ -119,7 +124,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		else
 			throw new JsonWriterException("Unable to handle type: " + o.getClass());
 	}
-	
+
 	/**
 	 * Emits an object with a key if it is a JSON-compatible type, otherwise throws an exception.
 	 */
@@ -140,7 +145,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		else
 			throw new JsonWriterException("Unable to handle type: " + o.getClass());
 	}
-	
+
 	/**
 	 * Emits a string value (or null).
 	 */
@@ -422,7 +427,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 			default:
 				if (shouldBeEscaped(c)) {
 					String t = "000" + Integer.toHexString(c);
-					raw("\\u" + t.substring(t.length() - 4));
+					raw("\\u" + t.substring(t.length() - "0000".length()));
 				} else {
 					raw(c);
 				}

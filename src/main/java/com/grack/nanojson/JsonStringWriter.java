@@ -17,7 +17,7 @@ package com.grack.nanojson;
 
 //@formatter:off
 /**
- * Light-weight JSON emitter with state checking. Emits JSON to a String.
+ * JSON writer that emits JSON to a {@link String}.
  * 
  * Create this class using {@link JsonWriter#string()}.
  * 

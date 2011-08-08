@@ -21,7 +21,7 @@ import java.io.OutputStream;
 
 //@formatter:off
 /**
- * Light-weight JSON emitter with state checking. Emits JSON to a {@link Appendable}.
+ * JSON writer that emits JSON to a {@link Appendable}.
  * 
  * Create this class with {@link JsonWriter#on(Appendable)} or {@link JsonWriter#on(OutputStream)}.
  * 

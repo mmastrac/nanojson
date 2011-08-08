@@ -26,7 +26,9 @@ import java.util.Map;
 
 //@formatter:off
 /**
- * Light-weight JSON writer with state checking. Writes JSON to a {@link String}, an {@link OutputStream}, or an
+ * Factory for JSON writers that target {@link String}s and {@link Appendable}s. 
+ * 
+ * Creates writers that write JSON to a {@link String}, an {@link OutputStream}, or an
  * {@link Appendable} such as a {@link StringBuilder}, a {@link Writer} a {@link PrintStream} or a {@link CharBuffer}.
  * 
  * <pre>

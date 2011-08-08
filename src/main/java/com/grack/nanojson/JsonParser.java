@@ -624,11 +624,11 @@ public final class JsonParser {
 	private JsonParserException createHelpfulException(char first, char[] expected, int failurePosition)
 			throws JsonParserException {
 		// Build the first part of the token
-		String errorToken = first + (expected == null ? "" : new String(expected, 0, failurePosition));
+		StringBuilder errorToken = new StringBuilder(first + (expected == null ? "" : new String(expected, 0, failurePosition)));
 
 		// Consume the whole pseudo-token to make a better error message
 		while (isAsciiLetter(peekChar()) && errorToken.length() < 15)
-			errorToken += (char)advanceChar();
+			errorToken.append((char)advanceChar());
 
 		return createParseException(null, "Unexpected token '" + errorToken + "'"
 				+ (expected == null ? "" : ". Did you mean '" + first + new String(expected) + "'?"), true);

@@ -149,7 +149,6 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 			raw("null");
 		else
 			emitStringValue(s);
-		post();
 		return castThis();
 	}
 
@@ -159,7 +158,6 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	public SELF value(int i) {
 		preValue();
 		raw(Integer.toString(i));
-		post();
 		return castThis();
 	}
 
@@ -169,7 +167,6 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	public SELF value(boolean b) {
 		preValue();
 		raw(Boolean.toString(b));
-		post();
 		return castThis();
 	}
 
@@ -179,7 +176,6 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	public SELF value(double d) {
 		preValue();
 		raw(Double.toString(d));
-		post();
 		return castThis();
 	}
 
@@ -192,7 +188,6 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 			raw("null");
 		else
 			emitStringValue(s);
-		post();
 		return castThis();
 	}
 
@@ -202,7 +197,6 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	public SELF value(String key, int i) {
 		preValue(key);
 		raw(Integer.toString(i));
-		post();
 		return castThis();
 	}
 
@@ -212,7 +206,6 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	public SELF value(String key, boolean b) {
 		preValue(key);
 		raw(Boolean.toString(b));
-		post();
 		return castThis();
 	}
 
@@ -222,7 +215,6 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	public SELF value(String key, double d) {
 		preValue(key);
 		raw(Double.toString(d));
-		post();
 		return castThis();
 	}
 
@@ -288,7 +280,6 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		}
 
 		inObject = states.pop();
-		post();
 		return castThis();
 	}
 
@@ -309,13 +300,11 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	private void rawValue(String s) {
 		preValue();
 		raw(s);
-		post();
 	}
 
 	private void rawValue(String key, String s) {
 		preValue(key);
 		raw(s);
-		post();
 	}
 
 	private void raw(String s) {
@@ -342,9 +331,6 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 				throw new JsonWriterException("Invalid call to emit a value in a finished JSON writer");
 			raw(",");
 		}
-	}
-
-	private void post() {
 	}
 
 	private void preValue() {

@@ -10,33 +10,11 @@ public class JsonEmitterTest {
 	 */
 	@Test
 	public void testSimpleValues() {
-		StringBuilder builder = new StringBuilder();
-		JsonEmitter emitter;
-
-		emitter = new JsonEmitter(builder);
-		emitter.value(true).end();
-		assertEquals("true", builder.toString());
-		builder.setLength(0);
-
-		emitter = new JsonEmitter(builder);
-		emitter.value(null).end();
-		assertEquals("null", builder.toString());
-		builder.setLength(0);
-
-		emitter = new JsonEmitter(builder);
-		emitter.value(1.0).end();
-		assertEquals("1.0", builder.toString());
-		builder.setLength(0);
-
-		emitter = new JsonEmitter(builder);
-		emitter.value(1).end();
-		assertEquals("1", builder.toString());
-		builder.setLength(0);
-
-		emitter = new JsonEmitter(builder);
-		emitter.value("abc").end();
-		assertEquals("\"abc\"", builder.toString());
-		builder.setLength(0);
+		assertEquals("true", JsonWriter.string().value(true).close());
+		assertEquals("null", JsonWriter.string().value(null).close());
+		assertEquals("1.0", JsonWriter.string().value(1.0).close());
+		assertEquals("1", JsonWriter.string().value(1).close());
+		assertEquals("\"abc\"", JsonWriter.string().value("abc").close());
 	}
 
 	/**
@@ -44,18 +22,14 @@ public class JsonEmitterTest {
 	 */
 	@Test
 	public void testArray() {
-		StringBuilder builder = new StringBuilder();
-		JsonEmitter emitter;
-
-		emitter = new JsonEmitter(builder);
-		emitter
-			.startArray()
+		String json = JsonWriter.string()
+			.array()
 				.value(true)
 				.value(false)
 				.value(true)
-			.endArray()
-		.end();
-		assertEquals("[true,false,true]", builder.toString());
+			.end()
+		.close();
+		assertEquals("[true,false,true]", json);
 	}
 
 	/**
@@ -63,22 +37,18 @@ public class JsonEmitterTest {
 	 */
 	@Test
 	public void testNestedArray() {
-		StringBuilder builder = new StringBuilder();
-		JsonEmitter emitter;
-
-		emitter = new JsonEmitter(builder);
-		emitter
-			.startArray()
-				.startArray()
-					.startArray()
+		String json = JsonWriter.string()
+			.array()
+				.array()
+					.array()
 						.value(true)
 						.value(false)
 						.value(true)
-					.endArray()
-				.endArray()
-			.endArray()
-		.end();
-		assertEquals("[[[true,false,true]]]", builder.toString());
+					.end()
+				.end()
+			.end()
+		.close();
+		assertEquals("[[[true,false,true]]]", json);
 	}
 
 	/**
@@ -86,20 +56,18 @@ public class JsonEmitterTest {
 	 */
 	@Test
 	public void testNestedArray2() {
-		StringBuilder builder = new StringBuilder();
-		JsonEmitter emitter;
-
-		emitter = new JsonEmitter(builder);
-		emitter.startArray()
-			.value(true)
-			.startArray()
-				.startArray()
-					.value(false)
-				.endArray()
-			.endArray()
-			.value(true)
-		.endArray().end();
-		assertEquals("[true,[[false]],true]", builder.toString());
+		String json = JsonWriter.string()
+			.array()
+				.value(true)
+				.array()
+					.array()
+						.value(false)
+					.end()
+				.end()
+				.value(true)
+			.end()
+		.close();
+		assertEquals("[true,[[false]],true]", json);
 	}
 
 	/**
@@ -107,15 +75,14 @@ public class JsonEmitterTest {
 	 */
 	@Test
 	public void testObject() {
-		StringBuilder builder = new StringBuilder();
-		new JsonEmitter(builder)
-			.startObject()
+		String json = JsonWriter.string()
+			.object()
 				.value("a", true)
 				.value("b", false)
 				.value("c", true)
-			.endObject()
-		.end();
-		assertEquals("{\"a\":true,\"b\":false,\"c\":true}", builder.toString());
+			.end()
+		.close();
+		assertEquals("{\"a\":true,\"b\":false,\"c\":true}", json);
 	}
 
 	/**
@@ -123,16 +90,14 @@ public class JsonEmitterTest {
 	 */
 	@Test
 	public void testNestedObject() {
-		StringBuilder builder = new StringBuilder();
-		JsonEmitter emitter;
-
-		emitter = new JsonEmitter(builder);
-		emitter.startObject()
-			.startObject("a")
-				.value("b", false)
-				.value("c", true)
-			.endObject()
-		.endObject().end();
-		assertEquals("{\"a\":{\"b\":false,\"c\":true}}", builder.toString());
+		String json = JsonWriter.string()
+			.object()
+				.object("a")
+					.value("b", false)
+					.value("c", true)
+				.end()
+			.end()
+		.close();
+		assertEquals("{\"a\":{\"b\":false,\"c\":true}}", json);
 	}
 }

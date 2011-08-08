@@ -562,9 +562,9 @@ public class JsonParserTest {
 		JsonObject o = JsonParser.object().from(readAsUtf8(input));
 		assertNotNull(o.get("a"));
 		assertNotNull(o.getObject("a").getArray("b\uecee\u8324\u007a\\\ue768.N"));
-		String json = JsonWriter.string().object(o).end();
+		String json = JsonWriter.string().object(o).close();
 		JsonObject o2 = JsonParser.object().from(json);
-		/* String json2 = */JsonWriter.string().object(o2).end();
+		/* String json2 = */JsonWriter.string().object(o2).close();
 
 		// This doesn't work - keys don't sort properly
 		// assertEquals(json, json2);

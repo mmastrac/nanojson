@@ -124,5 +124,15 @@ public class JsonWriterTest {
 			// OK
 		}
 	}
+	
+	@Test
+	public void testFailureEmpty() {
+		try {
+			JsonWriter.string().close();
+			fail();
+		} catch (JsonWriterException e) {
+			// OK
+		}
+	}
 
 }

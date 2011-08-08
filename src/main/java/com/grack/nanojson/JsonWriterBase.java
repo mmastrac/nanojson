@@ -30,12 +30,13 @@ import java.util.Stack;
 class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	protected final Appendable appendable;
 	private Stack<State> states = new Stack<State>();
+	private boolean first;
 
 	/**
 	 * The various states we can be in while writing JSON.
 	 */
 	private enum State {
-		EMPTY, ARRAY_START, ARRAY, OBJECT_START, OBJECT, FINI
+		EMPTY, ARRAY, OBJECT, FINI
 	}
 
 	JsonWriterBase(Appendable appendable) {
@@ -237,7 +238,8 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	 */
 	public SELF array() {
 		preValue();
-		states.push(State.ARRAY_START);
+		states.push(State.ARRAY);
+		first = true;
 		raw("[");
 		return castThis();
 	}
@@ -247,7 +249,8 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	 */
 	public SELF object() {
 		preValue();
-		states.push(State.OBJECT_START);
+		states.push(State.OBJECT);
+		first = true;
 		raw("{");
 		return castThis();
 	}
@@ -257,7 +260,8 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	 */
 	public SELF array(String key) {
 		preValue(key);
-		states.push(State.ARRAY_START);
+		states.push(State.ARRAY);
+		first = true;
 		raw("[");
 		return castThis();
 	}
@@ -267,7 +271,8 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	 */
 	public SELF object(String key) {
 		preValue(key);
-		states.push(State.OBJECT_START);
+		states.push(State.OBJECT);
+		first = true;
 		raw("{");
 		return castThis();
 	}
@@ -278,12 +283,10 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	public SELF end() {
 		switch (states.pop()) {
 		case ARRAY:
-		case ARRAY_START:
 			raw("]");
 			post();
 			break;
 		case OBJECT:
-		case OBJECT_START:
 			raw("}");
 			post();
 			break;
@@ -335,19 +338,17 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 
 	private void pre() {
 		switch (states.peek()) {
-		case ARRAY_START:
-			states.pop();
-			states.push(State.ARRAY);
-			break;
 		case ARRAY:
-			raw(",");
-			break;
-		case OBJECT_START:
-			states.pop();
-			states.push(State.OBJECT);
+			if (first)
+				first = false;
+			else
+				raw(",");
 			break;
 		case OBJECT:
-			raw(",");
+			if (first)
+				first = false;
+			else
+				raw(",");
 			break;
 		case FINI:
 			throw new JsonWriterException("Invalid call to emit a value in a finished JSON writer");
@@ -368,22 +369,20 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	}
 
 	private void preValue() {
-		pre();
-
-		if (states.peek() == State.OBJECT_START || states.peek() == State.OBJECT) {
+		if (states.peek() == State.OBJECT)
 			throw new JsonWriterException("Invalid call to emit a keyless value while writing an object");
-		}
+
+		pre();
 	}
 
 	private void preValue(String key) {
+		if (states.peek() != State.OBJECT)
+			throw new JsonWriterException("Invalid call to emit a key value while not writing an object");
+
 		pre();
 
 		emitStringValue(key);
 		raw(":");
-
-		if (states.peek() != State.OBJECT_START && states.peek() != State.OBJECT) {
-			throw new JsonWriterException("Invalid call to emit a key value while not writing an object");
-		}
 	}
 
 	/**

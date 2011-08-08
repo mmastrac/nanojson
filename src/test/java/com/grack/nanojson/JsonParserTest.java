@@ -34,6 +34,14 @@ import org.junit.Test;
 
 public class JsonParserTest {
 	@Test
+	public void testWhitespace() throws JsonParserException {
+		assertEquals(JsonObject.class,
+				JsonParser.object().from(" \t\r\n  { \t\r\n \"abc\"   \t\r\n : \t\r\n  1 \t\r\n  }  \t\r\n   ")
+						.getClass());
+		assertEquals("{}", JsonParser.object().from("{}").toString());
+	}
+
+	@Test
 	public void testEmptyObject() throws JsonParserException {
 		assertEquals(JsonObject.class, JsonParser.object().from("{}").getClass());
 		assertEquals("{}", JsonParser.object().from("{}").toString());
@@ -47,8 +55,8 @@ public class JsonParserTest {
 
 	@Test
 	public void testObjectTwoElements() throws JsonParserException {
-		assertEquals(JsonObject.class, JsonParser.object().from("{\"a\":1,\"b\":1}").getClass());
-		assertEquals("{b=1, a=1}", JsonParser.object().from("{\"a\":1,\"b\":1}").toString());
+		assertEquals(JsonObject.class, JsonParser.object().from("{\"a\":1,\"B\":1}").getClass());
+		assertEquals("{B=1, a=1}", JsonParser.object().from("{\"a\":1,\"B\":1}").toString());
 	}
 
 	@Test
@@ -136,12 +144,34 @@ public class JsonParserTest {
 		for (String testCase : testCases) {
 			Number n = (Number)JsonParser.any().from(testCase);
 			assertEquals(Double.parseDouble(testCase), n.doubleValue(), Double.MIN_NORMAL);
+			Number n2 = (Number)JsonParser.any().from(testCase.toUpperCase());
+			assertEquals(Double.parseDouble(testCase.toUpperCase()), n2.doubleValue(), Double.MIN_NORMAL);
+		}
+	}
+
+	/**
+	 * Test the basic numbers from -100 to 100 as a sanity check.
+	 */
+	@Test
+	public void testBasicNumbers() throws JsonParserException {
+		for (int i = -100; i <= +100; i++) {
+			assertEquals(i, (int)(Integer)JsonParser.any().from("" + i));
 		}
 	}
 
 	@Test
 	public void testBigint() throws JsonParserException {
 		JsonParser.object().from("{\"v\":123456789123456789123456789}");
+	}
+
+	@Test
+	public void testFailWrongType() {
+		try {
+			JsonParser.object().from("1");
+			fail("Should have failed to parse");
+		} catch (JsonParserException e) {
+			testException(e, 1, 1, "did not contain the correct type");
+		}
 	}
 
 	@Test
@@ -186,12 +216,20 @@ public class JsonParserTest {
 
 	@Test
 	public void testFailNumberEdgeCases() {
-		String[] edgeCases = { "01", "-01", "+01", ".1", "-.1", "+.1", "+1", "0.", "-0.", "+0.", "0.e", "-0.e", "+0.e",
-				"0e", "-0e", "+0e", "0e-", "-0e-", "+0e-", "0e+", "-0e+", "+0e+" };
+		String[] edgeCases = { "-", ".", "e", "01", "-01", "+01", "01.1", "-01.1", "+01.1", ".1", "-.1", "+.1", "+1",
+				"0.", "-0.", "+0.", "0.e", "-0.e", "+0.e", "0e", "-0e", "+0e", "0e-", "-0e-", "+0e-", "0e+", "-0e+",
+				"+0e+" };
 		for (String edgeCase : edgeCases) {
 			try {
 				JsonParser.object().from(edgeCase);
 				fail("Should have failed to parse: " + edgeCase);
+			} catch (JsonParserException e) {
+				testException(e, 1, 1);
+			}
+
+			try {
+				JsonParser.object().from(edgeCase.toUpperCase());
+				fail("Should have failed to parse: " + edgeCase.toUpperCase());
 			} catch (JsonParserException e) {
 				testException(e, 1, 1);
 			}
@@ -505,7 +543,7 @@ public class JsonParserTest {
 
 	@Test
 	public void testIllegalUTF8Bytes() {
-		// Test the always-illegal bytes 
+		// Test the always-illegal bytes
 		int[] failures = new int[] { 0xc0, 0xc1, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff };
 		for (int i = 0; i < failures.length; i++) {
 			try {
@@ -514,7 +552,7 @@ public class JsonParserTest {
 				testException(e, 1, 2, "UTF-8");
 			}
 		}
-		
+
 		// Test the continuation bytes outside of a continuation
 		for (int i = 0x80; i <= 0xBF; i++) {
 			try {

@@ -391,7 +391,7 @@ public final class JsonParser {
 					} else if (number.charAt(1) != 'e' && number.charAt(1) != 'E')
 						throw createParseException(null, "Malformed number: " + number, true);
 				}
-				if (number.length() > 1 && number.charAt(0) == '-') {
+				if (number.charAt(0) == '-') {
 					if (number.charAt(1) == '0') {
 						if (number.charAt(2) == '.') {
 							if (number.length() == 3)

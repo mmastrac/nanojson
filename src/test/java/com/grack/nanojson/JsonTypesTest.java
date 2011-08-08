@@ -79,5 +79,17 @@ public class JsonTypesTest {
 		assertEquals(null, o.getNumber(3));
 		assertEquals(null, o.get(3));
 		assertTrue(o.isNull(3));
+		assertTrue(o.has(3));
+	}
+	
+	@Test
+	public void testArrayBounds() {
+		JsonArray o = new JsonArray(Arrays.asList(null, null, null, null));
+		assertEquals(0, o.getInt(4));
+		assertEquals(0, o.getDouble(4), 0.0001f);
+		assertEquals(null, o.getNumber(4));
+		assertEquals(null, o.get(4));
+		assertFalse(o.isNull(4));
+		assertFalse(o.has(4));
 	}
 }

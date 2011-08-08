@@ -50,9 +50,13 @@ public final class JsonAppendableWriter extends JsonWriterBase<JsonAppendableWri
 	 * 
 	 * @throws IOException if the underlying {@link Flushable} {@link Appendable} failed to flush.
 	 */
-	public void close() throws IOException {
+	public void close() throws JsonWriterException {
 		super.closeInternal();
 		if (appendable instanceof Flushable)
-			((Flushable)appendable).flush();
+			try {
+				((Flushable)appendable).flush();
+			} catch (IOException e) {
+				throw new JsonWriterException(e);
+			}
 	}
 }

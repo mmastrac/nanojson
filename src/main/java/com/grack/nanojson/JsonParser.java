@@ -624,7 +624,8 @@ public final class JsonParser {
 	private JsonParserException createHelpfulException(char first, char[] expected, int failurePosition)
 			throws JsonParserException {
 		// Build the first part of the token
-		StringBuilder errorToken = new StringBuilder(first + (expected == null ? "" : new String(expected, 0, failurePosition)));
+		StringBuilder errorToken = new StringBuilder(first
+				+ (expected == null ? "" : new String(expected, 0, failurePosition)));
 
 		// Consume the whole pseudo-token to make a better error message
 		while (isAsciiLetter(peekChar()) && errorToken.length() < 15)

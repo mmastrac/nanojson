@@ -38,15 +38,15 @@ Errors can be quickly located by using `getLinePosition` and `getCharPosition` o
 
 ## Writing example
 
-`JsonWriter` is a simple, stateful JSON writer that outputs to anything implementing the Java `Appendable` interface. This includes
+`JsonWriter` is a simple, stateful JSON writer that can output to a `String`, or to anything implementing the Java `Appendable` interface. The latter includes 
 `StringBuilder`s, `Writer`s, `PrintStream`s and `CharBuffer`s.
 
-`JsonEmitter` has a straightforward interface: `value` methods for writing JSON literals such as numbers and strings and `[start|end][Array|Object]`
+`JsonWriter` has a straightforward interface: `value` methods for writing JSON literals such as numbers and strings, and `array` and `object`
 for managing array and object contexts. `array`, `object` and the `value` methods each have two overloads: one with a key prefix for writing
 objects and the other for writing raw JSON values or within an array.
 
     StringBuilder builder = new StringBuilder();
-    new JsonEmitter(builder)
+    new JsonWriter(builder)
       .object()
          .array("a")
            .value(1)

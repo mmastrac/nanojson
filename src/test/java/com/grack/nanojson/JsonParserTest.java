@@ -150,6 +150,21 @@ public class JsonParserTest {
 	}
 
 	/**
+	 * Test that negative zero ends up as negative zero in both the parser and the writer.
+	 */
+	@Test
+	public void testNegativeZero() throws JsonParserException {
+		assertEquals("-0.0", Double.toString(((Number)JsonParser.any().from("-0")).doubleValue()));
+		assertEquals("-0.0", Double.toString(((Number)JsonParser.any().from("-0.0")).doubleValue()));
+		assertEquals("-0.0", Double.toString(((Number)JsonParser.any().from("-0.0e0")).doubleValue()));
+		assertEquals("-0.0", Double.toString(((Number)JsonParser.any().from("-0e0")).doubleValue()));
+		assertEquals("-0.0", Double.toString(((Number)JsonParser.any().from("-0e1")).doubleValue()));
+		
+		assertEquals("-0.0", JsonWriter.string(-0.0));
+		assertEquals("-0.0", JsonWriter.string(-0.0f));
+	}
+
+	/**
 	 * Test the basic numbers from -100 to 100 as a sanity check.
 	 */
 	@Test
@@ -503,6 +518,31 @@ public class JsonParserTest {
 			fail();
 		} catch (JsonParserException e) {
 			testException(e, 4, 1);
+		}
+	}
+
+	/**
+	 * Ensures that we're correctly tracking UTF-8 character positions.
+	 */
+	@Test
+	public void testFailTrailingCommaUTF8() {
+		ByteArrayInputStream in1 = new ByteArrayInputStream("{\n\"abc\":123,\"def\":456,}".getBytes(Charset.forName("UTF-8")));
+		ByteArrayInputStream in2 = new ByteArrayInputStream("{\n\"\ub123\ub124\ub125\":123,\"def\":456,}".getBytes(Charset.forName("UTF-8")));
+		JsonParserException e1;
+		
+		try {
+			JsonParser.object().from(in1);
+			fail();
+			return;
+		} catch (JsonParserException e) {
+			e1 = e;
+		}
+
+		try {
+			JsonParser.object().from(in2);
+			fail();
+		} catch (JsonParserException e) {
+			testException(e, e1.getLinePosition(), e1.getCharPosition());
 		}
 	}
 

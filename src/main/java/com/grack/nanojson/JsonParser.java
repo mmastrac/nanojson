@@ -36,7 +36,7 @@ import java.nio.charset.Charset;
  * </pre>
  */
 public final class JsonParser {
-	private int linePos = 1, rowPos, charOffset;
+	private int linePos = 1, rowPos, charOffset, utf8adjust;
 	private int tokenLinePos, tokenCharPos, tokenCharOffset;
 	private Object value;
 	private Token token;
@@ -263,7 +263,7 @@ public final class JsonParser {
 			c = advanceChar();
 
 		tokenLinePos = linePos;
-		tokenCharPos = index - rowPos;
+		tokenCharPos = index - rowPos - utf8adjust;
 		tokenCharOffset = charOffset + index;
 
 		switch (c) {
@@ -414,7 +414,7 @@ public final class JsonParser {
 			}
 			if (number.length() > 1 && number.charAt(0) == '-' && number.charAt(1) == '0') {
 				if (number.length() == 2)
-					return 0;
+					return -0.0;
 				throw createParseException(null, "Malformed number: " + number, true);
 			}
 
@@ -454,9 +454,11 @@ public final class JsonParser {
 								false);
 				case 13:
 					c = (char)((c & 0x1f) << 6 | (advanceChar() & 0x3f));
+					utf8adjust++;
 					break;
 				case 14:
 					c = (char)((c & 0x0f) << 12 | (advanceChar() & 0x3f) << 6 | (advanceChar() & 0x3f));
+					utf8adjust += 2;
 					break;
 				case 15:
 					if ((c & 0xf) >= 5)
@@ -469,6 +471,7 @@ public final class JsonParser {
 					case 1:
 						reusableBuffer.appendCodePoint((c & 7) << 18 | (advanceChar() & 0x3f) << 12
 								| (advanceChar() & 0x3f) << 6 | (advanceChar() & 0x3f));
+						utf8adjust += 3;
 						continue outer;
 					case 2:
 						// TODO: \uFFFD (replacement char)
@@ -609,6 +612,7 @@ public final class JsonParser {
 		if (c == '\n') {
 			linePos++;
 			rowPos = index + 1;
+			utf8adjust = 0;
 		}
 
 		index++;
@@ -643,7 +647,7 @@ public final class JsonParser {
 			return new JsonParserException(e, message + " on line " + tokenLinePos + ", char " + tokenCharPos,
 					tokenLinePos, tokenCharPos, tokenCharOffset);
 		else {
-			int charPos = Math.max(1, index - rowPos);
+			int charPos = Math.max(1, index - rowPos - utf8adjust);
 			return new JsonParserException(e, message + " on line " + linePos + ", char " + charPos, linePos, charPos,
 					index + charOffset);
 		}

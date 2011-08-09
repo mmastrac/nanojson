@@ -24,6 +24,9 @@ public class JsonWriterTest {
 		assertEquals("\"abc\"", JsonWriter.string().value("abc").close());
 	}
 
+	/**
+	 * Test various ways of writing null, as well as various situations.
+	 */
 	@Test
 	public void testNull() {
 		assertEquals("null", JsonWriter.string().value((String)null).close());

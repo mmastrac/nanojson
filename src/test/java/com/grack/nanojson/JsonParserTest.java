@@ -658,7 +658,8 @@ public class JsonParserTest {
 			String testCase = new String(buffer, "ASCII");
 			if (positive)
 				try {
-					JsonParser.any().from(testCase);
+					Object out = JsonParser.any().from(testCase);
+					JsonWriter.string(out);
 				} catch (JsonParserException e) {
 					e.printStackTrace();
 					fail("Should not have failed " + ze.getName() + ": " + testCase);

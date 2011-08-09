@@ -42,7 +42,7 @@ public class JsonWriterTest {
 		assertEquals("{\"a\":null}", JsonWriter.string().object().value("a", (Number)null).end().done());
 		assertEquals("{\"a\":null}", JsonWriter.string().object().nul("a").end().done());
 	}
-	
+
 	/**
 	 * Test escaping of chars < 256.
 	 */
@@ -84,16 +84,11 @@ public class JsonWriterTest {
 	@Test
 	public void testWriteToSystemOutLikeStream() {
 		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-		JsonWriter.on(new PrintStream(bytes))
-			.object()
-				.value("a", 1)
-				.value("b", 2)
-			.end()
-		.done();
+		JsonWriter.on(new PrintStream(bytes)).object().value("a", 1).value("b", 2).end().done();
 
 		assertEquals("{\"a\":1,\"b\":2}", new String(bytes.toByteArray(), Charset.forName("UTF-8")));
 	}
-	
+
 	/**
 	 * Test escaping of / when following < to handle &lt;/script&gt;.
 	 */
@@ -102,7 +97,7 @@ public class JsonWriterTest {
 		assertEquals("\"<\\/script>\"", JsonWriter.string("</script>"));
 		assertEquals("\"/script\"", JsonWriter.string("/script"));
 	}
-	
+
 	/**
 	 * Test a simple array.
 	 */
@@ -224,7 +219,7 @@ public class JsonWriterTest {
 	public void testQuickJsonArray() {
 		assertEquals("[1,2,3]", JsonWriter.string(JsonArray.from(1, 2, 3)));
 	}
-	
+
 	@Test
 	public void testQuickArray() {
 		assertEquals("[1,2,3]", JsonWriter.string(Arrays.asList(1, 2, 3)));
@@ -233,6 +228,31 @@ public class JsonWriterTest {
 	@Test
 	public void testQuickArrayEmpty() {
 		assertEquals("[]", JsonWriter.string(Collections.emptyList()));
+	}
+
+	@Test
+	public void testQuickObjectArray() {
+		assertEquals("[1,2,3]", JsonWriter.string(new Object[] { 1, 2, 3 }));
+	}
+
+	@Test
+	public void testQuickObjectArrayNested() {
+		assertEquals("[[1,2],[[3]]]",
+				JsonWriter.string(new Object[] { new Object[] { 1, 2 }, new Object[] { new Object[] { 3 } } }));
+	}
+
+	@Test
+	public void testQuickObjectArrayEmpty() {
+		assertEquals("[]", JsonWriter.string(new Object[0]));
+	}
+	
+	@Test
+	public void testObjectArrayInMap() {
+		JsonObject o = new JsonObject();
+		o.put("array of string", new String[] { "a", "b", "c" });
+		o.put("array of boolean", new Boolean[] { true, false });
+		o.put("array of JsonObject", new JsonObject[] { new JsonObject(), null });
+		assertEquals("{\"array of boolean\":[true,false],\"array of JsonObject\":[{},null],\"array of string\":[\"a\",\"b\",\"c\"]}", JsonWriter.string(o));
 	}
 
 	@Test

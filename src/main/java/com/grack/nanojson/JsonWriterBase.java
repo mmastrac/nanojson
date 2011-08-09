@@ -16,6 +16,7 @@
 package com.grack.nanojson;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Stack;
@@ -118,7 +119,13 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 			return array((Collection<?>)o);
 		else if (o instanceof Map)
 			return object((Map<?, ?>)o);
-		else
+		else if (o.getClass().isArray()) {
+			int length = Array.getLength(o);
+			array();
+			for (int i = 0; i < length; i++)
+				value(Array.get(o, i));
+			return end();
+		} else
 			throw new JsonWriterException("Unable to handle type: " + o.getClass());
 	}
 
@@ -138,7 +145,13 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 			return array(key, (Collection<?>)o);
 		else if (o instanceof Map)
 			return object(key, (Map<?, ?>)o);
-		else
+		else if (o.getClass().isArray()) {
+			int length = Array.getLength(o);
+			array(key);
+			for (int i = 0; i < length; i++)
+				value(Array.get(o, i));
+			return end();
+		} else
 			throw new JsonWriterException("Unable to handle type: " + o.getClass());
 	}
 

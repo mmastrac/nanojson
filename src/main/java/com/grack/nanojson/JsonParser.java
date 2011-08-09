@@ -73,7 +73,7 @@ public final class JsonParser {
 		private final BufferedInputStream buffered;
 		private byte[] buf = new byte[32 * 1024];
 
-		private PseudoUtf8Reader(BufferedInputStream buffered) {
+		PseudoUtf8Reader(BufferedInputStream buffered) {
 			this.buffered = buffered;
 		}
 
@@ -97,7 +97,7 @@ public final class JsonParser {
 	public static final class JsonParserContext<T> {
 		private final Class<T> clazz;
 
-		private JsonParserContext(Class<T> clazz) {
+		JsonParserContext(Class<T> clazz) {
 			this.clazz = clazz;
 		}
 
@@ -187,7 +187,7 @@ public final class JsonParser {
 		}
 	}
 
-	private JsonParser(boolean utf8, Reader reader) throws JsonParserException {
+	JsonParser(boolean utf8, Reader reader) throws JsonParserException {
 		this.utf8 = utf8;
 		this.reader = reader;
 		this.buffer = new char[32 * 1024];
@@ -232,7 +232,7 @@ public final class JsonParser {
 	/**
 	 * Parse a single JSON value from the string, expecting an EOF at the end.
 	 */
-	private <T> T parse(Class<T> clazz) throws JsonParserException {
+	<T> T parse(Class<T> clazz) throws JsonParserException {
 		advanceToken();
 		Object parsed = currentValue();
 		if (advanceToken() != Token.EOF)
@@ -433,6 +433,7 @@ public final class JsonParser {
 	/**
 	 * Steps through to the end of the current string token (the unescaped double quote).
 	 */
+	@SuppressWarnings("fallthrough")
 	private String consumeTokenString() throws JsonParserException {
 		reusableBuffer.setLength(0);
 		outer: while (true) {
@@ -451,7 +452,6 @@ public final class JsonParser {
 					if ((c & 0xe) == 0)
 						throw createParseException(null, "Illegal UTF-8 byte: 0x" + Integer.toHexString(c & 0xff),
 								false);
-					//$FALL-THROUGH$
 				case 13:
 					c = (char)((c & 0x1f) << 6 | (advanceChar() & 0x3f));
 					break;

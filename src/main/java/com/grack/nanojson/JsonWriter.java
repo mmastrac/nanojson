@@ -136,4 +136,14 @@ public final class JsonWriter {
 	public static JsonAppendableWriter on(OutputStream out) {
 		return new JsonAppendableWriter(new OutputStreamWriter(out, Charset.forName("UTF-8")));
 	}
+	
+	/**
+	 * Escape a string value.
+	 * @param value
+	 * @return
+	 */
+	public static String escape(String value) {
+		String s = string(value);
+		return s.substring(1, s.length() - 1);
+	}
 }

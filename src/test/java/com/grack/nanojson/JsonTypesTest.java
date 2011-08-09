@@ -50,7 +50,7 @@ public class JsonTypesTest {
 
 	@Test
 	public void testArrayInt() {
-		JsonArray o = new JsonArray(Arrays.asList(null, null, null, null));
+		JsonArray o = new JsonArray(Arrays.asList((String)null, null, null, null));
 		o.set(3, 1);
 		assertEquals(1, o.getInt(3));
 		assertEquals(1.0, o.getDouble(3), 0.0001f);
@@ -65,7 +65,7 @@ public class JsonTypesTest {
 
 	@Test
 	public void testArrayString() {
-		JsonArray o = new JsonArray(Arrays.asList(null, null, null, null));
+		JsonArray o = new JsonArray(Arrays.asList((String)null, null, null, null));
 		o.set(3, "1");
 		assertEquals(0, o.getInt(3));
 		assertEquals(0, o.getDouble(3), 0.0001f);
@@ -77,7 +77,7 @@ public class JsonTypesTest {
 
 	@Test
 	public void testArrayNull() {
-		JsonArray o = new JsonArray(Arrays.asList(null, null, null, null));
+		JsonArray o = new JsonArray(Arrays.asList((String)null, null, null, null));
 		o.set(3, null);
 		assertEquals(0, o.getInt(3));
 		assertEquals(0, o.getDouble(3), 0.0001f);
@@ -90,7 +90,7 @@ public class JsonTypesTest {
 	
 	@Test
 	public void testArrayBounds() {
-		JsonArray o = new JsonArray(Arrays.asList(null, null, null, null));
+		JsonArray o = new JsonArray(Arrays.asList((String)null, null, null, null));
 		assertEquals(0, o.getInt(4));
 		assertEquals(0, o.getDouble(4), 0.0001f);
 		assertEquals(0, o.getFloat(4), 0.0001f);

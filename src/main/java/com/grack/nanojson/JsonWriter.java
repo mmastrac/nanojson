@@ -99,11 +99,40 @@ public final class JsonWriter {
 		return new JsonAppendableWriter(appendable);
 	}
 
+	//@formatter:off
+	/**
+	 * Creates a {@link JsonAppendableWriter} that can output to an {@link PrintStream} subclass.
+	 * 
+	 * <pre>
+	 * JsonWriter.on(System.out)
+	 * 		.object()
+	 * 			.value(&quot;a&quot;, 1)
+	 * 			.value(&quot;b&quot;, 2)
+	 * 		.end()
+	 * 	.close();
+	 * </pre>
+	 */
+	//@formatter:on
+	public static JsonAppendableWriter on(PrintStream appendable) {
+		return new JsonAppendableWriter(appendable);
+	}
+
+	//@formatter:off
 	/**
 	 * Creates a {@link JsonAppendableWriter} that can output to an {@link OutputStream} subclass. Uses the UTF-8
 	 * {@link Charset}. To specify a different charset, use the {@link JsonWriter#on(Appendable)} method with an
 	 * {@link OutputStreamWriter}.
+	 * 
+	 * <pre>
+	 * JsonWriter.on(System.out)
+	 * 		.object()
+	 * 			.value(&quot;a&quot;, 1)
+	 * 			.value(&quot;b&quot;, 2)
+	 * 		.end()
+	 * 	.close();
+	 * </pre>
 	 */
+	//@formatter:on
 	public static JsonAppendableWriter on(OutputStream out) {
 		return new JsonAppendableWriter(new OutputStreamWriter(out, Charset.forName("UTF-8")));
 	}

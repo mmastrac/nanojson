@@ -42,6 +42,16 @@ public class JsonWriterTest {
 						+ "\\u009d\\u009e\\u009f\"", JsonWriter.string(chars.toString()));
 	}
 
+	@Test
+	public void testWriteToSystemOut() {
+		JsonWriter.on(System.out)
+			.object()
+				.value("a", 1)
+				.value("b", 2)
+			.end()
+		.close();
+	}
+	
 	/**
 	 * Test escaping of / when following < to handle &lt;/script&gt;.
 	 */

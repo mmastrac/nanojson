@@ -250,9 +250,10 @@ public class JsonWriterTest {
 	public void testObjectArrayInMap() {
 		JsonObject o = new JsonObject();
 		o.put("array of string", new String[] { "a", "b", "c" });
-		o.put("array of boolean", new Boolean[] { true, false });
+		o.put("array of Boolean", new Boolean[] { true, false });
+		o.put("array of int", new int[] { 1, 2, 3 });
 		o.put("array of JsonObject", new JsonObject[] { new JsonObject(), null });
-		assertEquals("{\"array of boolean\":[true,false],\"array of JsonObject\":[{},null],\"array of string\":[\"a\",\"b\",\"c\"]}", JsonWriter.string(o));
+		assertEquals("{\"array of JsonObject\":[{},null],\"array of Boolean\":[true,false],\"array of string\":[\"a\",\"b\",\"c\"],\"array of int\":[1,2,3]}", JsonWriter.string(o));
 	}
 
 	@Test

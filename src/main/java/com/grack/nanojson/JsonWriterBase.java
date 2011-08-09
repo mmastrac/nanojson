@@ -180,6 +180,15 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	}
 
 	/**
+	 * Emits a float value.
+	 */
+	public SELF value(float d) {
+		preValue();
+		raw(Float.toString(d));
+		return castThis();
+	}
+
+	/**
 	 * Emits a string value (or null) with a key.
 	 */
 	public SELF value(String key, String s) {
@@ -215,6 +224,15 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	public SELF value(String key, double d) {
 		preValue(key);
 		raw(Double.toString(d));
+		return castThis();
+	}
+
+	/**
+	 * Emits a float value with a key.
+	 */
+	public SELF value(String key, float d) {
+		preValue(key);
+		raw(Float.toString(d));
 		return castThis();
 	}
 

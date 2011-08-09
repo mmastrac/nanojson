@@ -19,6 +19,7 @@ public class JsonWriterTest {
 		assertEquals("true", JsonWriter.string().value(true).close());
 		assertEquals("null", JsonWriter.string().value(null).close());
 		assertEquals("1.0", JsonWriter.string().value(1.0).close());
+		assertEquals("1.0", JsonWriter.string().value(1.0f).close());
 		assertEquals("1", JsonWriter.string().value(1).close());
 		assertEquals("\"abc\"", JsonWriter.string().value("abc").close());
 	}

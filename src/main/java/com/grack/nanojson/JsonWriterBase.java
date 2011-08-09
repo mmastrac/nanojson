@@ -244,7 +244,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		states.push(inObject);
 		inObject = false;
 		first = true;
-		raw("[");
+		raw('[');
 		return castThis();
 	}
 
@@ -256,7 +256,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		states.push(inObject);
 		inObject = true;
 		first = true;
-		raw("{");
+		raw('{');
 		return castThis();
 	}
 
@@ -268,7 +268,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		states.push(inObject);
 		inObject = false;
 		first = true;
-		raw("[");
+		raw('[');
 		return castThis();
 	}
 
@@ -280,7 +280,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		states.push(inObject);
 		inObject = true;
 		first = true;
-		raw("{");
+		raw('{');
 		return castThis();
 	}
 
@@ -292,9 +292,9 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 			throw new JsonWriterException("Invalid call to end()");
 
 		if (inObject) {
-			raw("}");
+			raw('}');
 		} else {
-			raw("]");
+			raw(']');
 		}
 
 		inObject = states.pop();
@@ -347,7 +347,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		} else {
 			if (states.size() == 0)
 				throw new JsonWriterException("Invalid call to emit a value in a finished JSON writer");
-			raw(",");
+			raw(',');
 		}
 	}
 
@@ -365,7 +365,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		pre();
 
 		emitStringValue(key);
-		raw(":");
+		raw(':');
 	}
 
 	/**

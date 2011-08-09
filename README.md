@@ -53,8 +53,8 @@ objects and the other for writing raw JSON values or within an array.
          .end()
          .value("b", false)
          .value("c", true)
-      .object()
-    .end();
+      .end()
+    .close();
 	
     -> {"a":[1,2],"b":false,"c":true}
 

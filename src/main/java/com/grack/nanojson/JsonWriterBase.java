@@ -110,10 +110,9 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 			return nul();
 		else if (o instanceof String)
 			return value((String)o);
-		else if (o instanceof Number) {
-			rawValue(((Number)o).toString());
-			return castThis();
-		} else if (o instanceof Boolean)
+		else if (o instanceof Number)
+			return value(((Number)o));
+		else if (o instanceof Boolean)
 			return value((boolean)(Boolean)o);
 		else if (o instanceof Collection)
 			return array((Collection<?>)o);
@@ -131,10 +130,9 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 			return nul(key);
 		else if (o instanceof String)
 			return value(key, (String)o);
-		else if (o instanceof Number) {
-			rawValue(key, ((Number)o).toString());
-			return castThis();
-		} else if (o instanceof Boolean)
+		else if (o instanceof Number)
+			return value(key, (Number)o);
+		else if (o instanceof Boolean)
 			return value(key, (boolean)(Boolean)o);
 		else if (o instanceof Collection)
 			return array(key, (Collection<?>)o);
@@ -338,16 +336,6 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 			throw new JsonWriterException("Unclosed JSON objects and/or arrays when closing writer");
 		if (first)
 			throw new JsonWriterException("Nothing was written to the JSON writer");
-	}
-
-	private void rawValue(String s) {
-		preValue();
-		raw(s);
-	}
-
-	private void rawValue(String key, String s) {
-		preValue(key);
-		raw(s);
 	}
 
 	private void raw(String s) {

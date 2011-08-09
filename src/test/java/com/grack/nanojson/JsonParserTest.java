@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -180,7 +181,9 @@ public class JsonParserTest {
 
 	@Test
 	public void testBigint() throws JsonParserException {
-		JsonParser.object().from("{\"v\":123456789123456789123456789}");
+		JsonObject o = JsonParser.object().from("{\"v\":123456789123456789123456789}");
+		BigInteger bigint = (BigInteger)o.get("v");
+		assertEquals("123456789123456789123456789", bigint.toString());
 	}
 
 	@Test

@@ -81,7 +81,7 @@ objects and the other for writing raw JSON values or within an array.
 
 Writing to a stream or writer is very similar:
 
-    JsonWriter.on(httpResponse)
+    JsonWriter.on(httpResponse.getWriter())
       .array()
          .value(false)
          .value(true)

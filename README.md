@@ -39,7 +39,7 @@ Errors can be quickly located by using `getLinePosition` and `getCharPosition` o
 ## Writing example
 
 `JsonWriter` is a simple, stateful JSON writer that can output to a `String`, or to anything implementing the Java `Appendable` interface. The latter includes 
-`StringBuilder`s, `Writer`s, `PrintStream`s, and `CharBuffer`s.
+`StringBuilder`, `Writer`, `PrintStream`, and `CharBuffer`.
 
 `JsonWriter` has a straightforward interface: `value` methods for writing JSON literals such as numbers and strings, and `array` and `object`
 for managing array and object contexts. `array`, `object` and the `value` methods each have two overloads: one with a key prefix for writing

@@ -8,6 +8,8 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.Test;
 
@@ -100,7 +102,7 @@ public class JsonWriterTest {
 		assertEquals("\"<\\/script>\"", JsonWriter.string("</script>"));
 		assertEquals("\"/script\"", JsonWriter.string("/script"));
 	}
-
+	
 	/**
 	 * Test a simple array.
 	 */
@@ -108,6 +110,24 @@ public class JsonWriterTest {
 	public void testArray() {
 		String json = JsonWriter.string().array().value(true).value(false).value(true).end().done();
 		assertEquals("[true,false,true]", json);
+	}
+
+	/**
+	 * Test an empty array.
+	 */
+	@Test
+	public void testArrayEmpty() {
+		String json = JsonWriter.string().array().end().done();
+		assertEquals("[]", json);
+	}
+
+	/**
+	 * Test an array of empty arrays.
+	 */
+	@Test
+	public void testArrayOfEmpty() {
+		String json = JsonWriter.string().array().array().end().array().end().end().done();
+		assertEquals("[[],[]]", json);
 	}
 
 	/**
@@ -203,6 +223,16 @@ public class JsonWriterTest {
 	@Test
 	public void testQuickJsonArray() {
 		assertEquals("[1,2,3]", JsonWriter.string(JsonArray.from(1, 2, 3)));
+	}
+	
+	@Test
+	public void testQuickArray() {
+		assertEquals("[1,2,3]", JsonWriter.string(Arrays.asList(1, 2, 3)));
+	}
+
+	@Test
+	public void testQuickArrayEmpty() {
+		assertEquals("[]", JsonWriter.string(Collections.emptyList()));
 	}
 
 	@Test

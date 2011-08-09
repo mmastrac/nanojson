@@ -320,6 +320,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 			raw(']');
 		}
 
+		first = false;
 		inObject = states.pop();
 		return castThis();
 	}

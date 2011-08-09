@@ -41,7 +41,7 @@ import java.util.Map;
  *         .value("b", false)
  *         .value("c", true)
  *     .end()
- * .close();
+ * .done();
  * </pre>
  */
 //@formatter:on
@@ -63,7 +63,7 @@ public final class JsonWriter {
 	 *         .value("b", false)
 	 *         .value("c", true)
 	 *     .end()
-	 * .close();
+	 * .done();
 	 * </pre>
 	 */
 	//@formatter:on
@@ -88,7 +88,7 @@ public final class JsonWriter {
 	 * </pre>
 	 */
 	public static String string(Object value) {
-		return new JsonStringWriter().value(value).close();
+		return new JsonStringWriter().value(value).done();
 	}
 
 	/**
@@ -109,7 +109,7 @@ public final class JsonWriter {
 	 * 			.value(&quot;a&quot;, 1)
 	 * 			.value(&quot;b&quot;, 2)
 	 * 		.end()
-	 * 	.close();
+	 * 	.done();
 	 * </pre>
 	 */
 	//@formatter:on
@@ -129,7 +129,7 @@ public final class JsonWriter {
 	 * 			.value(&quot;a&quot;, 1)
 	 * 			.value(&quot;b&quot;, 2)
 	 * 		.end()
-	 * 	.close();
+	 * 	.done();
 	 * </pre>
 	 */
 	//@formatter:on

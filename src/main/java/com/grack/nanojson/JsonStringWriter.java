@@ -31,7 +31,7 @@ package com.grack.nanojson;
  *         .value("b", false)
  *         .value("c", true)
  *     .end()
- * .close();
+ * .done();
  * </pre>
  */
 //@formatter:on
@@ -43,8 +43,8 @@ public final class JsonStringWriter extends JsonWriterBase<JsonStringWriter> {
 	/**
 	 * Completes this JSON writing session and returns the internal representation as a {@link String}.
 	 */
-	public String close() {
-		super.closeInternal();
+	public String done() {
+		super.doneInternal();
 		return appendable.toString();
 	}
 }

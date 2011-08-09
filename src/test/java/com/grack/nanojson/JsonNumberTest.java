@@ -21,7 +21,7 @@ public class JsonNumberTest {
 	@Test
 	public void testBasicNumberWrite() {
 		JsonArray array = JsonArray.from(1, 1.0, 1.0f);
-		assertEquals("[1,1.0,1.0]", JsonWriter.string().array(array).close());
+		assertEquals("[1,1.0,1.0]", JsonWriter.string().array(array).done());
 	}
 
 	@Test
@@ -36,7 +36,7 @@ public class JsonNumberTest {
 	@Test
 	public void testLargeIntWrite() {
 		JsonArray array = JsonArray.from(-300000000, 300000000);
-		assertEquals("[-300000000,300000000]", JsonWriter.string().array(array).close());
+		assertEquals("[-300000000,300000000]", JsonWriter.string().array(array).done());
 	}
 
 	@Test
@@ -51,7 +51,7 @@ public class JsonNumberTest {
 	@Test
 	public void testLongWrite() {
 		JsonArray array = JsonArray.from(1L, -3000000000L, 3000000000L);
-		assertEquals("[1,-3000000000,3000000000]", JsonWriter.string().array(array).close());
+		assertEquals("[1,-3000000000,3000000000]", JsonWriter.string().array(array).done());
 	}
 
 	@Test
@@ -67,7 +67,7 @@ public class JsonNumberTest {
 	public void testBigIntWrite() {
 		JsonArray array = JsonArray.from(BigInteger.ONE, new BigInteger("-30000000000000000000"), new BigInteger(
 				"30000000000000000000"));
-		assertEquals("[1,-30000000000000000000,30000000000000000000]", JsonWriter.string().array(array).close());
+		assertEquals("[1,-30000000000000000000,30000000000000000000]", JsonWriter.string().array(array).done());
 	}
 
 	/**
@@ -78,10 +78,10 @@ public class JsonNumberTest {
 		JsonArray array = JsonArray.from(Integer.MAX_VALUE, ((long)Integer.MAX_VALUE) + 1, Integer.MIN_VALUE,
 				((long)Integer.MIN_VALUE) - 1, Long.MAX_VALUE, BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE),
 				Long.MIN_VALUE, BigInteger.valueOf(Long.MIN_VALUE).subtract(BigInteger.ONE));
-		String json = JsonWriter.string().array(array).close();
+		String json = JsonWriter.string().array(array).done();
 		assertEquals("[2147483647,2147483648,-2147483648,-2147483649,9223372036854775807,9223372036854775808,-9223372036854775808,-9223372036854775809]", json);
 		JsonArray array2 = JsonParser.array().from(json);
-		String json2 = JsonWriter.string().array(array2).close();
+		String json2 = JsonWriter.string().array(array2).done();
 		assertEquals(json, json2);
 	}
 }

@@ -331,7 +331,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	 *             if the written JSON is not properly balanced, ie: all arrays and objects that were started have been
 	 *             properly ended.
 	 */
-	protected void closeInternal() {
+	protected void doneInternal() {
 		if (states.size() > 0)
 			throw new JsonWriterException("Unclosed JSON objects and/or arrays when closing writer");
 		if (first)

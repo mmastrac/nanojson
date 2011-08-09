@@ -75,9 +75,18 @@ objects and the other for writing raw JSON values or within an array.
          .value("b", false)
          .value("c", true)
       .end()
-    .close();
+    .done();
 	
     -> {"a":[1,2],"b":false,"c":true}
+
+Writing to a stream or writer is very similar:
+
+    JsonWriter.on(httpResponse)
+      .array()
+         .value(false)
+         .value(true)
+      .end()
+    .done();
 
 You can also quickly convert a `JsonArray`, a `JsonObject`, or any JSON primitive to a string:
 

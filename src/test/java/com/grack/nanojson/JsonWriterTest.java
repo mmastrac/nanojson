@@ -5,6 +5,7 @@ import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
 
@@ -16,12 +17,12 @@ public class JsonWriterTest {
 	 */
 	@Test
 	public void testSimpleValues() {
-		assertEquals("true", JsonWriter.string().value(true).close());
-		assertEquals("null", JsonWriter.string().nul().close());
-		assertEquals("1.0", JsonWriter.string().value(1.0).close());
-		assertEquals("1.0", JsonWriter.string().value(1.0f).close());
-		assertEquals("1", JsonWriter.string().value(1).close());
-		assertEquals("\"abc\"", JsonWriter.string().value("abc").close());
+		assertEquals("true", JsonWriter.string().value(true).done());
+		assertEquals("null", JsonWriter.string().nul().done());
+		assertEquals("1.0", JsonWriter.string().value(1.0).done());
+		assertEquals("1.0", JsonWriter.string().value(1.0f).done());
+		assertEquals("1", JsonWriter.string().value(1).done());
+		assertEquals("\"abc\"", JsonWriter.string().value("abc").done());
 	}
 
 	/**
@@ -29,15 +30,15 @@ public class JsonWriterTest {
 	 */
 	@Test
 	public void testNull() {
-		assertEquals("null", JsonWriter.string().value((String)null).close());
-		assertEquals("null", JsonWriter.string().value((Number)null).close());
-		assertEquals("null", JsonWriter.string().nul().close());
-		assertEquals("[null]", JsonWriter.string().array().value((String)null).end().close());
-		assertEquals("[null]", JsonWriter.string().array().value((Number)null).end().close());
-		assertEquals("[null]", JsonWriter.string().array().nul().end().close());
-		assertEquals("{\"a\":null}", JsonWriter.string().object().value("a", (String)null).end().close());
-		assertEquals("{\"a\":null}", JsonWriter.string().object().value("a", (Number)null).end().close());
-		assertEquals("{\"a\":null}", JsonWriter.string().object().nul("a").end().close());
+		assertEquals("null", JsonWriter.string().value((String)null).done());
+		assertEquals("null", JsonWriter.string().value((Number)null).done());
+		assertEquals("null", JsonWriter.string().nul().done());
+		assertEquals("[null]", JsonWriter.string().array().value((String)null).end().done());
+		assertEquals("[null]", JsonWriter.string().array().value((Number)null).end().done());
+		assertEquals("[null]", JsonWriter.string().array().nul().end().done());
+		assertEquals("{\"a\":null}", JsonWriter.string().object().value("a", (String)null).end().done());
+		assertEquals("{\"a\":null}", JsonWriter.string().object().value("a", (Number)null).end().done());
+		assertEquals("{\"a\":null}", JsonWriter.string().object().nul("a").end().done());
 	}
 	
 	/**
@@ -60,13 +61,16 @@ public class JsonWriterTest {
 	}
 
 	@Test
-	public void testWriteToSystemOut() {
-		JsonWriter.on(System.out)
+	public void testWriteToSystemOutLikeStream() {
+		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+		JsonWriter.on(new PrintStream(bytes))
 			.object()
 				.value("a", 1)
 				.value("b", 2)
 			.end()
-		.close();
+		.done();
+
+		assertEquals("{\"a\":1,\"b\":2}", new String(bytes.toByteArray(), Charset.forName("UTF-8")));
 	}
 	
 	/**
@@ -83,7 +87,7 @@ public class JsonWriterTest {
 	 */
 	@Test
 	public void testArray() {
-		String json = JsonWriter.string().array().value(true).value(false).value(true).end().close();
+		String json = JsonWriter.string().array().value(true).value(false).value(true).end().done();
 		assertEquals("[true,false,true]", json);
 	}
 
@@ -93,7 +97,7 @@ public class JsonWriterTest {
 	@Test
 	public void testNestedArray() {
 		String json = JsonWriter.string().array().array().array().value(true).value(false).value(true).end().end()
-				.end().close();
+				.end().done();
 		assertEquals("[[[true,false,true]]]", json);
 	}
 
@@ -103,7 +107,7 @@ public class JsonWriterTest {
 	@Test
 	public void testNestedArray2() {
 		String json = JsonWriter.string().array().value(true).array().array().value(false).end().end().value(true)
-				.end().close();
+				.end().done();
 		assertEquals("[true,[[false]],true]", json);
 	}
 
@@ -112,7 +116,7 @@ public class JsonWriterTest {
 	 */
 	@Test
 	public void testObject() {
-		String json = JsonWriter.string().object().value("a", true).value("b", false).value("c", true).end().close();
+		String json = JsonWriter.string().object().value("a", true).value("b", false).value("c", true).end().done();
 		assertEquals("{\"a\":true,\"b\":false,\"c\":true}", json);
 	}
 
@@ -121,7 +125,7 @@ public class JsonWriterTest {
 	 */
 	@Test
 	public void testNestedObject() {
-		String json = JsonWriter.string().object().object("a").value("b", false).value("c", true).end().end().close();
+		String json = JsonWriter.string().object().object("a").value("b", false).value("c", true).end().end().done();
 		assertEquals("{\"a\":{\"b\":false,\"c\":true}}", json);
 	}
 
@@ -147,7 +151,7 @@ public class JsonWriterTest {
 						.value("c", JsonArray.from("a", "b", "c"))
 					.end()
 				.end()
-			.close();
+			.done();
 		//@formatter:on
 		assertEquals("{\"a\":{\"b\":[{\"a\":1,\"b\":2},{\"c\":1.0,\"d\":2.0}],\"c\":[\"a\",\"b\",\"c\"]}}", json);
 	}
@@ -158,7 +162,7 @@ public class JsonWriterTest {
 	@Test
 	public void testAppendable() {
 		StringWriter writer = new StringWriter();
-		JsonWriter.on(writer).object().value("abc", "def").end().close();
+		JsonWriter.on(writer).object().value("abc", "def").end().done();
 		assertEquals("{\"abc\":\"def\"}", writer.toString());
 	}
 
@@ -168,7 +172,7 @@ public class JsonWriterTest {
 	@Test
 	public void testOutputStream() {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		JsonWriter.on(out).object().value("abc", "def").end().close();
+		JsonWriter.on(out).object().value("abc", "def").end().done();
 		assertEquals("{\"abc\":\"def\"}", new String(out.toByteArray(), Charset.forName("UTF-8")));
 	}
 
@@ -185,7 +189,7 @@ public class JsonWriterTest {
 	@Test
 	public void testFailureNoKeyInObject() {
 		try {
-			JsonWriter.string().object().value(true).end().close();
+			JsonWriter.string().object().value(true).end().done();
 			fail();
 		} catch (JsonWriterException e) {
 			// OK
@@ -195,7 +199,7 @@ public class JsonWriterTest {
 	@Test
 	public void testFailureNoKeyInObject2() {
 		try {
-			JsonWriter.string().object().value("a", 1).value(true).end().close();
+			JsonWriter.string().object().value("a", 1).value(true).end().done();
 			fail();
 		} catch (JsonWriterException e) {
 			// OK
@@ -205,7 +209,7 @@ public class JsonWriterTest {
 	@Test
 	public void testFailureKeyInArray() {
 		try {
-			JsonWriter.string().array().value("x", true).end().close();
+			JsonWriter.string().array().value("x", true).end().done();
 			fail();
 		} catch (JsonWriterException e) {
 			// OK
@@ -215,7 +219,7 @@ public class JsonWriterTest {
 	@Test
 	public void testFailureKeyInArray2() {
 		try {
-			JsonWriter.string().array().value(1).value("x", true).end().close();
+			JsonWriter.string().array().value(1).value("x", true).end().done();
 			fail();
 		} catch (JsonWriterException e) {
 			// OK
@@ -225,7 +229,7 @@ public class JsonWriterTest {
 	@Test
 	public void testFailureNotFullyClosed() {
 		try {
-			JsonWriter.string().array().value(1).close();
+			JsonWriter.string().array().value(1).done();
 			fail();
 		} catch (JsonWriterException e) {
 			// OK
@@ -235,7 +239,7 @@ public class JsonWriterTest {
 	@Test
 	public void testFailureNotFullyClosed2() {
 		try {
-			JsonWriter.string().array().close();
+			JsonWriter.string().array().done();
 			fail();
 		} catch (JsonWriterException e) {
 			// OK
@@ -245,7 +249,7 @@ public class JsonWriterTest {
 	@Test
 	public void testFailureEmpty() {
 		try {
-			JsonWriter.string().close();
+			JsonWriter.string().done();
 			fail();
 		} catch (JsonWriterException e) {
 			// OK
@@ -265,7 +269,7 @@ public class JsonWriterTest {
 	@Test
 	public void testFailureMoreThanOneRoot() {
 		try {
-			JsonWriter.string().value(1).value(1).close();
+			JsonWriter.string().value(1).value(1).done();
 			fail();
 		} catch (JsonWriterException e) {
 			// OK
@@ -275,7 +279,7 @@ public class JsonWriterTest {
 	@Test
 	public void testFailureMoreThanOneRoot2() {
 		try {
-			JsonWriter.string().array().value(1).end().value(1).close();
+			JsonWriter.string().array().value(1).end().value(1).done();
 			fail();
 		} catch (JsonWriterException e) {
 			// OK
@@ -285,7 +289,7 @@ public class JsonWriterTest {
 	@Test
 	public void testFailureMoreThanOneRoot3() {
 		try {
-			JsonWriter.string().array().value(1).end().array().value(1).end().close();
+			JsonWriter.string().array().value(1).end().array().value(1).end().done();
 			fail();
 		} catch (JsonWriterException e) {
 			// OK

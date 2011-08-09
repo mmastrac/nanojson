@@ -36,7 +36,7 @@ import java.io.OutputStream;
  *         .value("b", false)
  *         .value("c", true)
  *     .end()
- * .close();
+ * .done();
  * </pre>
  */
 //@formatter:on
@@ -50,8 +50,8 @@ public final class JsonAppendableWriter extends JsonWriterBase<JsonAppendableWri
 	 * 
 	 * @throws IOException if the underlying {@link Flushable} {@link Appendable} failed to flush.
 	 */
-	public void close() throws JsonWriterException {
-		super.closeInternal();
+	public void done() throws JsonWriterException {
+		super.doneInternal();
 		if (appendable instanceof Flushable)
 			try {
 				((Flushable)appendable).flush();

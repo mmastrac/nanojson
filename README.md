@@ -58,6 +58,11 @@ objects and the other for writing raw JSON values or within an array.
 	
     -> {"a":[1,2],"b":false,"c":true}
 
+You can also quickly convert a `JsonArray`, a `JsonObject`, or any JSON primitive to a string:
+
+    JsonArray array = ...
+    String json = JsonWriter.string(array);
+
 If you attempt to write invalid JSON, `JsonWriter` will throw a runtime `JsonWriterException`.
 
 ## Compliance

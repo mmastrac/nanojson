@@ -17,13 +17,26 @@ public class JsonWriterTest {
 	@Test
 	public void testSimpleValues() {
 		assertEquals("true", JsonWriter.string().value(true).close());
-		assertEquals("null", JsonWriter.string().value(null).close());
+		assertEquals("null", JsonWriter.string().nul().close());
 		assertEquals("1.0", JsonWriter.string().value(1.0).close());
 		assertEquals("1.0", JsonWriter.string().value(1.0f).close());
 		assertEquals("1", JsonWriter.string().value(1).close());
 		assertEquals("\"abc\"", JsonWriter.string().value("abc").close());
 	}
 
+	@Test
+	public void testNull() {
+		assertEquals("null", JsonWriter.string().value((String)null).close());
+		assertEquals("null", JsonWriter.string().value((Number)null).close());
+		assertEquals("null", JsonWriter.string().nul().close());
+		assertEquals("[null]", JsonWriter.string().array().value((String)null).end().close());
+		assertEquals("[null]", JsonWriter.string().array().value((Number)null).end().close());
+		assertEquals("[null]", JsonWriter.string().array().nul().end().close());
+		assertEquals("{\"a\":null}", JsonWriter.string().object().value("a", (String)null).end().close());
+		assertEquals("{\"a\":null}", JsonWriter.string().object().value("a", (Number)null).end().close());
+		assertEquals("{\"a\":null}", JsonWriter.string().object().nul("a").end().close());
+	}
+	
 	/**
 	 * Test escaping of chars < 256.
 	 */

@@ -88,14 +88,18 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	 * Emits a 'null' token.
 	 */
 	public SELF nul() {
-		return value(null);
+		preValue();
+		raw("null");
+		return castThis();
 	}
 
 	/**
 	 * Emits a 'null' token with a key.
 	 */
 	public SELF nul(String key) {
-		return value(key, null);
+		preValue(key);
+		raw("null");
+		return castThis();
 	}
 
 	/**
@@ -144,11 +148,10 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	 * Emits a string value (or null).
 	 */
 	public SELF value(String s) {
-		preValue();
 		if (s == null)
-			raw("null");
-		else
-			emitStringValue(s);
+			return nul();
+		preValue();
+		emitStringValue(s);
 		return castThis();
 	}
 
@@ -189,14 +192,25 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	}
 
 	/**
+	 * Emits a {@link Number} value.
+	 */
+	public SELF value(Number n) {
+		preValue();
+		if (n == null)
+			raw("null");
+		else
+			raw(n.toString());
+		return castThis();
+	}
+
+	/**
 	 * Emits a string value (or null) with a key.
 	 */
 	public SELF value(String key, String s) {
-		preValue(key);
 		if (s == null)
-			raw("null");
-		else
-			emitStringValue(s);
+			return nul(key);
+		preValue(key);
+		emitStringValue(s);
 		return castThis();
 	}
 
@@ -233,6 +247,17 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 	public SELF value(String key, float d) {
 		preValue(key);
 		raw(Float.toString(d));
+		return castThis();
+	}
+
+	/**
+	 * Emits a {@link Number} value with a key.
+	 */
+	public SELF value(String key, Number n) {
+		if (n == null)
+			return nul(key);
+		preValue(key);
+		raw(n.toString());
 		return castThis();
 	}
 

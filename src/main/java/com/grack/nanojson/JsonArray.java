@@ -112,6 +112,23 @@ public class JsonArray extends ArrayList<Object> {
 	}
 
 	/**
+	 * Returns the {@link Float} at the given index, or 0.0f if it does not exist or is the wrong type.
+	 */
+	public float getFloat(int key) {
+		return getFloat(key, 0);
+	}
+
+	/**
+	 * Returns the {@link Float} at the given index, or the default if it does not exist or is the wrong type.
+	 */
+	public float getFloat(int key, float default_) {
+		Object o = get(key);
+		if (o instanceof Number)
+			return ((Number)o).floatValue();
+		return default_;
+	}
+
+	/**
 	 * Returns the {@link Integer} at the given index, or 0 if it does not exist or is the wrong type.
 	 */
 	public int getInt(int key) {

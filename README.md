@@ -9,14 +9,25 @@ nanojson is a tiny, fast, and compliant JSON parser and writer for Java.
 
 ## Features
 
-  * Fast (faster that Jackson when parsing from memory and in some streaming cases)
-  * Strict error checking, reasonable error messages
+### Fast
+
+  * Faster that Jackson when parsing from memory and in some streaming cases
+
+### Tiny
+
   * Minimal object allocation
-  * Minimal number of source lines: full parser around 600 lines, emitter is barely more than 300
-  * Apache licensed
+  * Minimal number of source lines: full parser around 600 lines, writer is barely more than 400
+  * Tiny jar: less than 20kB
+
+### Robust
+
+  * Strict error checking, reasonable error messages
+  * Well-tested (code-coverage-directed tests, passes more than 100 tests, including those from YUI and json.org)
+
+### Easy to use
+
   * Well-documented
-  * Well-tested (passes more than 100 tests, including those from YUI and json.org)
-  * Multiple input sources: strings, streams, readers and URLs
+  * Apache licensed
 
 ## Parsing example
 

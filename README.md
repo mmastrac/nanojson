@@ -95,6 +95,21 @@ You can also quickly convert a `JsonArray`, a `JsonObject`, or any JSON primitiv
 
 If you attempt to write invalid JSON, `JsonWriter` will throw a runtime `JsonWriterException`.
 
+## JSON types
+
+nanojson provides two helper types for dealing with JSON objects and arrays: `JsonObject` and `JsonArray`. These are subclasses of `HashMap` and `ArrayList`,
+and add helper methods to cast the underlying type of the member to one of the given JSON primitives.
+
+These helper types also provide a builder that can be used in the same way as a `JsonWriter`:
+
+    JsonArray a = JsonArray.builder()
+        .value(1)
+        .value(2)
+        .object()
+            .value("abc": 123)
+        .end()
+    .done();
+
 ## Compliance
 
   * Passes all of the http://www.json.org/JSON_checker/ tests, minus the test that enforces results not be a string and one that tests nesting depth for arrays

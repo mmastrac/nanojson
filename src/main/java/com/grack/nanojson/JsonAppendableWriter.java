@@ -40,7 +40,8 @@ import java.io.OutputStream;
  * </pre>
  */
 //@formatter:on
-public final class JsonAppendableWriter extends JsonWriterBase<JsonAppendableWriter> {
+public final class JsonAppendableWriter extends JsonWriterBase<JsonAppendableWriter> implements
+		JsonSink<JsonAppendableWriter> {
 	JsonAppendableWriter(Appendable appendable) {
 		super(appendable);
 	}
@@ -48,7 +49,8 @@ public final class JsonAppendableWriter extends JsonWriterBase<JsonAppendableWri
 	/**
 	 * Closes this JSON writer and flushes the underlying {@link Appendable} if it is also {@link Flushable}.
 	 * 
-	 * @throws IOException if the underlying {@link Flushable} {@link Appendable} failed to flush.
+	 * @throws JsonWriterException
+	 *             if the underlying {@link Flushable} {@link Appendable} failed to flush.
 	 */
 	public void done() throws JsonWriterException {
 		super.doneInternal();

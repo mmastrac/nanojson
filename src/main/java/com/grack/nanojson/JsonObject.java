@@ -52,6 +52,13 @@ public class JsonObject extends HashMap<String, Object> {
 	}
 
 	/**
+	 * Creates a {@link JsonBuilder} for a {@link JsonObject}.
+	 */
+	public static JsonBuilder<JsonObject> builder() {
+		return new JsonBuilder<JsonObject>(new JsonObject());
+	}
+
+	/**
 	 * Returns the {@link JsonArray} at the given key, or null if it does not exist or is the wrong type.
 	 */
 	public JsonArray getArray(String key) {

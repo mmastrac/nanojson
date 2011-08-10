@@ -4,9 +4,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 
 import org.junit.Test;
+
+import sun.security.util.BigInt;
 
 public class JsonTypesTest {
 	@Test
@@ -87,7 +90,7 @@ public class JsonTypesTest {
 		assertTrue(o.isNull(3));
 		assertTrue(o.has(3));
 	}
-	
+
 	@Test
 	public void testArrayBounds() {
 		JsonArray o = new JsonArray(Arrays.asList((String)null, null, null, null));
@@ -99,4 +102,76 @@ public class JsonTypesTest {
 		assertFalse(o.isNull(4));
 		assertFalse(o.has(4));
 	}
+
+	@Test
+	public void testJsonArrayBuilder() {
+		//@formatter:off
+		JsonArray a = JsonArray.builder()
+				.value(true)
+				.value(1.0)
+				.value(1.0f)
+				.value(1)
+				.value(new BigInteger("1234567890"))
+				.value("hi")
+				.object()
+					.value("abc", 123)
+				.end()
+				.array()
+					.value(1)
+					.nul()
+				.end()
+				.array(JsonArray.from(1, 2, 3))
+				.object(JsonObject.builder().nul("a").nul("b").nul("c").done())
+			.done();
+		//@formatter:on
+
+		assertEquals(
+				"[true,1.0,1.0,1,1234567890,\"hi\",{\"abc\":123},[1,null],[1,2,3],{\"b\":null,\"c\":null,\"a\":null}]",
+				JsonWriter.string(a));
+	}
+
+	@Test
+	public void testJsonObjectBuilder() {
+		//@formatter:off
+		JsonObject a = JsonObject.builder()
+				.value("bool", true)
+				.value("double", 1.0)
+				.value("float", 1.0f)
+				.value("int", 1)
+				.value("bigint", new BigInteger("1234567890"))
+				.value("string", "hi")
+				.nul("null")
+				.object("object")
+					.value("abc", 123)
+				.end()
+				.array("array")
+					.value(1)
+					.nul()
+				.end()
+				.array("existingArray", JsonArray.from(1, 2, 3))
+				.object("existingObject", JsonObject.builder().nul("a").nul("b").nul("c").done())
+			.done();
+		//@formatter:on
+
+		assertEquals(
+				"{\"bigint\":1234567890,\"int\":1,\"string\":\"hi\",\"existingObject\":{\"b\":null,\"c\":null,\"a\":null},"
+						+ "\"existingArray\":[1,2,3],\"object\":{\"abc\":123},\"bool\":true,\"double\":1.0,\"float\":1.0,\"null\":null,\"array\":[1,null]}",
+				JsonWriter.string(a));
+	}
+
+	@Test(expected = JsonWriterException.class)
+	public void testJsonArrayBuilderFailCantCloseRoot() {
+		JsonArray.builder().end();
+	}
+
+	@Test(expected = JsonWriterException.class)
+	public void testJsonArrayBuilderFailCantAddKeyToArray() {
+		JsonArray.builder().value("abc", 1);
+	}
+
+	@Test(expected = JsonWriterException.class)
+	public void testJsonArrayBuilderFailCantAddNonKeyToObject() {
+		JsonObject.builder().value(1);
+	}
+
 }

@@ -54,6 +54,13 @@ public class JsonArray extends ArrayList<Object> {
 	}
 
 	/**
+	 * Creates a {@link JsonBuilder} for a {@link JsonArray}.
+	 */
+	public static JsonBuilder<JsonArray> builder() {
+		return new JsonBuilder<JsonArray>(new JsonArray());
+	}
+	
+	/**
 	 * Returns the underlying object at the given index, or null if it does not exist.
 	 */
 	public Object get(int key) {

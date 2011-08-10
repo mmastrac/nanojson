@@ -28,7 +28,7 @@ import java.util.Stack;
  * @param <SELF>
  *            A subclass of {@link JsonWriterBase}.
  */
-class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
+class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF> {
 	protected final Appendable appendable;
 	private Stack<Boolean> states = new Stack<Boolean>();
 	private boolean first = true;
@@ -46,10 +46,18 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		return (SELF)this;
 	}
 
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#array(java.util.Collection)
+	 */
+	@Override
 	public SELF array(Collection<?> c) {
 		return array(null, c);
 	}
 
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#array(java.lang.String, java.util.Collection)
+	 */
+	@Override
 	public SELF array(String key, Collection<?> c) {
 		if (key == null)
 			array();
@@ -63,10 +71,18 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		return end();
 	}
 
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#object(java.util.Map)
+	 */
+	@Override
 	public SELF object(Map<?, ?> map) {
 		return object(null, map);
 	}
 
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#object(java.lang.String, java.util.Map)
+	 */
+	@Override
 	public SELF object(String key, Map<?, ?> map) {
 		if (key == null)
 			object();
@@ -85,27 +101,30 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		return end();
 	}
 
-	/**
-	 * Emits a 'null' token.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#nul()
 	 */
+	@Override
 	public SELF nul() {
 		preValue();
 		raw("null");
 		return castThis();
 	}
 
-	/**
-	 * Emits a 'null' token with a key.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#nul(java.lang.String)
 	 */
+	@Override
 	public SELF nul(String key) {
 		preValue(key);
 		raw("null");
 		return castThis();
 	}
 
-	/**
-	 * Emits an object if it is a JSON-compatible type, otherwise throws an exception.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#value(java.lang.Object)
 	 */
+	@Override
 	public SELF value(Object o) {
 		if (o == null)
 			return nul();
@@ -129,9 +148,10 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 			throw new JsonWriterException("Unable to handle type: " + o.getClass());
 	}
 
-	/**
-	 * Emits an object with a key if it is a JSON-compatible type, otherwise throws an exception.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#value(java.lang.String, java.lang.Object)
 	 */
+	@Override
 	public SELF value(String key, Object o) {
 		if (o == null)
 			return nul(key);
@@ -155,9 +175,10 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 			throw new JsonWriterException("Unable to handle type: " + o.getClass());
 	}
 
-	/**
-	 * Emits a string value (or null).
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#value(java.lang.String)
 	 */
+	@Override
 	public SELF value(String s) {
 		if (s == null)
 			return nul();
@@ -166,45 +187,50 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		return castThis();
 	}
 
-	/**
-	 * Emits an integer value.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#value(int)
 	 */
+	@Override
 	public SELF value(int i) {
 		preValue();
 		raw(Integer.toString(i));
 		return castThis();
 	}
 
-	/**
-	 * Emits a boolean value.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#value(boolean)
 	 */
+	@Override
 	public SELF value(boolean b) {
 		preValue();
 		raw(Boolean.toString(b));
 		return castThis();
 	}
 
-	/**
-	 * Emits a double value.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#value(double)
 	 */
+	@Override
 	public SELF value(double d) {
 		preValue();
 		raw(Double.toString(d));
 		return castThis();
 	}
 
-	/**
-	 * Emits a float value.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#value(float)
 	 */
+	@Override
 	public SELF value(float d) {
 		preValue();
 		raw(Float.toString(d));
 		return castThis();
 	}
 
-	/**
-	 * Emits a {@link Number} value.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#value(java.lang.Number)
 	 */
+	@Override
 	public SELF value(Number n) {
 		preValue();
 		if (n == null)
@@ -214,9 +240,10 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		return castThis();
 	}
 
-	/**
-	 * Emits a string value (or null) with a key.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#value(java.lang.String, java.lang.String)
 	 */
+	@Override
 	public SELF value(String key, String s) {
 		if (s == null)
 			return nul(key);
@@ -225,45 +252,50 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		return castThis();
 	}
 
-	/**
-	 * Emits an integer value with a key.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#value(java.lang.String, int)
 	 */
+	@Override
 	public SELF value(String key, int i) {
 		preValue(key);
 		raw(Integer.toString(i));
 		return castThis();
 	}
 
-	/**
-	 * Emits a boolean value with a key.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#value(java.lang.String, boolean)
 	 */
+	@Override
 	public SELF value(String key, boolean b) {
 		preValue(key);
 		raw(Boolean.toString(b));
 		return castThis();
 	}
 
-	/**
-	 * Emits a double value with a key.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#value(java.lang.String, double)
 	 */
+	@Override
 	public SELF value(String key, double d) {
 		preValue(key);
 		raw(Double.toString(d));
 		return castThis();
 	}
 
-	/**
-	 * Emits a float value with a key.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#value(java.lang.String, float)
 	 */
+	@Override
 	public SELF value(String key, float d) {
 		preValue(key);
 		raw(Float.toString(d));
 		return castThis();
 	}
 
-	/**
-	 * Emits a {@link Number} value with a key.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#value(java.lang.String, java.lang.Number)
 	 */
+	@Override
 	public SELF value(String key, Number n) {
 		if (n == null)
 			return nul(key);
@@ -272,9 +304,10 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		return castThis();
 	}
 
-	/**
-	 * Starts an array.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#array()
 	 */
+	@Override
 	public SELF array() {
 		preValue();
 		states.push(inObject);
@@ -284,9 +317,10 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		return castThis();
 	}
 
-	/**
-	 * Starts an object.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#object()
 	 */
+	@Override
 	public SELF object() {
 		preValue();
 		states.push(inObject);
@@ -296,9 +330,10 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		return castThis();
 	}
 
-	/**
-	 * Starts an array within an object, prefixed with a key.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#array(java.lang.String)
 	 */
+	@Override
 	public SELF array(String key) {
 		preValue(key);
 		states.push(inObject);
@@ -308,9 +343,10 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		return castThis();
 	}
 
-	/**
-	 * Starts an object within an object, prefixed with a key.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#object(java.lang.String)
 	 */
+	@Override
 	public SELF object(String key) {
 		preValue(key);
 		states.push(inObject);
@@ -320,9 +356,10 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> {
 		return castThis();
 	}
 
-	/**
-	 * Ends the current array or object.
+	/* (non-Javadoc)
+	 * @see com.grack.nanojson.JsonSink#end()
 	 */
+	@Override
 	public SELF end() {
 		if (states.size() == 0)
 			throw new JsonWriterException("Invalid call to end()");

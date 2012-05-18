@@ -71,6 +71,15 @@ public class JsonNumberTest {
 	}
 
 	/**
+	 * Tests a bug where longs were silently truncated to floats.
+	 */
+	@Test
+	public void testLongBuilder() {
+		JsonObject o = JsonObject.builder().value("long", 0xffffffffffffL).done();
+		assertEquals(0xffffffffffffL, o.getNumber("long").longValue());
+	}
+
+	/**
 	 * Test around the edges of the integral types
 	 */
 	@Test

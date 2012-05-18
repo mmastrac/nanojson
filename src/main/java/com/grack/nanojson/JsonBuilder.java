@@ -94,8 +94,23 @@ public final class JsonBuilder<T> implements JsonSink<JsonBuilder<T>> {
 	}
 
 	@Override
+	public JsonBuilder<T> value(long l) {
+		return value((Object)l);
+	}
+
+	@Override
 	public JsonBuilder<T> value(boolean b) {
 		return value((Object)b);
+	}
+
+	@Override
+	public JsonBuilder<T> value(double d) {
+		return value((Object)d);
+	}
+
+	@Override
+	public JsonBuilder<T> value(float f) {
+		return value((Object)f);
 	}
 
 	@Override
@@ -114,8 +129,23 @@ public final class JsonBuilder<T> implements JsonSink<JsonBuilder<T>> {
 	}
 
 	@Override
+	public JsonBuilder<T> value(String key, long l) {
+		return value(key, (Object)l);
+	}
+
+	@Override
 	public JsonBuilder<T> value(String key, boolean b) {
 		return value(key, (Object)b);
+	}
+
+	@Override
+	public JsonBuilder<T> value(String key, double d) {
+		return value(key, (Object)d);
+	}
+
+	@Override
+	public JsonBuilder<T> value(String key, float f) {
+		return value(key, (Object)f);
 	}
 
 	@Override

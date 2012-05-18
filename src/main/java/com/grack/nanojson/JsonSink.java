@@ -61,6 +61,11 @@ public interface JsonSink<SELF extends JsonSink<SELF>> {
 	SELF value(int i);
 
 	/**
+	 * Emits a long value.
+	 */
+	SELF value(long l);
+
+	/**
 	 * Emits a boolean value.
 	 */
 	SELF value(boolean b);
@@ -89,6 +94,11 @@ public interface JsonSink<SELF extends JsonSink<SELF>> {
 	 * Emits an integer value with a key.
 	 */
 	SELF value(String key, int i);
+	
+	/**
+	 * Emits a long value with a key.
+	 */
+	SELF value(String key, long l);
 
 	/**
 	 * Emits a boolean value with a key.

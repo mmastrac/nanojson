@@ -2,6 +2,10 @@
 
 nanojson is a tiny, fast, and compliant JSON parser and writer for Java. 
 
+## License
+
+nanojson is dual-licensed under the MIT and Apache Public License.
+
 ## Get started
 
   * Build: `mvn clean compile test jar:jar`

@@ -9,8 +9,6 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-import sun.security.util.BigInt;
-
 public class JsonTypesTest {
 	@Test
 	public void testObjectInt() {

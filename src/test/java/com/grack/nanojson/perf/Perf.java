@@ -1,4 +1,4 @@
-package com.grack.nanojson;
+package com.grack.nanojson.perf;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -12,15 +12,18 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import com.google.caliper.Runner;
-import com.google.caliper.SimpleBenchmark;
+import com.google.caliper.Benchmark;
+import com.google.caliper.runner.CaliperMain;
+import com.grack.nanojson.JsonObject;
+import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParser.JsonParserContext;
+import com.grack.nanojson.JsonParserException;
 
 /**
  * Caliper test to compare parsing of strings vs. UTF-8 streams of GSON, Jackson and nanojson.
  */
 public class Perf {
-	public static class Parse extends SimpleBenchmark {
+	public static class Parse extends Benchmark {
 		private String string;
 		private URL url;
 		private ObjectMapper mapper = new ObjectMapper();
@@ -79,14 +82,14 @@ public class Perf {
 		}
 
 		public void timeGsonString(int reps) {
-			com.google.caliper.internal.gson.JsonParser parser = new com.google.caliper.internal.gson.JsonParser();
+			com.google.gson.JsonParser parser = new com.google.gson.JsonParser();
 			for (int i = 0; i < reps; i++) {
 				parser.parse(string);
 			}
 		}
 
 		public void timeGsonStream(int reps) throws IOException {
-			com.google.caliper.internal.gson.JsonParser parser = new com.google.caliper.internal.gson.JsonParser();
+			com.google.gson.JsonParser parser = new com.google.gson.JsonParser();
 			for (int i = 0; i < reps; i++) {
 				InputStream stm = url.openStream();
 				parser.parse(new InputStreamReader(stm));
@@ -95,7 +98,7 @@ public class Perf {
 		}
 
 		public static void main(String[] args) {
-			Runner.main("com.grack.nanojson.Perf.Parse");
+			CaliperMain.main(Perf.Parse.class, args);
 		}
 	}
 }

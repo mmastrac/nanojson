@@ -36,6 +36,8 @@ import java.nio.charset.Charset;
  * </pre>
  */
 public final class JsonParser {
+	static final int BUFFER_SIZE = 32 * 1024;
+
 	private int linePos = 1, rowPos, charOffset, utf8adjust;
 	private int tokenLinePos, tokenCharPos, tokenCharOffset;
 	private Object value;
@@ -52,6 +54,7 @@ public final class JsonParser {
 	private static final char[] FALSE = { 'a', 'l', 's', 'e' };
 	private static final char[] NULL = { 'u', 'l', 'l' };
 	private final boolean utf8;
+	private boolean lazyNumbers;
 
 	/**
 	 * The tokens available in JSON.
@@ -71,7 +74,7 @@ public final class JsonParser {
 	 */
 	private static final class PseudoUtf8Reader extends Reader {
 		private final BufferedInputStream buffered;
-		private byte[] buf = new byte[32 * 1024];
+		private byte[] buf = new byte[BUFFER_SIZE];
 
 		PseudoUtf8Reader(BufferedInputStream buffered) {
 			this.buffered = buffered;
@@ -79,8 +82,8 @@ public final class JsonParser {
 
 		@Override
 		public int read(char[] cbuf, int off, int len) throws IOException {
-			int r = buffered.read(buf);
-			for (int i = 0; i < r; i++)
+			int r = buffered.read(buf, off, len);
+			for (int i = off; i < off + r; i++)
 				cbuf[i] = (char)buf[i];
 			return r;
 		}
@@ -96,23 +99,29 @@ public final class JsonParser {
 	 */
 	public static final class JsonParserContext<T> {
 		private final Class<T> clazz;
+		private boolean lazyNumbers;
 
 		JsonParserContext(Class<T> clazz) {
 			this.clazz = clazz;
+		}
+
+		public JsonParserContext<T> withLazyNumbers() {
+			lazyNumbers = true;
+			return this;
 		}
 
 		/**
 		 * Parses the current JSON type from a {@link String}.
 		 */
 		public T from(String s) throws JsonParserException {
-			return new JsonParser(false, new StringReader(s)).parse(clazz);
+			return new JsonParser(false, lazyNumbers, new StringReader(s)).parse(clazz);
 		}
 
 		/**
 		 * Parses the current JSON type from a {@link Reader}.
 		 */
 		public T from(Reader r) throws JsonParserException {
-			return new JsonParser(false, r).parse(clazz);
+			return new JsonParser(false, lazyNumbers, r).parse(clazz);
 		}
 
 		/**
@@ -134,6 +143,7 @@ public final class JsonParser {
 		/**
 		 * Parses the current JSON type from a {@link InputStream}. Detects the encoding from the input stream.
 		 */
+		@SuppressWarnings("resource")
 		public T from(InputStream stm) throws JsonParserException {
 			final BufferedInputStream buffered = stm instanceof BufferedInputStream ? (BufferedInputStream)stm
 					: new BufferedInputStream(stm);
@@ -148,7 +158,7 @@ public final class JsonParser {
 					buffered.read();
 					buffered.read();
 					buffered.read();
-					return new JsonParser(true, new PseudoUtf8Reader(buffered)).parse(clazz);
+					return new JsonParser(true, lazyNumbers, new PseudoUtf8Reader(buffered)).parse(clazz);
 				} else if (sig[0] == 0x00 && sig[1] == 0x00 && sig[2] == 0xFE && sig[3] == 0xFF) {
 					charset = Charset.forName("UTF-32BE");
 				} else if (sig[0] == 0xFF && sig[1] == 0xFE && sig[2] == 0x00 && sig[3] == 0x00) {
@@ -177,20 +187,21 @@ public final class JsonParser {
 					buffered.reset();
 				} else {
 					buffered.reset();
-					return new JsonParser(true, new PseudoUtf8Reader(buffered)).parse(clazz);
+					return new JsonParser(true, lazyNumbers, new PseudoUtf8Reader(buffered)).parse(clazz);
 				}
 
-				return new JsonParser(false, new InputStreamReader(buffered, charset)).parse(clazz);
+				return new JsonParser(false, lazyNumbers, new InputStreamReader(buffered, charset)).parse(clazz);
 			} catch (IOException e) {
 				throw new JsonParserException(e, "IOException while detecting charset", 1, 1, 0);
 			}
 		}
 	}
 
-	JsonParser(boolean utf8, Reader reader) throws JsonParserException {
+	JsonParser(boolean utf8, boolean lazyNumbers, Reader reader) throws JsonParserException {
 		this.utf8 = utf8;
+		this.lazyNumbers = lazyNumbers;
 		this.reader = reader;
-		this.buffer = new char[32 * 1024];
+		this.buffer = new char[BUFFER_SIZE];
 		eof = refillBuffer();
 	}
 
@@ -263,7 +274,7 @@ public final class JsonParser {
 			c = advanceChar();
 
 		tokenLinePos = linePos;
-		tokenCharPos = index - rowPos - utf8adjust;
+		tokenCharPos = index + charOffset - rowPos - utf8adjust;
 		tokenCharOffset = charOffset + index;
 
 		switch (c) {
@@ -357,9 +368,15 @@ public final class JsonParser {
 	 * Expects a given string at the current position.
 	 */
 	private void consumeKeyword(char first, char[] expected) throws JsonParserException {
+		if (!ensureBuffer(expected.length)) {
+			throw createHelpfulException(first, expected, 0);
+		}
+
 		for (int i = 0; i < expected.length; i++)
-			if (advanceChar() != expected[i])
+			if (buffer[index++] != expected[i])
 				throw createHelpfulException(first, expected, i);
+
+		fixupAfterRawBufferRead();
 
 		// The token should end with something other than an ASCII letter
 		if (isAsciiLetter(peekChar()))
@@ -403,7 +420,7 @@ public final class JsonParser {
 					}
 				}
 
-				return Double.parseDouble(number);
+				return lazyNumbers ? new JsonLazyNumber(number) : Double.parseDouble(number);
 			}
 
 			// Special zero handling to match JSON spec. No leading zeros allowed for integers.
@@ -418,11 +435,15 @@ public final class JsonParser {
 				throw createParseException(null, "Malformed number: " + number, true);
 			}
 
+			if (lazyNumbers)
+				return new JsonLazyNumber(number);
+
 			// HACK: Attempt to parse using the approximate best type for this
-			int length = number.charAt(0) == '-' ? number.length() - 1 : number.length();
-			if (length < 10) // 2 147 483 647
+			boolean firstMinus = number.charAt(0) == '-';
+			int length = firstMinus ? number.length() - 1 : number.length();
+			if (length < 10 || (length == 10 && number.charAt(firstMinus ? 1 : 0) < '2')) // 2 147 483 647
 				return Integer.parseInt(number);
-			if (length < 19) // 9 223 372 036 854 775 807
+			if (length < 19 || (length == 19 && number.charAt(firstMinus ? 1 : 0) < '9')) // 9 223 372 036 854 775 807
 				return Long.parseLong(number);
 			return new BigInteger(number);
 		} catch (NumberFormatException e) {
@@ -457,7 +478,9 @@ public final class JsonParser {
 					utf8adjust++;
 					break;
 				case 14:
-					c = (char)((c & 0x0f) << 12 | (advanceChar() & 0x3f) << 6 | (advanceChar() & 0x3f));
+					ensureBuffer(2);
+					c = (char)((c & 0x0f) << 12 | (buffer[index++] & 0x3f) << 6 | (buffer[index++] & 0x3f));
+					fixupAfterRawBufferRead();
 					utf8adjust += 2;
 					break;
 				case 15:
@@ -469,20 +492,27 @@ public final class JsonParser {
 					switch ((c & 0xc) >> 2) {
 					case 0:
 					case 1:
-						reusableBuffer.appendCodePoint((c & 7) << 18 | (advanceChar() & 0x3f) << 12
-								| (advanceChar() & 0x3f) << 6 | (advanceChar() & 0x3f));
+						ensureBuffer(3);
+						reusableBuffer.appendCodePoint((c & 7) << 18 | (buffer[index++] & 0x3f) << 12
+								| (buffer[index++] & 0x3f) << 6 | (buffer[index++] & 0x3f));
+						fixupAfterRawBufferRead();
 						utf8adjust += 3;
 						continue outer;
 					case 2:
 						// TODO: \uFFFD (replacement char)
-						int codepoint = (c & 3) << 24 | (advanceChar() & 0x3f) << 18 | (advanceChar() & 0x3f) << 12
-								| (advanceChar() & 0x3f) << 6 | (advanceChar() & 0x3f);
+						ensureBuffer(4);
+						int codepoint = (c & 3) << 24 | (buffer[index++] & 0x3f) << 18 | (buffer[index++] & 0x3f) << 12
+								| (buffer[index++] & 0x3f) << 6 | (buffer[index++] & 0x3f);
+						fixupAfterRawBufferRead();
 						throw createParseException(null,
 								"Unable to represent codepoint 0x" + Integer.toHexString(codepoint)
 										+ " in a Java string", false);
 					case 3:
-						codepoint = (c & 1) << 30 | (advanceChar() & 0x3f) << 24 | (advanceChar() & 0x3f) << 18
-								| (advanceChar() & 0x3f) << 12 | (advanceChar() & 0x3f) << 6 | (advanceChar() & 0x3f);
+						ensureBuffer(5);
+						codepoint = (c & 1) << 30 | (buffer[index++] & 0x3f) << 24 | (buffer[index++] & 0x3f) << 18
+								| (buffer[index++] & 0x3f) << 12 | (buffer[index++] & 0x3f) << 6
+								| (buffer[index++] & 0x3f);
+						fixupAfterRawBufferRead();
 						throw createParseException(null,
 								"Unable to represent codepoint 0x" + Integer.toHexString(codepoint)
 										+ " in a Java string", false);
@@ -524,8 +554,30 @@ public final class JsonParser {
 					reusableBuffer.append((char)escape);
 					break;
 				case 'u':
-					reusableBuffer.append((char)(stringHexChar() << 12 | stringHexChar() << 8 //
-							| stringHexChar() << 4 | stringHexChar()));
+					int escaped = 0;
+					if (!ensureBuffer(4)) {
+						// Move to end of buffer for correct exception positioning
+						index = bufferLength;
+						throw createParseException(null, "Unexpected end of input in string escape", false);
+					}
+
+					for (int i = 0; i < 4; i++) {
+						escaped <<= 4;
+						int digit = buffer[index++];
+						if (digit >= '0' && digit <= '9') {
+							escaped |= (digit - '0');
+						} else if (digit >= 'A' && digit <= 'F') {
+							escaped |= (digit - 'A') + 10;
+						} else if (digit >= 'a' && digit <= 'f') {
+							escaped |= (digit - 'a') + 10;
+						} else {
+							throw createParseException(null, "Expected unicode hex escape character: " + (char)digit
+									+ " (" + digit + ")", false);
+						}
+					}
+
+					fixupAfterRawBufferRead();
+					reusableBuffer.append((char)escaped);
 					break;
 				default:
 					throw createParseException(null, "Invalid escape: \\" + (char)escape, false);
@@ -551,16 +603,6 @@ public final class JsonParser {
 	}
 
 	/**
-	 * Advances a character, throwing if it is illegal in the context of a JSON string hex unicode escape.
-	 */
-	private int stringHexChar() throws JsonParserException {
-		int c = Character.digit(advanceChar(), 16);
-		if (c == -1)
-			throw createParseException(null, "Expected unicode hex escape character", false);
-		return c;
-	}
-
-	/**
 	 * Quick test for digit characters.
 	 */
 	private boolean isDigitCharacter(int c) {
@@ -583,12 +625,12 @@ public final class JsonParser {
 
 	private boolean refillBuffer() throws JsonParserException {
 		try {
+			index = 0;
 			charOffset += bufferLength;
 			int r = reader.read(buffer, 0, buffer.length);
 			if (r <= 0)
 				return true;
 			bufferLength = r;
-			index = 0;
 			return false;
 		} catch (IOException e) {
 			throw createParseException(e, "IOException", true);
@@ -603,23 +645,66 @@ public final class JsonParser {
 	}
 
 	/**
+	 * Ensures that there is enough room in the buffer to directly access the next N chars via buffer[].
+	 */
+	private boolean ensureBuffer(int n) throws JsonParserException {
+		// We're good here
+		if (bufferLength - n >= index) {
+			return true;
+		}
+
+		// Nope, we need to read more, but we also have to retain whatever buffer we have
+		charOffset += index;
+		bufferLength = bufferLength - index;
+		System.arraycopy(buffer, index, buffer, 0, bufferLength);
+		index = 0;
+		try {
+			while (buffer.length > bufferLength) {
+				int r = reader.read(buffer, bufferLength, buffer.length - bufferLength);
+				if (r <= 0)
+					return false;
+				bufferLength += r;
+				if (bufferLength > n)
+					return true;
+			}
+
+			// Should be impossible
+			assert false : "Unexpected internal error";
+			return false;
+		} catch (IOException e) {
+			throw createParseException(e, "IOException", true);
+		}
+	}
+
+	/**
 	 * Advance one character ahead, or return {@link Token#EOF} on end of input.
 	 */
 	private int advanceChar() throws JsonParserException {
 		if (eof)
 			return -1;
+
 		int c = buffer[index];
 		if (c == '\n') {
 			linePos++;
-			rowPos = index + 1;
+			rowPos = index + 1 + charOffset;
 			utf8adjust = 0;
 		}
 
 		index++;
+
+		// Prepare for next read
 		if (index >= bufferLength)
 			eof = refillBuffer();
 
 		return c;
+	}
+
+	/**
+	 * Helper function to fixup eof after reading buffer directly.
+	 */
+	private void fixupAfterRawBufferRead() throws JsonParserException {
+		if (index >= bufferLength)
+			eof = refillBuffer();
 	}
 
 	/**
@@ -647,7 +732,7 @@ public final class JsonParser {
 			return new JsonParserException(e, message + " on line " + tokenLinePos + ", char " + tokenCharPos,
 					tokenLinePos, tokenCharPos, tokenCharOffset);
 		else {
-			int charPos = Math.max(1, index - rowPos - utf8adjust);
+			int charPos = Math.max(1, index + charOffset - rowPos - utf8adjust);
 			return new JsonParserException(e, message + " on line " + linePos + ", char " + charPos, linePos, charPos,
 					index + charOffset);
 		}

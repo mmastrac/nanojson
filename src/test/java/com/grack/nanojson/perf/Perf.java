@@ -52,7 +52,7 @@ public class Perf {
 		}
 
 		public void timeNanojsonString(int reps) throws JsonParserException {
-			JsonParserContext<JsonObject> parser = JsonParser.object();
+			JsonParserContext<JsonObject> parser = JsonParser.object().withLazyNumbers();
 			for (int i = 0; i < reps; i++) {
 				parser.from(string);
 			}

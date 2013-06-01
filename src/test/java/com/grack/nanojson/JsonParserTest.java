@@ -133,9 +133,19 @@ public class JsonParserTest {
 		assertEquals("\0", JsonParser.any().from("\"\\u0000\""));
 		assertEquals("\u8000", JsonParser.any().from("\"\\u8000\""));
 		assertEquals("\uffff", JsonParser.any().from("\"\\uffff\""));
+		assertEquals("\uFFFF", JsonParser.any().from("\"\\uFFFF\""));
 
 		assertEquals("all together: \\/\n\r\t\b\f (fin)",
 				JsonParser.any().from("\"all together: \\\\\\/\\n\\r\\t\\b\\f (fin)\""));
+	}
+
+	@Test
+	public void testStringEscapesAroundBufferBoundary() throws JsonParserException {
+		String base = "";
+		for (int i = 0; i < JsonParser.BUFFER_SIZE + 1024; i++) {
+			base += " ";
+			assertEquals("\u0055", JsonParser.any().from(base + "\"\\u0055\""));
+		}
 	}
 
 	@Test
@@ -533,10 +543,12 @@ public class JsonParserTest {
 	 */
 	@Test
 	public void testFailTrailingCommaUTF8() {
-		ByteArrayInputStream in1 = new ByteArrayInputStream("{\n\"abc\":123,\"def\":456,}".getBytes(Charset.forName("UTF-8")));
-		ByteArrayInputStream in2 = new ByteArrayInputStream("{\n\"\ub123\ub124\ub125\":123,\"def\":456,}".getBytes(Charset.forName("UTF-8")));
+		ByteArrayInputStream in1 = new ByteArrayInputStream("{\n\"abc\":123,\"def\":456,}".getBytes(Charset
+				.forName("UTF-8")));
+		ByteArrayInputStream in2 = new ByteArrayInputStream(
+				"{\n\"\ub123\ub124\ub125\":123,\"def\":456,}".getBytes(Charset.forName("UTF-8")));
 		JsonParserException e1;
-		
+
 		try {
 			JsonParser.object().from(in1);
 			fail();

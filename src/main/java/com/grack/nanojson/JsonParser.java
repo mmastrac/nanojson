@@ -36,6 +36,7 @@ import java.nio.charset.Charset;
  * </pre>
  */
 public final class JsonParser {
+	private static final int BUFFER_ROOM = 20;
 	static final int BUFFER_SIZE = 32 * 1024;
 
 	private int linePos = 1, rowPos, charOffset, utf8adjust;
@@ -392,7 +393,7 @@ public final class JsonParser {
 		boolean isDouble = false;
 
 		outer: while (true) {
-			int n = ensureBuffer(20);
+			int n = ensureBuffer(BUFFER_ROOM);
 			if (n == 0)
 				break outer;
 
@@ -466,87 +467,27 @@ public final class JsonParser {
 	/**
 	 * Steps through to the end of the current string token (the unescaped double quote).
 	 */
-	@SuppressWarnings("fallthrough")
 	private String consumeTokenString() throws JsonParserException {
 		reusableBuffer.setLength(0);
 		outer: while (true) {
+			if (ensureBuffer(BUFFER_ROOM) == 0)
+				throw createParseException(null, "String was not terminated before end of input", true);
+	
 			char c = stringChar();
-			// Hand-UTF8-decoding
+			
 			if (utf8 && (c & 0x80) != 0) {
-				ensureBuffer(5);
-
-				switch (c & 0xf0) {
-				case 0x80:
-				case 0x90:
-				case 0xa0:
-				case 0xb0:
-					throw createParseException(null,
-							"Illegal UTF-8 continuation byte: 0x" + Integer.toHexString(c & 0xff), false);
-				case 0xc0:
-					// Check for illegal C0 and C1 bytes
-					if ((c & 0xe) == 0)
-						throw createParseException(null, "Illegal UTF-8 byte: 0x" + Integer.toHexString(c & 0xff),
-								false);
-					// fall-through
-				case 0xd0:
-					c = (char)((c & 0x1f) << 6 | (buffer[index++] & 0x3f));
-					reusableBuffer.append(c);
-					utf8adjust++;
-					break;
-				case 0xe0:
-					c = (char)((c & 0x0f) << 12 | (buffer[index++] & 0x3f) << 6 | (buffer[index++] & 0x3f));
-					reusableBuffer.append(c);
-					utf8adjust += 2;
-					break;
-				case 0xf0:
-					if ((c & 0xf) >= 5)
-						throw createParseException(null, "Illegal UTF-8 byte: 0x" + Integer.toHexString(c & 0xff),
-								false);
-
-					// Extended char
-					switch ((c & 0xc) >> 2) {
-					case 0:
-					case 1:
-						reusableBuffer.appendCodePoint((c & 7) << 18 | (buffer[index++] & 0x3f) << 12
-								| (buffer[index++] & 0x3f) << 6 | (buffer[index++] & 0x3f));
-						utf8adjust += 3;
-						break;
-					case 2:
-						// TODO: \uFFFD (replacement char)
-						int codepoint = (c & 3) << 24 | (buffer[index++] & 0x3f) << 18 | (buffer[index++] & 0x3f) << 12
-								| (buffer[index++] & 0x3f) << 6 | (buffer[index++] & 0x3f);
-						throw createParseException(null,
-								"Unable to represent codepoint 0x" + Integer.toHexString(codepoint)
-										+ " in a Java string", false);
-					case 3:
-						codepoint = (c & 1) << 30 | (buffer[index++] & 0x3f) << 24 | (buffer[index++] & 0x3f) << 18
-								| (buffer[index++] & 0x3f) << 12 | (buffer[index++] & 0x3f) << 6
-								| (buffer[index++] & 0x3f);
-						throw createParseException(null,
-								"Unable to represent codepoint 0x" + Integer.toHexString(codepoint)
-										+ " in a Java string", false);
-					default:
-						assert false : "Impossible";
-					}
-					break;
-				default:
-					// Regular old byte
-					break;
-				}
-				if (index > bufferLength)
-					throw createParseException(null, "UTF-8 codepoint was truncated", false);
-				fixupAfterRawBufferRead();
+				// If it's a UTF-8 codepoint, we know it won't have special meaning
+				consumeTokenStringUtf8Char(c);
 				continue outer;
 			}
 
 			switch (c) {
 			case '\"':
+				fixupAfterRawBufferRead();
 				return reusableBuffer.toString();
 			case '\\':
-				int escape = advanceChar();
+				char escape = buffer[index++];
 				switch (escape) {
-				case -1:
-					throw createParseException(null, "EOF encountered in the middle of a string escape", false);
 				case 'b':
 					reusableBuffer.append('\b');
 					break;
@@ -565,15 +506,10 @@ public final class JsonParser {
 				case '"':
 				case '/':
 				case '\\':
-					reusableBuffer.append((char)escape);
+					reusableBuffer.append(escape);
 					break;
 				case 'u':
 					int escaped = 0;
-					if (ensureBuffer(4) < 4) {
-						// Move to end of buffer for correct exception positioning
-						index = bufferLength;
-						throw createParseException(null, "Unexpected end of input in string escape", false);
-					}
 
 					for (int i = 0; i < 4; i++) {
 						escaped <<= 4;
@@ -590,30 +526,106 @@ public final class JsonParser {
 						}
 					}
 
-					fixupAfterRawBufferRead();
 					reusableBuffer.append((char)escaped);
 					break;
 				default:
-					throw createParseException(null, "Invalid escape: \\" + (char)escape, false);
+					throw createParseException(null, "Invalid escape: \\" + escape, false);
 				}
 				break;
 			default:
 				reusableBuffer.append(c);
 			}
+			
+			if (index > bufferLength) {
+				index = bufferLength; // Reset index to last valid location
+				throw createParseException(null, "EOF encountered in the middle of a string escape", false);				
+			}
 		}
+	}
+
+	@SuppressWarnings("fallthrough")
+	private void consumeTokenStringUtf8Char(char c) throws JsonParserException {
+		ensureBuffer(5);
+
+		// Hand-UTF8-decoding
+		switch (c & 0xf0) {
+		case 0x80:
+		case 0x90:
+		case 0xa0:
+		case 0xb0:
+			throw createParseException(null,
+					"Illegal UTF-8 continuation byte: 0x" + Integer.toHexString(c & 0xff), false);
+		case 0xc0:
+			// Check for illegal C0 and C1 bytes
+			if ((c & 0xe) == 0)
+				throw createParseException(null, "Illegal UTF-8 byte: 0x" + Integer.toHexString(c & 0xff),
+						false);
+			// fall-through
+		case 0xd0:
+			c = (char)((c & 0x1f) << 6 | (buffer[index++] & 0x3f));
+			reusableBuffer.append(c);
+			utf8adjust++;
+			break;
+		case 0xe0:
+			c = (char)((c & 0x0f) << 12 | (buffer[index++] & 0x3f) << 6 | (buffer[index++] & 0x3f));
+			reusableBuffer.append(c);
+			utf8adjust += 2;
+			break;
+		case 0xf0:
+			if ((c & 0xf) >= 5)
+				throw createParseException(null, "Illegal UTF-8 byte: 0x" + Integer.toHexString(c & 0xff),
+						false);
+
+			// Extended char
+			switch ((c & 0xc) >> 2) {
+			case 0:
+			case 1:
+				reusableBuffer.appendCodePoint((c & 7) << 18 | (buffer[index++] & 0x3f) << 12
+						| (buffer[index++] & 0x3f) << 6 | (buffer[index++] & 0x3f));
+				utf8adjust += 3;
+				break;
+			case 2:
+				// TODO: \uFFFD (replacement char)
+				int codepoint = (c & 3) << 24 | (buffer[index++] & 0x3f) << 18 | (buffer[index++] & 0x3f) << 12
+						| (buffer[index++] & 0x3f) << 6 | (buffer[index++] & 0x3f);
+				throw createParseException(null,
+						"Unable to represent codepoint 0x" + Integer.toHexString(codepoint)
+								+ " in a Java string", false);
+			case 3:
+				codepoint = (c & 1) << 30 | (buffer[index++] & 0x3f) << 24 | (buffer[index++] & 0x3f) << 18
+						| (buffer[index++] & 0x3f) << 12 | (buffer[index++] & 0x3f) << 6
+						| (buffer[index++] & 0x3f);
+				throw createParseException(null,
+						"Unable to represent codepoint 0x" + Integer.toHexString(codepoint)
+								+ " in a Java string", false);
+			default:
+				assert false : "Impossible";
+			}
+			break;
+		default:
+			// Regular old byte
+			break;
+		}
+		if (index > bufferLength)
+			throw createParseException(null, "UTF-8 codepoint was truncated", false);
 	}
 
 	/**
 	 * Advances a character, throwing if it is illegal in the context of a JSON string.
 	 */
 	private char stringChar() throws JsonParserException {
-		int c = advanceChar();
-		if (c == -1)
-			throw createParseException(null, "String was not terminated before end of input", true);
-		if (c < 32)
+		char c = buffer[index++];
+		if (c < 32) {
+			// Need to ensure that we position this at the correct location for the error
+			if (c == '\n') {
+				linePos++;
+				rowPos = index + 1 + charOffset;
+				utf8adjust = 0;
+			}
 			throw createParseException(null,
 					"Strings may not contain control characters: 0x" + Integer.toString(c, 16), false);
-		return (char)c;
+		}
+		return c;
 	}
 
 	/**

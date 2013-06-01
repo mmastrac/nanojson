@@ -16,7 +16,7 @@ nanojson is dual-licensed under the MIT and Apache Public License.
 ### Fast
 
   * Minimal object allocation
-  * Fastest Java JSON in many cases: faster that Jackson when parsing from memory and in some streaming cases:
+  * Fastest Java JSON in many cases: faster that Jackson when parsing from memory and in some streaming cases (with lazy numbers enabled):
 
 ![](/docs/perf.png)
         

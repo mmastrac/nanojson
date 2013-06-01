@@ -51,8 +51,24 @@ public class Perf {
 			string = readAsUtf8(stm);
 		}
 
-		public void timeNanojsonString(int reps) throws JsonParserException {
+		public void timeNanojsonLazyNumberString(int reps) throws JsonParserException {
 			JsonParserContext<JsonObject> parser = JsonParser.object().withLazyNumbers();
+			for (int i = 0; i < reps; i++) {
+				parser.from(string);
+			}
+		}
+
+		public void timeNanojsonLazyNumberStream(int reps) throws JsonParserException, IOException {
+			JsonParserContext<JsonObject> parser = JsonParser.object().withLazyNumbers();
+			for (int i = 0; i < reps; i++) {
+				InputStream stm = url.openStream();
+				parser.from(stm);
+				stm.close();
+			}
+		}
+
+		public void timeNanojsonString(int reps) throws JsonParserException {
+			JsonParserContext<JsonObject> parser = JsonParser.object();
 			for (int i = 0; i < reps; i++) {
 				parser.from(string);
 			}

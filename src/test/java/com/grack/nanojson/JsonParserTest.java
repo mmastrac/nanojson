@@ -33,6 +33,8 @@ import java.util.zip.ZipInputStream;
 
 import org.junit.Test;
 
+import com.google.common.base.Charsets;
+
 public class JsonParserTest {
 	@Test
 	public void testWhitespace() throws JsonParserException {
@@ -598,6 +600,18 @@ public class JsonParserTest {
 		Charset charset = Charset.forName("UTF-32BE");
 		testEncoding(charset);
 		testEncodingBOM(charset);
+	}
+
+	@Test
+	public void testValidUTF8Codepoint() throws JsonParserException {
+		assertEquals("\ud83d\ude8a",
+				JsonParser.any().from(new ByteArrayInputStream("\"\ud83d\ude8a\"".getBytes(Charsets.UTF_8))));
+	}
+
+	@Test
+	public void testValidUTF8Codepoint2() throws JsonParserException {
+		assertEquals("\u2602",
+				JsonParser.any().from(new ByteArrayInputStream("\"\u2602\"".getBytes(Charsets.UTF_8))));
 	}
 
 	@Test

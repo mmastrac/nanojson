@@ -395,7 +395,7 @@ public final class JsonParser {
 			int n = ensureBuffer(20);
 			if (n == 0)
 				break outer;
-			
+
 			for (int i = 0; i < n; i++) {
 				char next = buffer[index];
 				if (!isDigitCharacter(next))
@@ -472,30 +472,33 @@ public final class JsonParser {
 		outer: while (true) {
 			char c = stringChar();
 			// Hand-UTF8-decoding
-			if (utf8) {
-				switch ((c & 0xff) >> 4) {
-				case 8:
-				case 9:
-				case 10:
-				case 11:
+			if (utf8 && (c & 0x80) != 0) {
+				ensureBuffer(5);
+
+				switch (c & 0xf0) {
+				case 0x80:
+				case 0x90:
+				case 0xa0:
+				case 0xb0:
 					throw createParseException(null,
 							"Illegal UTF-8 continuation byte: 0x" + Integer.toHexString(c & 0xff), false);
-				case 12:
+				case 0xc0:
 					// Check for illegal C0 and C1 bytes
 					if ((c & 0xe) == 0)
 						throw createParseException(null, "Illegal UTF-8 byte: 0x" + Integer.toHexString(c & 0xff),
 								false);
-				case 13:
-					c = (char)((c & 0x1f) << 6 | (advanceChar() & 0x3f));
+					// fall-through
+				case 0xd0:
+					c = (char)((c & 0x1f) << 6 | (buffer[index++] & 0x3f));
+					reusableBuffer.append(c);
 					utf8adjust++;
 					break;
-				case 14:
-					ensureBuffer(2);
+				case 0xe0:
 					c = (char)((c & 0x0f) << 12 | (buffer[index++] & 0x3f) << 6 | (buffer[index++] & 0x3f));
-					fixupAfterRawBufferRead();
+					reusableBuffer.append(c);
 					utf8adjust += 2;
 					break;
-				case 15:
+				case 0xf0:
 					if ((c & 0xf) >= 5)
 						throw createParseException(null, "Illegal UTF-8 byte: 0x" + Integer.toHexString(c & 0xff),
 								false);
@@ -504,27 +507,21 @@ public final class JsonParser {
 					switch ((c & 0xc) >> 2) {
 					case 0:
 					case 1:
-						ensureBuffer(3);
 						reusableBuffer.appendCodePoint((c & 7) << 18 | (buffer[index++] & 0x3f) << 12
 								| (buffer[index++] & 0x3f) << 6 | (buffer[index++] & 0x3f));
-						fixupAfterRawBufferRead();
 						utf8adjust += 3;
-						continue outer;
+						break;
 					case 2:
 						// TODO: \uFFFD (replacement char)
-						ensureBuffer(4);
 						int codepoint = (c & 3) << 24 | (buffer[index++] & 0x3f) << 18 | (buffer[index++] & 0x3f) << 12
 								| (buffer[index++] & 0x3f) << 6 | (buffer[index++] & 0x3f);
-						fixupAfterRawBufferRead();
 						throw createParseException(null,
 								"Unable to represent codepoint 0x" + Integer.toHexString(codepoint)
 										+ " in a Java string", false);
 					case 3:
-						ensureBuffer(5);
 						codepoint = (c & 1) << 30 | (buffer[index++] & 0x3f) << 24 | (buffer[index++] & 0x3f) << 18
 								| (buffer[index++] & 0x3f) << 12 | (buffer[index++] & 0x3f) << 6
 								| (buffer[index++] & 0x3f);
-						fixupAfterRawBufferRead();
 						throw createParseException(null,
 								"Unable to represent codepoint 0x" + Integer.toHexString(codepoint)
 										+ " in a Java string", false);
@@ -533,8 +530,13 @@ public final class JsonParser {
 					}
 					break;
 				default:
+					// Regular old byte
 					break;
 				}
+				if (index > bufferLength)
+					throw createParseException(null, "UTF-8 codepoint was truncated", false);
+				fixupAfterRawBufferRead();
+				continue outer;
 			}
 
 			switch (c) {
@@ -640,13 +642,12 @@ public final class JsonParser {
 	 */
 	private boolean refillBuffer() throws JsonParserException {
 		try {
-			index = 0;
-			charOffset += bufferLength;
 			int r = reader.read(buffer, 0, buffer.length);
 			if (r <= 0) {
-				bufferLength = 0;
 				return true;
 			}
+			charOffset += bufferLength;
+			index = 0;
 			bufferLength = r;
 			return false;
 		} catch (IOException e) {

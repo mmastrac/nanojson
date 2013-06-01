@@ -368,7 +368,7 @@ public final class JsonParser {
 	 * Expects a given string at the current position.
 	 */
 	private void consumeKeyword(char first, char[] expected) throws JsonParserException {
-		if (!ensureBuffer(expected.length)) {
+		if (ensureBuffer(expected.length) < expected.length) {
 			throw createHelpfulException(first, expected, 0);
 		}
 
@@ -390,11 +390,23 @@ public final class JsonParser {
 		reusableBuffer.setLength(0);
 		reusableBuffer.append(c);
 		boolean isDouble = false;
-		while (isDigitCharacter(peekChar())) {
-			char next = (char)advanceChar();
-			isDouble |= next == '.' || next == 'e' || next == 'E';
-			reusableBuffer.append(next);
+
+		outer: while (true) {
+			int n = ensureBuffer(20);
+			if (n == 0)
+				break outer;
+			
+			for (int i = 0; i < n; i++) {
+				char next = buffer[index];
+				if (!isDigitCharacter(next))
+					break outer;
+
+				isDouble |= next == '.' || next == 'e' || next == 'E';
+				reusableBuffer.append(next);
+				index++;
+			}
 		}
+		fixupAfterRawBufferRead();
 
 		String number = reusableBuffer.toString();
 
@@ -555,7 +567,7 @@ public final class JsonParser {
 					break;
 				case 'u':
 					int escaped = 0;
-					if (!ensureBuffer(4)) {
+					if (ensureBuffer(4) < 4) {
 						// Move to end of buffer for correct exception positioning
 						index = bufferLength;
 						throw createParseException(null, "Unexpected end of input in string escape", false);
@@ -623,13 +635,18 @@ public final class JsonParser {
 		return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 	}
 
+	/**
+	 * Returns true if EOF.
+	 */
 	private boolean refillBuffer() throws JsonParserException {
 		try {
 			index = 0;
 			charOffset += bufferLength;
 			int r = reader.read(buffer, 0, buffer.length);
-			if (r <= 0)
+			if (r <= 0) {
+				bufferLength = 0;
 				return true;
+			}
 			bufferLength = r;
 			return false;
 		} catch (IOException e) {
@@ -647,10 +664,10 @@ public final class JsonParser {
 	/**
 	 * Ensures that there is enough room in the buffer to directly access the next N chars via buffer[].
 	 */
-	private boolean ensureBuffer(int n) throws JsonParserException {
+	private int ensureBuffer(int n) throws JsonParserException {
 		// We're good here
 		if (bufferLength - n >= index) {
-			return true;
+			return n;
 		}
 
 		// Nope, we need to read more, but we also have to retain whatever buffer we have
@@ -661,16 +678,17 @@ public final class JsonParser {
 		try {
 			while (buffer.length > bufferLength) {
 				int r = reader.read(buffer, bufferLength, buffer.length - bufferLength);
-				if (r <= 0)
-					return false;
+				if (r <= 0) {
+					return bufferLength - index;
+				}
 				bufferLength += r;
 				if (bufferLength > n)
-					return true;
+					return bufferLength - index;
 			}
 
 			// Should be impossible
 			assert false : "Unexpected internal error";
-			return false;
+			throw new IOException("Unexpected internal error");
 		} catch (IOException e) {
 			throw createParseException(e, "IOException", true);
 		}

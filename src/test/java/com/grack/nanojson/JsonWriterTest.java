@@ -1,6 +1,7 @@
 package com.grack.nanojson;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
@@ -253,7 +254,12 @@ public class JsonWriterTest {
 		o.put("array of Boolean", new Boolean[] { true, false });
 		o.put("array of int", new int[] { 1, 2, 3 });
 		o.put("array of JsonObject", new JsonObject[] { new JsonObject(), null });
-		assertEquals("{\"array of JsonObject\":[{},null],\"array of Boolean\":[true,false],\"array of string\":[\"a\",\"b\",\"c\"],\"array of int\":[1,2,3]}", JsonWriter.string(o));
+		
+		String[] bits = { "\"array of JsonObject\":[{},null]","\"array of Boolean\":[true,false]","\"array of string\":[\"a\",\"b\",\"c\"]","\"array of int\":[1,2,3]" };
+		String s = JsonWriter.string(o);
+		for (String bit : bits) {
+			assertTrue("Didn't contain " + bit, s.contains(bit));
+		}
 	}
 
 	@Test

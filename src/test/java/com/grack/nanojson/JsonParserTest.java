@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -58,8 +59,11 @@ public class JsonParserTest {
 
 	@Test
 	public void testObjectTwoElements() throws JsonParserException {
-		assertEquals(JsonObject.class, JsonParser.object().from("{\"a\":1,\"B\":1}").getClass());
-		assertEquals("{B=1, a=1}", JsonParser.object().from("{\"a\":1,\"B\":1}").toString());
+		JsonObject obj = JsonParser.object().from("{\"a\":1,\"B\":1}");
+		assertEquals(JsonObject.class, obj.getClass());
+		assertEquals(1, obj.get("B"));
+		assertEquals(1, obj.get("a"));
+		assertEquals(2, obj.size());
 	}
 
 	@Test
@@ -112,7 +116,13 @@ public class JsonParserTest {
 		JsonObject o = JsonParser.object().from(
 				"{\"abc\":123, \"def\":456.0, \"ghi\":[true, false], \"jkl\":null, \"mno\":true}");
 
-		assertEquals("{jkl=null, abc=123, ghi=[true, false], def=456.0, mno=true}", o.toString());
+		assertEquals(null, o.get("jkl"));
+		assertTrue(o.containsKey("jkl"));
+		assertEquals(123, o.get("abc"));
+		assertEquals(Arrays.asList(true, false), o.get("ghi"));
+		assertEquals(456.0, o.get("def"));
+		assertEquals(true, o.get("mno"));
+		assertEquals(5, o.size());
 
 		assertEquals(123, o.getInt("abc"));
 		assertEquals(456, o.getInt("def"));

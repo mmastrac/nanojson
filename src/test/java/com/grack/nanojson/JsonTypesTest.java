@@ -51,7 +51,8 @@ public class JsonTypesTest {
 
 	@Test
 	public void testArrayInt() {
-		JsonArray o = new JsonArray(Arrays.asList((String)null, null, null, null));
+		JsonArray o = new JsonArray(Arrays.asList((String) null, null, null,
+				null));
 		o.set(3, 1);
 		assertEquals(1, o.getInt(3));
 		assertEquals(1.0, o.getDouble(3), 0.0001f);
@@ -66,7 +67,8 @@ public class JsonTypesTest {
 
 	@Test
 	public void testArrayString() {
-		JsonArray o = new JsonArray(Arrays.asList((String)null, null, null, null));
+		JsonArray o = new JsonArray(Arrays.asList((String) null, null, null,
+				null));
 		o.set(3, "1");
 		assertEquals(0, o.getInt(3));
 		assertEquals(0, o.getDouble(3), 0.0001f);
@@ -78,7 +80,8 @@ public class JsonTypesTest {
 
 	@Test
 	public void testArrayNull() {
-		JsonArray o = new JsonArray(Arrays.asList((String)null, null, null, null));
+		JsonArray o = new JsonArray(Arrays.asList((String) null, null, null,
+				null));
 		o.set(3, null);
 		assertEquals(0, o.getInt(3));
 		assertEquals(0, o.getDouble(3), 0.0001f);
@@ -91,7 +94,8 @@ public class JsonTypesTest {
 
 	@Test
 	public void testArrayBounds() {
-		JsonArray o = new JsonArray(Arrays.asList((String)null, null, null, null));
+		JsonArray o = new JsonArray(Arrays.asList((String) null, null, null,
+				null));
 		assertEquals(0, o.getInt(4));
 		assertEquals(0, o.getDouble(4), 0.0001f);
 		assertEquals(0, o.getFloat(4), 0.0001f);
@@ -103,35 +107,24 @@ public class JsonTypesTest {
 
 	@Test
 	public void testJsonArrayBuilder() {
-		//@formatter:off
-		JsonArray a = JsonArray.builder()
-				.value(true)
-				.value(1.0)
-				.value(1.0f)
-				.value(1)
-				.value(new BigInteger("1234567890"))
-				.value("hi")
-				.object()
-					.value("abc", 123)
-				.end()
-				.array()
-					.value(1)
-					.nul()
-				.end()
+		// @formatter:off
+		JsonArray a = JsonArray.builder().value(true).value(1.0).value(1.0f)
+				.value(1).value(new BigInteger("1234567890")).value("hi")
+				.object().value("abc", 123).end().array().value(1).nul().end()
 				.array(JsonArray.from(1, 2, 3))
-				.object(JsonObject.builder().nul("a").nul("b").nul("c").done())
-			.done();
-		//@formatter:on
+				.object(JsonObject.builder().nul("a").done()).done();
+		// @formatter:on
 
 		assertEquals(
-				"[true,1.0,1.0,1,1234567890,\"hi\",{\"abc\":123},[1,null],[1,2,3],{\"b\":null,\"c\":null,\"a\":null}]",
+				"[true,1.0,1.0,1,1234567890,\"hi\",{\"abc\":123},[1,null],[1,2,3],{\"a\":null}]",
 				JsonWriter.string(a));
 	}
 
 	@Test
 	public void testJsonObjectBuilder() {
-		//@formatter:off
-		JsonObject a = JsonObject.builder()
+		// @formatter:off
+		JsonObject a = JsonObject
+				.builder()
 				.value("bool", true)
 				.value("double", 1.0)
 				.value("float", 1.0f)
@@ -140,21 +133,30 @@ public class JsonTypesTest {
 				.value("string", "hi")
 				.nul("null")
 				.object("object")
-					.value("abc", 123)
+				.value("abc", 123)
 				.end()
 				.array("array")
-					.value(1)
-					.nul()
+				.value(1)
+				.nul()
 				.end()
 				.array("existingArray", JsonArray.from(1, 2, 3))
-				.object("existingObject", JsonObject.builder().nul("a").nul("b").nul("c").done())
-			.done();
-		//@formatter:on
+				.object("existingObject",
+						JsonObject.builder().nul("a").done())
+				.done();
+		// @formatter:on
 
-		assertEquals(
-				"{\"bigint\":1234567890,\"int\":1,\"string\":\"hi\",\"existingObject\":{\"b\":null,\"c\":null,\"a\":null},"
-						+ "\"existingArray\":[1,2,3],\"object\":{\"abc\":123},\"bool\":true,\"double\":1.0,\"float\":1.0,\"null\":null,\"array\":[1,null]}",
-				JsonWriter.string(a));
+		String[] bits = new String[] { "\"bigint\":1234567890", "\"int\":1",
+				"\"string\":\"hi\"",
+				"\"existingObject\":{\"a\":null}",
+				"\"existingArray\":[1,2,3]", "\"object\":{\"abc\":123}",
+				"\"bool\":true", "\"double\":1.0", "\"float\":1.0",
+				"\"null\":null", "\"array\":[1,null]" };
+
+		String s = JsonWriter.string(a);
+		
+		for (String bit : bits) {
+			assertTrue(s.contains(bit));
+		}
 	}
 
 	@Test(expected = JsonWriterException.class)

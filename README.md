@@ -11,6 +11,14 @@ nanojson is dual-licensed under the MIT and Apache Public License.
   * Build: `mvn clean compile test jar:jar`
   * Javadocs: `mvn javadoc:javadoc && open target/site/apidocs/index.html`
 
+Add it to your maven project:
+
+    <dependency>
+      <groupId>com.grack</groupId>
+      <artifactId>nanojson</artifactId>
+      <version>1.0</version>
+   </dependency>
+
 ## Features
 
 ### Fast

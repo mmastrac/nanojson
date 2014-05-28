@@ -139,9 +139,9 @@
 	</build>
 
 	<scm>
-		<connection>scm:git:mmastrac@github.com:mmastrac/nanojson.git</connection>
-		<developerConnection>scm:git:mmastrac@github.com:mmastrac/nanojson.git</developerConnection>
-		<url>https://mmastrac@github.com:mmastrac/nanojson.git</url>
+		<connection>scm:git:git@github.com:mmastrac/nanojson.git</connection>
+		<developerConnection>scm:git:git@github.com:mmastrac/nanojson.git</developerConnection>
+		<url>scm:git:git@github.com:mmastrac/nanojson.git</url>
 	</scm>
 
 </project>

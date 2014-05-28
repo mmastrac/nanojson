@@ -34,8 +34,6 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 	private boolean first = true;
 	private boolean inObject;
 
-//	/** used to suppress adding newlines inside of arrays */
-//	private boolean inArray = false;
 	/** If true, indent lines and insert new-line characters for human readability */
 	private boolean doIndent = false;
 	/** character or sequence to use for indenting (must be whitespace) */
@@ -306,7 +304,6 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 		inObject = false;
 		first = true;
 		raw('[');
-//		inArray = true;
 		return castThis();
 	}
 
@@ -331,7 +328,6 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 		inObject = false;
 		first = true;
 		raw('[');
-//		inArray = true;
 		return castThis();
 	}
 
@@ -363,7 +359,6 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 			raw('}');
 		} else {
 			raw(']');
-//			inArray = false;
 		}
 
 		first = false;

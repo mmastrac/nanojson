@@ -60,6 +60,7 @@
 				<configuration>
 					<configLocation>checkstyle.xml</configLocation>
 					<propertyExpansion>basedir=${basedir}</propertyExpansion>
+					<includeTestSourceDirectory>true</includeTestSourceDirectory>
 				</configuration>
 				<executions>
 					<execution>

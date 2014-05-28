@@ -11,7 +11,7 @@
 	<artifactId>nanojson</artifactId>
 	<packaging>jar</packaging>
 	<name>nanojson</name>
-	<version>1.0</version>
+	<version>1.1-SNAPSHOT</version>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

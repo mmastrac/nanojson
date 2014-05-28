@@ -43,6 +43,18 @@ import java.util.Map;
  *     .end()
  * .done();
  * </pre>
+ * <p>
+ * For human-readable indented JSON output, use 
+ * {@link JsonWriterBase#enableIndenting(boolean)} at the beginning. For example:<br>
+ * <pre>
+ * JsonObject root = new JsonObject();
+ * // add members with root.put(key,value)
+ * StringWriter sw = new StringWriter();
+ * JsonAppendableWriter jw = JsonWriter.on(sw);
+ * jw.enableIndenting(true);
+ * jw.value(root);
+ * String json = sw.toString();
+ * </pre>
  */
 //@formatter:on
 public final class JsonWriter {

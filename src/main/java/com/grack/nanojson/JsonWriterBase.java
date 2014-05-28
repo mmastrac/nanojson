@@ -34,6 +34,47 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 	private boolean first = true;
 	private boolean inObject;
 
+//	/** used to suppress adding newlines inside of arrays */
+//	private boolean inArray = false;
+	/** If true, indent lines and insert new-line characters for human readability */
+	private boolean doIndent = false;
+	/** character or sequence to use for indenting (must be whitespace) */
+	private String indentString = "    ";
+	/** current indent amount */
+	private int indent = 0;
+	/**
+	 * Sets whether or not to add whitespace characters to improve the human 
+	 * readability of the output. 
+	 * <p>
+	 * This object is returned so that method invocations can be chained.
+	 * @param doIndent If true, indent spacing will be used. If false, then 
+	 * no unnecessary whitespace characters will appear in the output.
+	 * @return Returns this object. 
+	 */
+	public SELF enableIndenting(boolean doIndent){
+		this.doIndent = doIndent;
+		return castThis();
+	}
+	/**
+	 * Sets the character(s) to add to the beginning of each line for indenting 
+	 * purposes.
+	 * <p>
+	 * This object is returned so that method invocations can be chained.
+	 * @param indentString The String to insert when indenting. Typically the 
+	 * tab character (<tt>"\t"</tt>) or space (<tt>"  "</tt>).
+	 * @return Returns this object. 
+	 */
+	public SELF setIndentString(String indentString){
+		// sanity check!
+		for(int i = 0; i < indentString.length(); i++){
+			if(Character.isWhitespace(indentString.charAt(i)) == false){
+				throw new IllegalArgumentException("Only whitespace characters are allowed for indents. String '"+indentString+"' contains non-whitespace characters.");
+			}
+		}
+		this.indentString = indentString;
+		return castThis();
+	}
+	
 	JsonWriterBase(Appendable appendable) {
 		this.appendable = appendable;
 	}
@@ -265,6 +306,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 		inObject = false;
 		first = true;
 		raw('[');
+//		inArray = true;
 		return castThis();
 	}
 
@@ -275,6 +317,10 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 		inObject = true;
 		first = true;
 		raw('{');
+		if(doIndent){
+			indent++;
+			appendNewLine();
+		}
 		return castThis();
 	}
 
@@ -285,6 +331,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 		inObject = false;
 		first = true;
 		raw('[');
+//		inArray = true;
 		return castThis();
 	}
 
@@ -295,6 +342,10 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 		inObject = true;
 		first = true;
 		raw('{');
+		if(doIndent){
+			indent++;
+			appendNewLine();
+		}
 		return castThis();
 	}
 
@@ -304,9 +355,15 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 			throw new JsonWriterException("Invalid call to end()");
 
 		if (inObject) {
+			if(doIndent){
+				indent--;
+				appendNewLine();
+				appendIndent();
+			}
 			raw('}');
 		} else {
 			raw(']');
+//			inArray = false;
 		}
 
 		first = false;
@@ -328,6 +385,16 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 			throw new JsonWriterException("Nothing was written to the JSON writer");
 	}
 
+	private void appendIndent(){
+		for(int i = 0; i < indent; i++){
+			raw(indentString);
+		}
+	}
+	
+	private void appendNewLine(){
+		raw('\n');
+	}
+	
 	private void raw(String s) {
 		try {
 			appendable.append(s);
@@ -351,6 +418,9 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 			if (states.size() == 0)
 				throw new JsonWriterException("Invalid call to emit a value in a finished JSON writer");
 			raw(',');
+			if(doIndent && inObject){
+				appendNewLine();
+			}
 		}
 	}
 
@@ -367,6 +437,9 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 
 		pre();
 
+		if(doIndent){
+			appendIndent();
+		}
 		emitStringValue(key);
 		raw(':');
 	}

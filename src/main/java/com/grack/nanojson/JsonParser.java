@@ -106,6 +106,10 @@ public final class JsonParser {
 			this.clazz = clazz;
 		}
 
+		/**
+		 * Parses numbers lazily, allowing us to defer some of the cost of
+		 * number construction until later.
+		 */
 		public JsonParserContext<T> withLazyNumbers() {
 			lazyNumbers = true;
 			return this;
@@ -144,7 +148,6 @@ public final class JsonParser {
 		/**
 		 * Parses the current JSON type from a {@link InputStream}. Detects the encoding from the input stream.
 		 */
-		@SuppressWarnings("resource")
 		public T from(InputStream stm) throws JsonParserException {
 			final BufferedInputStream buffered = stm instanceof BufferedInputStream ? (BufferedInputStream)stm
 					: new BufferedInputStream(stm);
@@ -538,7 +541,9 @@ public final class JsonParser {
 			
 			if (index > bufferLength) {
 				index = bufferLength; // Reset index to last valid location
-				throw createParseException(null, "EOF encountered in the middle of a string escape", false);				
+				throw createParseException(null,
+						"EOF encountered in the middle of a string escape",
+						false);
 			}
 		}
 	}

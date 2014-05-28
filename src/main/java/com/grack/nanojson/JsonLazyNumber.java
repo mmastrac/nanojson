@@ -2,6 +2,9 @@ package com.grack.nanojson;
 
 import java.math.BigDecimal;
 
+/**
+ * Lazily-parsed number for performance.
+ */
 @SuppressWarnings("serial")
 class JsonLazyNumber extends Number {
 	private String value;

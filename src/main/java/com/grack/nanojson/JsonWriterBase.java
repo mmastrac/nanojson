@@ -22,67 +22,42 @@ import java.util.Map;
 import java.util.Stack;
 
 /**
- * Internal class that handles emitting to an {@link Appendable}. Users only see the public subclasses,
- * {@link JsonStringWriter} and {@link JsonAppendableWriter}.
+ * Internal class that handles emitting to an {@link Appendable}. Users only see
+ * the public subclasses, {@link JsonStringWriter} and
+ * {@link JsonAppendableWriter}.
  * 
  * @param <SELF>
  *            A subclass of {@link JsonWriterBase}.
  */
-class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF> {
+class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
+		JsonSink<SELF> {
 	protected final Appendable appendable;
 	private Stack<Boolean> states = new Stack<Boolean>();
 	private boolean first = true;
 	private boolean inObject;
 
-	/** If true, indent lines and insert new-line characters for human readability */
-	private boolean doIndent = false;
-	/** character or sequence to use for indenting (must be whitespace) */
-	private String indentString = "    ";
-	/** current indent amount */
+	/**
+	 * Sequence to use for indenting.
+	 */
+	private String indentString;
+
+	/**
+	 * Current indent amount.
+	 */
 	private int indent = 0;
-	/**
-	 * Sets whether or not to add whitespace characters to improve the human 
-	 * readability of the output. 
-	 * <p>
-	 * This object is returned so that method invocations can be chained.
-	 * @param doIndent If true, indent spacing will be used. If false, then 
-	 * no unnecessary whitespace characters will appear in the output.
-	 * @return Returns this object. 
-	 */
-	public SELF enableIndenting(boolean doIndent){
-		this.doIndent = doIndent;
-		return castThis();
-	}
-	/**
-	 * Sets the character(s) to add to the beginning of each line for indenting 
-	 * purposes.
-	 * <p>
-	 * This object is returned so that method invocations can be chained.
-	 * @param indentString The String to insert when indenting. Typically the 
-	 * tab character (<tt>"\t"</tt>) or space (<tt>"  "</tt>).
-	 * @return Returns this object. 
-	 */
-	public SELF setIndentString(String indentString){
-		// sanity check!
-		for(int i = 0; i < indentString.length(); i++){
-			if(Character.isWhitespace(indentString.charAt(i)) == false){
-				throw new IllegalArgumentException("Only whitespace characters are allowed for indents. String '"+indentString+"' contains non-whitespace characters.");
-			}
-		}
-		this.indentString = indentString;
-		return castThis();
-	}
-	
-	JsonWriterBase(Appendable appendable) {
+
+	JsonWriterBase(Appendable appendable, String indent) {
 		this.appendable = appendable;
+		this.indentString = indent;
 	}
 
 	/**
-	 * This is guaranteed to be safe as the type of "this" will always be the type of "SELF".
+	 * This is guaranteed to be safe as the type of "this" will always be the
+	 * type of "SELF".
 	 */
 	@SuppressWarnings("unchecked")
 	private SELF castThis() {
-		return (SELF)this;
+		return (SELF) this;
 	}
 
 	@Override
@@ -120,8 +95,9 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 			Object o = entry.getValue();
 			if (!(entry.getKey() instanceof String))
 				throw new JsonWriterException("Invalid key type for map: "
-						+ (entry.getKey() == null ? "null" : entry.getKey().getClass()));
-			String k = (String)entry.getKey();
+						+ (entry.getKey() == null ? "null" : entry.getKey()
+								.getClass()));
+			String k = (String) entry.getKey();
 			value(k, o);
 		}
 
@@ -147,15 +123,15 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 		if (o == null)
 			return nul();
 		else if (o instanceof String)
-			return value((String)o);
+			return value((String) o);
 		else if (o instanceof Number)
-			return value(((Number)o));
+			return value(((Number) o));
 		else if (o instanceof Boolean)
-			return value((boolean)(Boolean)o);
+			return value((boolean) (Boolean) o);
 		else if (o instanceof Collection)
-			return array((Collection<?>)o);
+			return array((Collection<?>) o);
 		else if (o instanceof Map)
-			return object((Map<?, ?>)o);
+			return object((Map<?, ?>) o);
 		else if (o.getClass().isArray()) {
 			int length = Array.getLength(o);
 			array();
@@ -163,7 +139,8 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 				value(Array.get(o, i));
 			return end();
 		} else
-			throw new JsonWriterException("Unable to handle type: " + o.getClass());
+			throw new JsonWriterException("Unable to handle type: "
+					+ o.getClass());
 	}
 
 	@Override
@@ -171,15 +148,15 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 		if (o == null)
 			return nul(key);
 		else if (o instanceof String)
-			return value(key, (String)o);
+			return value(key, (String) o);
 		else if (o instanceof Number)
-			return value(key, (Number)o);
+			return value(key, (Number) o);
 		else if (o instanceof Boolean)
-			return value(key, (boolean)(Boolean)o);
+			return value(key, (boolean) (Boolean) o);
 		else if (o instanceof Collection)
-			return array(key, (Collection<?>)o);
+			return array(key, (Collection<?>) o);
 		else if (o instanceof Map)
-			return object(key, (Map<?, ?>)o);
+			return object(key, (Map<?, ?>) o);
 		else if (o.getClass().isArray()) {
 			int length = Array.getLength(o);
 			array(key);
@@ -187,7 +164,8 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 				value(Array.get(o, i));
 			return end();
 		} else
-			throw new JsonWriterException("Unable to handle type: " + o.getClass());
+			throw new JsonWriterException("Unable to handle type: "
+					+ o.getClass());
 	}
 
 	@Override
@@ -205,7 +183,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 		raw(Integer.toString(i));
 		return castThis();
 	}
-	
+
 	@Override
 	public SELF value(long l) {
 		preValue();
@@ -314,7 +292,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 		inObject = true;
 		first = true;
 		raw('{');
-		if(doIndent){
+		if (indentString != null) {
 			indent++;
 			appendNewLine();
 		}
@@ -338,7 +316,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 		inObject = true;
 		first = true;
 		raw('{');
-		if(doIndent){
+		if (indentString != null) {
 			indent++;
 			appendNewLine();
 		}
@@ -351,7 +329,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 			throw new JsonWriterException("Invalid call to end()");
 
 		if (inObject) {
-			if(doIndent){
+			if (indentString != null) {
 				indent--;
 				appendNewLine();
 				appendIndent();
@@ -370,26 +348,28 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 	 * Ensures that the object is in the finished state.
 	 * 
 	 * @throws JsonWriterException
-	 *             if the written JSON is not properly balanced, ie: all arrays and objects that were started have been
-	 *             properly ended.
+	 *             if the written JSON is not properly balanced, ie: all arrays
+	 *             and objects that were started have been properly ended.
 	 */
 	protected void doneInternal() {
 		if (states.size() > 0)
-			throw new JsonWriterException("Unclosed JSON objects and/or arrays when closing writer");
+			throw new JsonWriterException(
+					"Unclosed JSON objects and/or arrays when closing writer");
 		if (first)
-			throw new JsonWriterException("Nothing was written to the JSON writer");
+			throw new JsonWriterException(
+					"Nothing was written to the JSON writer");
 	}
 
-	private void appendIndent(){
-		for(int i = 0; i < indent; i++){
+	private void appendIndent() {
+		for (int i = 0; i < indent; i++) {
 			raw(indentString);
 		}
 	}
-	
-	private void appendNewLine(){
+
+	private void appendNewLine() {
 		raw('\n');
 	}
-	
+
 	private void raw(String s) {
 		try {
 			appendable.append(s);
@@ -411,9 +391,10 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 			first = false;
 		} else {
 			if (states.size() == 0)
-				throw new JsonWriterException("Invalid call to emit a value in a finished JSON writer");
+				throw new JsonWriterException(
+						"Invalid call to emit a value in a finished JSON writer");
 			raw(',');
-			if(doIndent && inObject){
+			if (indentString != null && inObject) {
 				appendNewLine();
 			}
 		}
@@ -421,18 +402,20 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 
 	private void preValue() {
 		if (inObject)
-			throw new JsonWriterException("Invalid call to emit a keyless value while writing an object");
+			throw new JsonWriterException(
+					"Invalid call to emit a keyless value while writing an object");
 
 		pre();
 	}
 
 	private void preValue(String key) {
 		if (!inObject)
-			throw new JsonWriterException("Invalid call to emit a key value while not writing an object");
+			throw new JsonWriterException(
+					"Invalid call to emit a key value while not writing an object");
 
 		pre();
 
-		if(doIndent){
+		if (indentString != null) {
 			appendIndent();
 		}
 		emitStringValue(key);
@@ -440,7 +423,8 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 	}
 
 	/**
-	 * Emits a quoted string value, escaping characters that are required to be escaped.
+	 * Emits a quoted string value, escaping characters that are required to be
+	 * escaped.
 	 */
 	private void emitStringValue(String s) {
 		raw('"');
@@ -494,6 +478,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements JsonSink<SELF
 	 * json.org spec says that all control characters must be escaped.
 	 */
 	private boolean shouldBeEscaped(char c) {
-		return c < ' ' || (c >= '\u0080' && c < '\u00a0') || (c >= '\u2000' && c < '\u2100');
+		return c < ' ' || (c >= '\u0080' && c < '\u00a0')
+				|| (c >= '\u2000' && c < '\u2100');
 	}
 }

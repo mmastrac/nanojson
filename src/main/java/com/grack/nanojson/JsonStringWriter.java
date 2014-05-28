@@ -22,7 +22,9 @@ package com.grack.nanojson;
  * Create this class using {@link JsonWriter#string()}.
  * 
  * <pre>
- * String json = JsonEmitter.string()
+ * String json = JsonEmitter
+ *     .indent("  ")
+ *     .string()
  *     .object()
  *         .array("a")
  *             .value(1)
@@ -36,8 +38,8 @@ package com.grack.nanojson;
  */
 //@formatter:on
 public final class JsonStringWriter extends JsonWriterBase<JsonStringWriter> {
-	JsonStringWriter() {
-		super(new StringBuilder());
+	JsonStringWriter(String indent) {
+		super(new StringBuilder(), indent);
 	}
 
 	/**

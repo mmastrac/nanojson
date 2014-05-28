@@ -23,11 +23,14 @@ import java.io.OutputStream;
 /**
  * JSON writer that emits JSON to a {@link Appendable}.
  * 
- * Create this class with {@link JsonWriter#on(Appendable)} or {@link JsonWriter#on(OutputStream)}.
+ * Create this class with {@link JsonWriter#on(Appendable)} or
+ * {@link JsonWriter#on(OutputStream)}.
  * 
- *  <pre>
+ * <pre>
  * OutputStream out = ...;
- * JsonEmitter.on(out)
+ * JsonEmitter
+ *     .indent("  ")
+ *     .on(out)
  *     .object()
  *         .array("a")
  *             .value(1)
@@ -38,37 +41,28 @@ import java.io.OutputStream;
  *     .end()
  * .done();
  * </pre>
- * <p>
- * For human-readable indented JSON output, use 
- * {@link JsonWriterBase#enableIndenting(boolean)} at the beginning. For example:<br>
- * <pre>
- * JsonObject root = new JsonObject();
- * // add members with root.put(key,value)
- * StringWriter sw = new StringWriter();
- * JsonAppendableWriter jw = JsonWriter.on(sw);
- * jw.enableIndenting(true);
- * jw.value(root);
- * String json = sw.toString();
- * </pre>
  */
-//@formatter:on
-public final class JsonAppendableWriter extends JsonWriterBase<JsonAppendableWriter> implements
+// @formatter:on
+public final class JsonAppendableWriter extends
+		JsonWriterBase<JsonAppendableWriter> implements
 		JsonSink<JsonAppendableWriter> {
-	JsonAppendableWriter(Appendable appendable) {
-		super(appendable);
+	JsonAppendableWriter(Appendable appendable, String indent) {
+		super(appendable, indent);
 	}
 
 	/**
-	 * Closes this JSON writer and flushes the underlying {@link Appendable} if it is also {@link Flushable}.
+	 * Closes this JSON writer and flushes the underlying {@link Appendable} if
+	 * it is also {@link Flushable}.
 	 * 
 	 * @throws JsonWriterException
-	 *             if the underlying {@link Flushable} {@link Appendable} failed to flush.
+	 *             if the underlying {@link Flushable} {@link Appendable} failed
+	 *             to flush.
 	 */
 	public void done() throws JsonWriterException {
 		super.doneInternal();
 		if (appendable instanceof Flushable)
 			try {
-				((Flushable)appendable).flush();
+				((Flushable) appendable).flush();
 			} catch (IOException e) {
 				throw new JsonWriterException(e);
 			}

@@ -10,14 +10,16 @@ nanojson is dual-licensed under the MIT and Apache Public License.
 
   * Build: `mvn clean compile test jar:jar`
   * Javadocs: `mvn javadoc:javadoc && open target/site/apidocs/index.html`
-
-Add it to your maven project:
+ 
+Add it to your maven pom.xml:
 
     <dependency>
       <groupId>com.grack</groupId>
       <artifactId>nanojson</artifactId>
       <version>1.0</version>
     </dependency>
+
+Or just drop the files directly into your project.
 
 ## Features
 
@@ -30,8 +32,8 @@ Add it to your maven project:
         
 ### Tiny
 
-  * Minimal number of source lines: full parser around 600 lines, writer is barely more than 400
-  * Tiny jar: less than 20kB
+  * Minimal number of source lines: full parser around 800 lines, writer is around 500
+  * Tiny jar: less than 25kB
 
 ### Robust
 
@@ -42,6 +44,7 @@ Add it to your maven project:
 
   * Well-documented
   * Apache licensed
+  * No dependencies
 
 ## Parsing example
 
@@ -119,3 +122,4 @@ These helper types also provide a builder that can be used in the same way as a 
   * Passes all of the http://www.json.org/JSON_checker/ tests, minus the test that enforces results not be a string and one that tests nesting depth for arrays
   * Passes the sample JSON torture test from http://code.google.com/p/json-test-suite/
   * Passes the tests from the YUI browser JSON test suite
+

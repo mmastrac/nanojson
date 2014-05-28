@@ -36,7 +36,13 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 
+/**
+ * Test for {@link JsonParser}.
+ */
 public class JsonParserTest {
+	// CHECKSTYLE_OFF: MagicNumber
+	// CHECKSTYLE_OFF: JavadocMethod
+	// CHECKSTYLE_OFF: EmptyBlock
 	@Test
 	public void testWhitespace() throws JsonParserException {
 		assertEquals(JsonObject.class,

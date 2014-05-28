@@ -20,10 +20,16 @@ import com.grack.nanojson.JsonParser.JsonParserContext;
 import com.grack.nanojson.JsonParserException;
 
 /**
- * Caliper test to compare parsing of strings vs. UTF-8 streams of GSON, Jackson and nanojson.
+ * Caliper test to compare parsing of strings vs. UTF-8 streams of GSON, Jackson
+ * and nanojson.
  */
 public class Perf {
+	// CHECKSTYLE_OFF: JavadocMethod
+	/**
+	 * The parsing benchmark.
+	 */
 	public static class Parse extends Benchmark {
+		private static final int BUFFER_SIZE = 1024 * 1024;
 		private String string;
 		private URL url;
 		private ObjectMapper mapper = new ObjectMapper();
@@ -33,7 +39,7 @@ public class Perf {
 		 */
 		private static String readAsUtf8(InputStream input) throws IOException {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			byte[] b = new byte[1024 * 1024];
+			byte[] b = new byte[BUFFER_SIZE];
 			while (true) {
 				int r = input.read(b);
 				if (r <= 0)
@@ -51,15 +57,19 @@ public class Perf {
 			string = readAsUtf8(stm);
 		}
 
-		public void timeNanojsonLazyNumberString(int reps) throws JsonParserException {
-			JsonParserContext<JsonObject> parser = JsonParser.object().withLazyNumbers();
+		public void timeNanojsonLazyNumberString(int reps)
+				throws JsonParserException {
+			JsonParserContext<JsonObject> parser = JsonParser.object()
+					.withLazyNumbers();
 			for (int i = 0; i < reps; i++) {
 				parser.from(string);
 			}
 		}
 
-		public void timeNanojsonLazyNumberStream(int reps) throws JsonParserException, IOException {
-			JsonParserContext<JsonObject> parser = JsonParser.object().withLazyNumbers();
+		public void timeNanojsonLazyNumberStream(int reps)
+				throws JsonParserException, IOException {
+			JsonParserContext<JsonObject> parser = JsonParser.object()
+					.withLazyNumbers();
 			for (int i = 0; i < reps; i++) {
 				InputStream stm = url.openStream();
 				parser.from(stm);
@@ -74,7 +84,8 @@ public class Perf {
 			}
 		}
 
-		public void timeNanojsonStream(int reps) throws JsonParserException, IOException {
+		public void timeNanojsonStream(int reps) throws JsonParserException,
+				IOException {
 			JsonParserContext<JsonObject> parser = JsonParser.object();
 			for (int i = 0; i < reps; i++) {
 				InputStream stm = url.openStream();
@@ -83,13 +94,15 @@ public class Perf {
 			}
 		}
 
-		public void timeJacksonString(int reps) throws JsonParseException, JsonMappingException, IOException {
+		public void timeJacksonString(int reps) throws JsonParseException,
+				JsonMappingException, IOException {
 			for (int i = 0; i < reps; i++) {
 				mapper.readValue(string, JsonNode.class);
 			}
 		}
 
-		public void timeJacksonStream(int reps) throws JsonParseException, JsonMappingException, IOException {
+		public void timeJacksonStream(int reps) throws JsonParseException,
+				JsonMappingException, IOException {
 			for (int i = 0; i < reps; i++) {
 				InputStream stm = url.openStream();
 				mapper.readValue(stm, JsonNode.class);

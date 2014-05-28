@@ -9,7 +9,12 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
+/**
+ * Test for the various JSON types.
+ */
 public class JsonTypesTest {
+	// CHECKSTYLE_OFF: MagicNumber
+	// CHECKSTYLE_OFF: JavadocMethod
 	@Test
 	public void testObjectInt() {
 		JsonObject o = new JsonObject();

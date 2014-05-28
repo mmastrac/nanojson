@@ -14,7 +14,13 @@ import java.util.Collections;
 
 import org.junit.Test;
 
+/**
+ * Test for {@link JsonWriter}.
+ */
 public class JsonWriterTest {
+	// CHECKSTYLE_OFF: MagicNumber
+	// CHECKSTYLE_OFF: JavadocMethod
+	// CHECKSTYLE_OFF: EmptyBlock
 	/**
 	 * Test emitting simple values.
 	 */

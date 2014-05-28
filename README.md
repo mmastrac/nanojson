@@ -17,7 +17,7 @@ Add it to your maven project:
       <groupId>com.grack</groupId>
       <artifactId>nanojson</artifactId>
       <version>1.0</version>
-   </dependency>
+    </dependency>
 
 ## Features
 

@@ -1,4 +1,5 @@
-# nanojson
+# nanojson [![Build Status](https://travis-ci.org/mmastrac/nanojson.svg?branch=master)](https://travis-ci.org/mmastrac/nanojson)
+
 
 nanojson is a tiny, fast, and compliant JSON parser and writer for Java. 
 

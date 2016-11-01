@@ -5,8 +5,8 @@
      "http://www.puppycrawl.com/dtds/suppressions_1_0.dtd">
 
 <suppressions>
-	<suppress checks="MagicNumber" files="JsonParser.java"/>
 	<suppress checks="InnerAssignment" files="JsonParser.java"/>
+	<suppress checks="MagicNumber" files="JsonParser.java"/>
 	<suppress checks="VisibilityModifier" files="JsonParser.java"/>
 </suppressions>
 

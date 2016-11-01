@@ -360,12 +360,11 @@ public final class JsonParser {
 		case '.':
 			throw createParseException(null, "Numbers may not start with '" + (char)c + "'", true);
 		default:
+			if (isAsciiLetter(c))
+				throw createHelpfulException((char)c, null, 0);
+
+			throw createParseException(null, "Unexpected character: " + (char)c, true);
 		}
-
-		if (isAsciiLetter(c))
-			throw createHelpfulException((char)c, null, 0);
-
-		throw createParseException(null, "Unexpected character: " + (char)c, true);
 	}
 
 	/**
@@ -420,10 +419,10 @@ public final class JsonParser {
 				// Double.parseDouble(). This is a hand-rolled pseudo-parser that
 				// verifies numbers we read.
 				int state = 0;
-				int index = 0;
+				int idx = 0;
 				outer:
 				while (true) {
-					char nc = index >= number.length() ? 0 : number.charAt(index++);
+					char nc = idx >= number.length() ? 0 : number.charAt(idx++);
 					int ns = -1;
 					sw:
 					switch (state) {
@@ -483,6 +482,8 @@ public final class JsonParser {
 							break outer; // legal ending
 						}
 						break;
+					default:
+						assert false : "Impossible"; // will throw malformed number
 					}
 					if (ns == -1)
 						throw new NumberFormatException("Malformed number: " + value);

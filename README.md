@@ -47,7 +47,7 @@ Or just drop the files directly into your project.
   * Apache licensed
   * No dependencies
 
-## Parsing example
+## Parser example
 
 There are three entry points for parsing, depending on the type of JSON object you expect to parse: `JsonParser.object().from()`, `JsonParser.array().from()`, and `JsonParser.any().from()`. 
 You pass them a `String` or a `Reader` and they will either return the parsed object of a given type or throw a `JsonParserException`.
@@ -65,7 +65,12 @@ Errors can be quickly located by using `getLinePosition` and `getCharPosition` o
 
     com.grack.nanojson.JsonParserException: Trailing comma in object on line 4, char 1
 
-## Writing example
+For performance-sensitive code, numeric values can be parsed lazily using the `withLazyNumbers` option. JSON numeric values will thehn be 
+parsed at access time rather than parse time:
+
+    JsonObject obj = JsonParser.object().withLazyNumbers().from("{\"abc\":123}");
+
+## Writer example
 
 `JsonWriter` is a simple, stateful JSON writer that can output to a `String`, or to anything implementing the Java `Appendable` interface. The latter includes 
 `StringBuilder`, `Writer`, `PrintStream`, and `CharBuffer`.

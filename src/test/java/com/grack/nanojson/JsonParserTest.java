@@ -169,7 +169,7 @@ public class JsonParserTest {
 	@Test
 	public void testNumbers() throws JsonParserException {
 		String[] testCases = new String[] { "0", "1", "-0", "-1", "0.1", "1.1", "-0.1", "0.10", "-0.10", "0e1", "0e0",
-				"-0e-1", "0.0e0", "-0.0e0" };
+				"-0e-1", "0.0e0", "-0.0e0", "9" };
 		for (String testCase : testCases) {
 			Number n = (Number)JsonParser.any().from(testCase);
 			assertEquals(Double.parseDouble(testCase), n.doubleValue(), Double.MIN_NORMAL);
@@ -268,18 +268,59 @@ public class JsonParserTest {
 	public void testFailNumberEdgeCases() {
 		String[] edgeCases = { "-", ".", "e", "01", "-01", "+01", "01.1", "-01.1", "+01.1", ".1", "-.1", "+.1", "+1",
 				"0.", "-0.", "+0.", "0.e", "-0.e", "+0.e", "0e", "-0e", "+0e", "0e-", "-0e-", "+0e-", "0e+", "-0e+",
-				"+0e+" };
+				"+0e+", "-e", "+e", "2.", "-2.", "-1.e1", "1.e1", "0.e1" };
 		for (String edgeCase : edgeCases) {
 			try {
-				JsonParser.object().from(edgeCase);
+				JsonParser.any().from(edgeCase);
 				fail("Should have failed to parse: " + edgeCase);
 			} catch (JsonParserException e) {
 				testException(e, 1, 1);
 			}
 
+			// Should fail in uppercase too
 			try {
-				JsonParser.object().from(edgeCase.toUpperCase());
+				JsonParser.any().from(edgeCase.toUpperCase());
 				fail("Should have failed to parse: " + edgeCase.toUpperCase());
+			} catch (JsonParserException e) {
+				testException(e, 1, 1);
+			}
+
+			// All these should fail with lazy numbers too
+			try {
+				JsonParser.any().withLazyNumbers().from(edgeCase);
+				fail("Should have failed to parse: " + edgeCase);
+			} catch (JsonParserException e) {
+				testException(e, 1, 1);
+			}
+		}
+	}
+
+	/**
+	 * See http://seriot.ch/json/parsing.html and https://github.com/mmastrac/nanojson/issues/3.
+	 */
+	@Test
+	public void testFailNumberEdgeCasesFromJSONSuite() {
+		String[] edgeCases = { "[-2.]", "[0.e1]", "[2.e+3]", "[2.e-3]", "[2.e3]", "[1.]" };
+		for (String edgeCase : edgeCases) {
+			try {
+				JsonParser.array().from(edgeCase);
+				fail("Should have failed to parse: " + edgeCase);
+			} catch (JsonParserException e) {
+				testException(e, 1, 2);
+			}
+		}
+	}
+
+	/**
+	 * See http://seriot.ch/json/parsing.html and https://github.com/mmastrac/nanojson/issues/3.
+	 */
+	@Test
+	public void testFailNumberEdgeCasesFromJSONSuiteNoArray() {
+		String[] edgeCases = { "-2.", "0.e1", "2.e+3", "2.e-3", "2.e3", "1." };
+		for (String edgeCase : edgeCases) {
+			try {
+				JsonParser.any().from(edgeCase);
+				fail("Should have failed to parse: " + edgeCase);
 			} catch (JsonParserException e) {
 				testException(e, 1, 1);
 			}
@@ -652,6 +693,20 @@ public class JsonParserTest {
 		}
 	}
 
+	/**
+	 * See http://seriot.ch/parsing_json.html and https://github.com/mmastrac/nanojson/issues/3.
+	 */
+	@Test
+	public void testIllegalUTF8StringFromJSONSuite() {
+		try {
+			JsonParser.object().from(new ByteArrayInputStream(new byte[] {
+					'"', (byte) 0xed, (byte) 0xa0, (byte) 0x80, '"' }));
+			fail();
+		} catch (JsonParserException e) {
+			testException(e, 1, 2, "UTF-8");
+		}
+	}
+
 	private void testEncoding(Charset charset) throws JsonParserException {
 		String unicodeKeyFromHell = new String(new int[] { 0x7f, 0x80, 0x7ff, 0x800, 0xffff, 0x10000, 0x10ffff }, 0, 7);
 		ByteArrayInputStream in = new ByteArrayInputStream(
@@ -780,7 +835,8 @@ public class JsonParserTest {
 	}
 
 	private void testException(JsonParserException e, int linePos, int charPos) {
-		assertEquals("line " + linePos + " char " + charPos,
+		assertEquals(e.getMessage() + " incorrect location",
+				"line " + linePos + " char " + charPos,
 				"line " + e.getLinePosition() + " char " + e.getCharPosition());
 	}
 

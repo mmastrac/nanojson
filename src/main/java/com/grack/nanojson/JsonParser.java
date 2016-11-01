@@ -416,35 +416,91 @@ public final class JsonParser {
 
 		try {
 			if (isDouble) {
-				// Special zero handling to match JSON spec. Leading zero is only allowed if next character is . or e
-				if (number.charAt(0) == '0') {
-					if (number.charAt(1) == '.') {
-						if (number.length() == 2)
-							throw createParseException(null, "Malformed number: " + number, true);
-					} else if (number.charAt(1) != 'e' && number.charAt(1) != 'E')
-						throw createParseException(null, "Malformed number: " + number, true);
-				}
-				if (number.charAt(0) == '-') {
-					if (number.charAt(1) == '0') {
-						if (number.charAt(2) == '.') {
-							if (number.length() == 3)
-								throw createParseException(null, "Malformed number: " + number, true);
-						} else if (number.charAt(2) != 'e' && number.charAt(2) != 'E')
-							throw createParseException(null, "Malformed number: " + number, true);
-					} else if (number.charAt(1) == '.') {
-						throw createParseException(null, "Malformed number: " + number, true);
+				// The JSON spec is way stricter about number formats than
+				// Double.parseDouble(). This is a hand-rolled pseudo-parser that
+				// verifies numbers we read.
+				int state = 0;
+				int index = 0;
+				outer:
+				while (true) {
+					char nc = index >= number.length() ? 0 : number.charAt(index++);
+					int ns = -1;
+					sw:
+					switch (state) {
+					case 0: // start
+					case 1: // start leading negative
+						if (nc == '-' && state == 0) {
+							ns = 1; break sw;
+						}
+						if (nc == '0') {
+							ns = 3; break sw;
+						}
+						if (nc >= '0' && nc <= '9') {
+							ns = 2; break sw;
+						}
+						break;
+					case 2: // no leading zero
+					case 3: // leading zero
+						if ((nc >= '0' && nc <= '9') && state == 2) {
+							ns = 2; break sw;
+						}
+						if (nc == '.') {
+							ns = 4; break sw;
+						}
+						if (nc == 'e' || nc == 'E') {
+							ns = 6; break sw;
+						}
+						if (nc == 0) {
+							break outer; // legal ending
+						}
+						break;
+					case 4: // after period
+					case 5: // after period, one digit read
+						if (nc >= '0' && nc <= '9') {
+							ns = 5; break sw;
+						}
+						if (nc == 0 && state == 5) {
+							break outer; // legal ending
+						}
+						if ((nc == 'e' || nc == 'E') && state == 5) {
+							ns = 6; break sw;
+						}
+						break;
+					case 6: // after exponent
+					case 7: // after exponent and sign
+						if (nc == '+' || nc == '-' && state == 6) {
+							ns = 7; break sw;
+						}
+						if (nc >= '0' && nc <= '9') {
+							ns = 8; break sw;
+						}
+						break;
+					case 8: // after digits
+						if (nc >= '0' && nc <= '9') {
+							ns = 8; break sw;
+						}
+						if (nc == 0) {
+							break outer; // legal ending
+						}
+						break;
 					}
+					if (ns == -1)
+						throw new NumberFormatException("Malformed number: " + value);
+					state = ns;
 				}
 
 				return lazyNumbers ? new JsonLazyNumber(number) : Double.parseDouble(number);
 			}
 
-			// Special zero handling to match JSON spec. No leading zeros allowed for integers.
-			if (number.charAt(0) == '0') {
-				if (number.length() == 1)
-					return 0;
+			// Quick parse/reject for single-digits
+			if (number.length() == 1) {
+				if (number.charAt(0) >= '0' && number.charAt(0) <= '9')
+					return number.charAt(0) - '0';
 				throw createParseException(null, "Malformed number: " + number, true);
 			}
+			// Special zero handling to match JSON spec. No leading zeros allowed for integers.
+			if (number.charAt(0) == '0')
+				throw createParseException(null, "Malformed number: " + number, true);
 			if (number.length() > 1 && number.charAt(0) == '-' && number.charAt(1) == '0') {
 				if (number.length() == 2)
 					return -0.0;
@@ -573,8 +629,12 @@ public final class JsonParser {
 			break;
 		case 0xe0:
 			c = (char)((c & 0x0f) << 12 | (buffer[index++] & 0x3f) << 6 | (buffer[index++] & 0x3f));
-			reusableBuffer.append(c);
 			utf8adjust += 2;
+			// Check for illegally-encoded surrogate - http://unicode.org/faq/utf_bom.html#utf8-4
+			if ((c >= '\ud800' && c <= '\udbff') || (c >= '\udc00' && c <= '\udfff'))
+				throw createParseException(null, "Illegal UTF-8 codepoint: 0x" + Integer.toHexString(c),
+						false);
+			reusableBuffer.append(c);
 			break;
 		case 0xf0:
 			if ((c & 0xf) >= 5)

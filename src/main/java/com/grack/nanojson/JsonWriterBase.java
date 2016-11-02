@@ -17,9 +17,9 @@ package com.grack.nanojson;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Stack;
 
 /**
  * Internal class that handles emitting to an {@link Appendable}. Users only see
@@ -31,8 +31,11 @@ import java.util.Stack;
  */
 class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 		JsonSink<SELF> {
+	private static final int BUFFER_SIZE = 10 * 1024;
 	protected final Appendable appendable;
-	private Stack<Boolean> states = new Stack<Boolean>();
+	private StringBuilder buffer = new StringBuilder(BUFFER_SIZE);
+	private BitSet states = new BitSet();
+	private int stateIndex = 0;
 	private boolean first = true;
 	private boolean inObject;
 
@@ -278,7 +281,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 	@Override
 	public SELF array() {
 		preValue();
-		states.push(inObject);
+		states.set(stateIndex++, inObject);
 		inObject = false;
 		first = true;
 		raw('[');
@@ -288,7 +291,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 	@Override
 	public SELF object() {
 		preValue();
-		states.push(inObject);
+		states.set(stateIndex++, inObject);
 		inObject = true;
 		first = true;
 		raw('{');
@@ -302,7 +305,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 	@Override
 	public SELF array(String key) {
 		preValue(key);
-		states.push(inObject);
+		states.set(stateIndex++, inObject);
 		inObject = false;
 		first = true;
 		raw('[');
@@ -312,7 +315,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 	@Override
 	public SELF object(String key) {
 		preValue(key);
-		states.push(inObject);
+		states.set(stateIndex++, inObject);
 		inObject = true;
 		first = true;
 		raw('{');
@@ -325,7 +328,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 
 	@Override
 	public SELF end() {
-		if (states.size() == 0)
+		if (stateIndex == 0)
 			throw new JsonWriterException("Invalid call to end()");
 
 		if (inObject) {
@@ -340,7 +343,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 		}
 
 		first = false;
-		inObject = states.pop();
+		inObject = states.get(--stateIndex);
 		return castThis();
 	}
 
@@ -352,12 +355,14 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 	 *             and objects that were started have been properly ended.
 	 */
 	protected void doneInternal() {
-		if (states.size() > 0)
+		if (stateIndex > 0)
 			throw new JsonWriterException(
 					"Unclosed JSON objects and/or arrays when closing writer");
 		if (first)
 			throw new JsonWriterException(
 					"Nothing was written to the JSON writer");
+
+		flush();
 	}
 
 	private void appendIndent() {
@@ -371,16 +376,23 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 	}
 
 	private void raw(String s) {
-		try {
-			appendable.append(s);
-		} catch (IOException e) {
-			throw new JsonWriterException(e);
+		buffer.append(s);
+		if (buffer.length() > BUFFER_SIZE) {
+			flush();
 		}
 	}
 
 	private void raw(char c) {
+		buffer.append(c);
+		if (buffer.length() > BUFFER_SIZE) {
+			flush();
+		}
+	}
+
+	private void flush() {
 		try {
-			appendable.append(c);
+			appendable.append(buffer.toString());
+			buffer.setLength(0);
 		} catch (IOException e) {
 			throw new JsonWriterException(e);
 		}
@@ -390,7 +402,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 		if (first) {
 			first = false;
 		} else {
-			if (states.size() == 0)
+			if (stateIndex == 0)
 				throw new JsonWriterException(
 						"Invalid call to emit a value in a finished JSON writer");
 			raw(',');

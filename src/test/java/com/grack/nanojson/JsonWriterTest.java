@@ -65,6 +65,7 @@ public class JsonWriterTest {
 		StringBuilder chars = new StringBuilder();
 		for (int i = 0; i < 0xa0; i++)
 			chars.append((char) i);
+		chars.append("\u20ff");
 
 		assertEquals(
 				"\"\\u0000\\u0001\\u0002\\u0003\\u0004\\u0005\\u0006\\u0007\\b\\t\\n\\u000b\\f\\r\\u000e\\u000f\\u0010"
@@ -73,7 +74,7 @@ public class JsonWriterTest {
 						+ "ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\\u0080\\u0081\\u0082"
 						+ "\\u0083\\u0084\\u0085\\u0086\\u0087\\u0088\\u0089\\u008a\\u008b\\u008c\\u008d\\u008e\\u008f"
 						+ "\\u0090\\u0091\\u0092\\u0093\\u0094\\u0095\\u0096\\u0097\\u0098\\u0099\\u009a\\u009b\\u009c"
-						+ "\\u009d\\u009e\\u009f\"",
+						+ "\\u009d\\u009e\\u009f\\u20ff\"",
 				JsonWriter.string(chars.toString()));
 	}
 
@@ -97,10 +98,83 @@ public class JsonWriterTest {
 				JsonWriter.escape(chars.toString()));
 	}
 
+	/**
+	 * Torture test for UTF8 character encoding.
+	 */
 	@Test
-	public void testWriteToSystemOutLikeStream() {
+	public void testBMPCharacters() throws Exception {
+		StringBuilder builder = new StringBuilder();
+		for (int i = 0; i < 0xD000; i++) {
+			builder.append((char)i);
+		}
+		builder.append("\ue000");
+		builder.append("\uefff");
+		builder.append("\uf000");
+		builder.append("\uffff");
+
+		// Base string
+		String s = JsonWriter.string(builder.toString());
+		assertEquals(builder.toString(), (String)JsonParser.any().from(s));
+
+		// Ensure that it also matches the PrintStream output
 		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-		JsonWriter.on(new PrintStream(bytes)).object().value("a", 1)
+		JsonWriter.on(new PrintStream(bytes, false, "UTF-8")).value(builder.toString()).done();
+		assertEquals(builder.toString(), (String)JsonParser.any().from(new String(bytes.toByteArray(),
+				Charset.forName("UTF-8"))));
+
+		// Ensure that it also matches the stream output
+		bytes = new ByteArrayOutputStream();
+		JsonWriter.on(bytes).value(builder.toString()).done();
+		assertEquals(builder.toString(), (String)JsonParser.any().from(new String(bytes.toByteArray(),
+				Charset.forName("UTF-8"))));
+	}
+
+	/**
+	 * Torture test for UTF8 character encoding outside the basic multilingual plane.
+	 */
+	@Test
+	public void testNonBMP() throws Exception {
+		StringBuilder builder = new StringBuilder();
+		builder.appendCodePoint(0x10000); // Start of non-BMP
+		builder.appendCodePoint(0x1f601); // GRINNING FACE WITH SMILING EYES
+		builder.appendCodePoint(0x10ffff); // Character.MAX_CODE_POINT
+
+		// Base string
+		String s = JsonWriter.string(builder.toString());
+		assertEquals(builder.toString(), (String)JsonParser.any().from(s));
+
+		// Ensure that it also matches the PrintStream output
+		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+		JsonWriter.on(new PrintStream(bytes, false, "UTF-8")).value(builder.toString()).done();
+		assertEquals(builder.toString(), (String)JsonParser.any().from(new String(bytes.toByteArray(),
+				Charset.forName("UTF-8"))));
+
+		// Ensure that it also matches the stream output
+		bytes = new ByteArrayOutputStream();
+		JsonWriter.on(bytes).value(builder.toString()).done();
+		assertEquals(builder.toString(), (String)JsonParser.any().from(new String(bytes.toByteArray(),
+				Charset.forName("UTF-8"))));
+	}
+
+	/**
+	 * Basic {@link OutputStream} smoke test.
+	 */
+	@Test
+	public void testWriteToUTF8Stream() {
+		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+		JsonWriter.on(bytes).object().value("a", 1)
+				.value("b", 2).end().done();
+		assertEquals("{\"a\":1,\"b\":2}", new String(bytes.toByteArray(),
+				Charset.forName("UTF-8")));
+	}
+
+	/**
+	 * Basic {@link PrintStream} smoke test.
+	 */
+	@Test
+	public void testWriteToSystemOutLikeStream() throws Exception {
+		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+		JsonWriter.on(new PrintStream(bytes, false, "UTF-8")).object().value("a", 1)
 				.value("b", 2).end().done();
 
 		assertEquals("{\"a\":1,\"b\":2}", new String(bytes.toByteArray(),

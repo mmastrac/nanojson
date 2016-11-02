@@ -50,6 +50,10 @@ public final class JsonAppendableWriter extends
 		super(appendable, indent);
 	}
 
+	JsonAppendableWriter(OutputStream out, String indent) {
+		super(out, indent);
+	}
+
 	/**
 	 * Closes this JSON writer and flushes the underlying {@link Appendable} if
 	 * it is also {@link Flushable}.
@@ -60,11 +64,13 @@ public final class JsonAppendableWriter extends
 	 */
 	public void done() throws JsonWriterException {
 		super.doneInternal();
-		if (appendable instanceof Flushable)
-			try {
+		try {
+			if (appendable instanceof Flushable)
 				((Flushable) appendable).flush();
-			} catch (IOException e) {
-				throw new JsonWriterException(e);
-			}
+			else if (out != null)
+				out.flush();
+		} catch (IOException e) {
+			throw new JsonWriterException(e);
+		}
 	}
 }

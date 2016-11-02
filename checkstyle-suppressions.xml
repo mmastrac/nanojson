@@ -8,5 +8,6 @@
 	<suppress checks="InnerAssignment" files="JsonParser.java"/>
 	<suppress checks="MagicNumber" files="JsonParser.java"/>
 	<suppress checks="VisibilityModifier" files="JsonParser.java"/>
+	<suppress checks="MagicNumber" files="JsonWriterBase.java"/>
 </suppressions>
 

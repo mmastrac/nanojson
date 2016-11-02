@@ -107,7 +107,7 @@ public final class JsonWriter {
 		 */
 		//@formatter:on
 		public JsonAppendableWriter on(PrintStream appendable) {
-			return new JsonAppendableWriter(appendable, indent);
+			return new JsonAppendableWriter((Appendable)appendable, indent);
 		}
 
 		//@formatter:off
@@ -232,7 +232,7 @@ public final class JsonWriter {
 	 */
 	//@formatter:on
 	public static JsonAppendableWriter on(PrintStream appendable) {
-		return new JsonAppendableWriter(appendable, null);
+		return new JsonAppendableWriter((Appendable)appendable, null);
 	}
 
 	//@formatter:off
@@ -252,8 +252,7 @@ public final class JsonWriter {
 	 */
 	//@formatter:on
 	public static JsonAppendableWriter on(OutputStream out) {
-		return new JsonAppendableWriter(new OutputStreamWriter(out,
-				Charset.forName("UTF-8")), null);
+		return new JsonAppendableWriter(out, null);
 	}
 
 	/**

@@ -159,8 +159,10 @@ public class JsonParserTest {
 
 	@Test
 	public void testStringEscapesAroundBufferBoundary() throws JsonParserException {
-		String base = "";
-		for (int i = 0; i < JsonParser.BUFFER_SIZE + 1024; i++) {
+		char[] c = new char[JsonParser.BUFFER_SIZE - 1024];
+		Arrays.fill(c,  ' ');
+		String base = new String(c);
+		for (int i = 0; i < 2048; i++) {
 			base += " ";
 			assertEquals("\u0055", JsonParser.any().from(base + "\"\\u0055\""));
 		}

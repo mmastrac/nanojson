@@ -14,6 +14,8 @@ import java.util.Collections;
 
 import org.junit.Test;
 
+import com.google.common.base.Charsets;
+
 /**
  * Test for {@link JsonWriter}.
  */
@@ -32,6 +34,63 @@ public class JsonWriterTest {
 		assertEquals("1.0", JsonWriter.string().value(1.0f).done());
 		assertEquals("1", JsonWriter.string().value(1).done());
 		assertEquals("\"abc\"", JsonWriter.string().value("abc").done());
+	}
+
+	/**
+	 * Write progressively longer strings to see if we can tickle a boundary
+	 * exception.
+	 */
+	@Test
+	public void testStreamWriterWithNonBMPStringAroundBufferSize() throws JsonParserException {
+		char[] c = new char[JsonWriterBase.BUFFER_SIZE - 128];
+		Arrays.fill(c, ' ');
+		String base = new String(c);
+		for (int i = 0; i < 256; i++) {
+			base += " ";
+			ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+			String s = base + new String(new int[] { 0x10ffff }, 0, 1);
+			JsonWriter.on(bytes).value(s).done();
+			assertEquals(s, JsonParser.any().from(new String(bytes.toByteArray(), Charsets.UTF_8)));
+		}
+	}
+
+	/**
+	 * Write progressively longer strings to see if we can tickle a boundary
+	 * exception.
+	 */
+	@Test
+	public void testStreamWriterWithBMPStringAroundBufferSize() throws JsonParserException {
+		char[] c = new char[JsonWriterBase.BUFFER_SIZE - 128];
+		Arrays.fill(c, ' ');
+		String base = new String(c);
+		for (int i = 0; i < 256; i++) {
+			base += " ";
+			ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+			String s = base + new String(new int[] { 0xffff }, 0, 1);
+			JsonWriter.on(bytes).value(s).done();
+			assertEquals(s, JsonParser.any().from(new String(bytes.toByteArray(), Charsets.UTF_8)));
+		}
+	}
+
+	/**
+	 * Write progressively longer string + array to see if we can tickle a
+	 * boundary exception.
+	 */
+	@Test
+	public void testStreamWriterWithArrayAroundBufferSize() throws JsonParserException {
+		char[] c = new char[JsonWriterBase.BUFFER_SIZE - 128];
+		Arrays.fill(c,  ' ');
+		String base = new String(c);
+		for (int i = 0; i < 256; i++) {
+			base += " ";
+			ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+			String s = base + new String(new int[] { 0x10ffff }, 0, 1);
+			JsonWriter.on(bytes).array().value(s).nul().end().done();
+			String s2 = new String(bytes.toByteArray(), Charsets.UTF_8);
+			JsonArray array = JsonParser.array().from(s2);
+			assertEquals(s, array.get(0));
+			assertEquals(null, array.get(1));
+		}
 	}
 
 	/**
@@ -162,9 +221,9 @@ public class JsonWriterTest {
 	@Test
 	public void testWriteToUTF8Stream() {
 		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-		JsonWriter.on(bytes).object().value("a", 1)
+		JsonWriter.on(bytes).object().value("a\n", 1)
 				.value("b", 2).end().done();
-		assertEquals("{\"a\":1,\"b\":2}", new String(bytes.toByteArray(),
+		assertEquals("{\"a\\n\":1,\"b\":2}", new String(bytes.toByteArray(),
 				Charset.forName("UTF-8")));
 	}
 
@@ -174,10 +233,10 @@ public class JsonWriterTest {
 	@Test
 	public void testWriteToSystemOutLikeStream() throws Exception {
 		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-		JsonWriter.on(new PrintStream(bytes, false, "UTF-8")).object().value("a", 1)
+		JsonWriter.on(new PrintStream(bytes, false, "UTF-8")).object().value("a\n", 1)
 				.value("b", 2).end().done();
 
-		assertEquals("{\"a\":1,\"b\":2}", new String(bytes.toByteArray(),
+		assertEquals("{\"a\\n\":1,\"b\":2}", new String(bytes.toByteArray(),
 				Charset.forName("UTF-8")));
 	}
 

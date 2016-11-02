@@ -32,7 +32,7 @@ import java.util.Map;
  */
 class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 		JsonSink<SELF> {
-	private static final int BUFFER_SIZE = 10 * 1024;
+	static final int BUFFER_SIZE = 10 * 1024;
 	private static final char[] NULL = new char[] { 'n', 'u', 'l', 'l' };
 	private static final char[] TRUE = new char[] { 't', 'r', 'u', 'e' };
 	private static final char[] FALSE = new char[] { 'f', 'a', 'l', 's', 'e' };

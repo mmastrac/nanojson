@@ -159,7 +159,7 @@ public class JsonParserTest {
 
 	@Test
 	public void testStringEscapesAroundBufferBoundary() throws JsonParserException {
-		char[] c = new char[JsonParser.BUFFER_SIZE - 1024];
+		char[] c = new char[JsonTokener.BUFFER_SIZE - 1024];
 		Arrays.fill(c,  ' ');
 		String base = new String(c);
 		for (int i = 0; i < 2048; i++) {

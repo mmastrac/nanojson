@@ -1,6 +1,9 @@
 package com.grack.nanojson;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 
@@ -9,15 +12,60 @@ import org.junit.Test;
 import com.grack.nanojson.Users.Friend;
 import com.grack.nanojson.Users.User;
 
+/**
+ * Tests for {@link JsonReader}.
+ */
 public class JsonReaderTest {
+	// CHECKSTYLE_OFF: MagicNumber
+	/**
+	 * Read a simple object.
+	 */
+	@Test
+	public void testObject() throws JsonParserException {
+		JsonReader reader = JsonReader.from("{\"a\":1}");
+		assertEquals(JsonReader.Type.OBJECT, reader.current());
+		reader.object();
+		assertFalse(reader.done());
+		assertEquals("a", reader.key());
+		assertFalse(reader.done());
+		assertEquals(JsonReader.Type.NUMBER, reader.current());
+		assertEquals(1, reader.intVal());
+		assertTrue(reader.done());
+		assertFalse(reader.pop());
+	}
+
+	/**
+	 * Read a simple array.
+	 */
+	@Test
+	public void testArray() throws JsonParserException {
+		JsonReader reader = JsonReader.from("[\"a\",1,null]");
+		assertEquals(JsonReader.Type.ARRAY, reader.current());
+		reader.array();
+		assertFalse(reader.done());
+		assertEquals(JsonReader.Type.STRING, reader.current());
+		assertEquals("a", reader.string());
+		
+		assertFalse(reader.done());
+		assertEquals(JsonReader.Type.NUMBER, reader.current());
+		assertEquals(1, reader.intVal());
+
+		assertFalse(reader.done());
+		assertEquals(JsonReader.Type.NULL, reader.current());
+		reader.nul();
+		
+		assertTrue(reader.done());
+		assertFalse(reader.pop());
+	}
+	
 	/**
 	 * Assert all the things.
 	 */
 	@Test
-	public void testNestedDetailed() {
+	public void testNestedDetailed() throws JsonParserException {
 		String json = createNestedJson();
 
-		JsonReader reader = JsonReader.on(json);
+		JsonReader reader = JsonReader.from(json);
 		
 		assertEquals(JsonReader.Type.OBJECT, reader.current());
 		reader.object();
@@ -55,13 +103,13 @@ public class JsonReaderTest {
 
 		for (int i = 0; i < 3; i++) {
 			assertFalse(reader.done());
+			assertEquals(JsonReader.Type.STRING, reader.current());
 			assertEquals("v" + i, reader.string());
 		}
 		
 		assertTrue(reader.done());
 		assertTrue(reader.pop());
 		
-		assertTrue(reader.pop());
 		assertTrue(reader.pop());
 		assertFalse(reader.pop());
 	}
@@ -71,10 +119,10 @@ public class JsonReaderTest {
 	 * feel for the API.
 	 */
 	@Test
-	public void testNestedLight() {
+	public void testNestedLight() throws JsonParserException {
 		String json = createNestedJson();
 
-		JsonReader reader = JsonReader.on(json);
+		JsonReader reader = JsonReader.from(json);
 		reader.object();
 		
 		assertEquals("a", reader.key());
@@ -101,13 +149,15 @@ public class JsonReaderTest {
 		
 		assertTrue(reader.pop());		
 		assertTrue(reader.pop());
-		assertTrue(reader.pop());
 		assertFalse(reader.pop());
 	}
 	
+	/**
+	 * Test the {@link Users} class from java-json-benchmark.
+	 */
 	@Test
-	public void testJsonBenchmarkUser() {
-		JsonReader reader = JsonReader.on(blah);
+	public void testJsonBenchmarkUser() throws JsonParserException {
+		JsonReader reader = JsonReader.from(getClass().getResourceAsStream("/users.json"));
 		
 		Users users = new Users();
 		
@@ -128,6 +178,9 @@ public class JsonReaderTest {
 							break;
 						case "age":
 							u.age = reader.intVal();
+							break;
+						case "isActive":
+							u.isActive = reader.bool();
 							break;
 						case "tags":
 							u.tags = new ArrayList<String>();
@@ -152,10 +205,15 @@ public class JsonReaderTest {
 									case "name":
 										f.name = reader.string();
 										break;
+									default:
+										fail();
 									}
 								}
 								reader.pop();
 							}
+							break;
+						default:
+							fail();
 						}
 					}
 					
@@ -167,6 +225,9 @@ public class JsonReaderTest {
 		reader.pop();
 	}
 
+	/**
+	 * Useful method to generate a deeply nested JSON object.
+	 */
 	private String createNestedJson() {
 		//@formatter:off
 		String json = JsonWriter.string()

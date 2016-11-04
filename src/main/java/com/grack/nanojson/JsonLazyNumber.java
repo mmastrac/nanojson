@@ -13,6 +13,10 @@ class JsonLazyNumber extends Number {
 		this.value = value;
 	}
 
+	public void set(String number) {
+		this.value = number;
+	}
+	
 	@Override
 	public double doubleValue() {
 		return Double.parseDouble(value);

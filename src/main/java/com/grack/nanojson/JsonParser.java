@@ -148,8 +148,9 @@ public final class JsonParser {
 		if (advanceToken() != Token.EOF)
 			throw tokener.createParseException(null, "Expected end of input, got " + token, true);
 		if (clazz != Object.class && (parsed == null || !clazz.isAssignableFrom(parsed.getClass())))
-			throw tokener.createParseException(null, "JSON did not contain the correct type, expected " + clazz.getSimpleName()
-					+ ".", true);
+			throw tokener.createParseException(null,
+					"JSON did not contain the correct type, expected " + clazz.getSimpleName() + ".", 
+					true);
 		return clazz.cast(parsed);
 	}
 
@@ -168,12 +169,9 @@ public final class JsonParser {
 	 * numbers.
 	 */
 	private Token advanceToken() throws JsonParserException {
-		int c = tokener.advanceToNext();
-		
-		switch (c) {
-		case -1:
-			return token = Token.EOF;
-		case '[': // Inlined function to avoid additional stack
+		token = tokener.advanceToToken();
+		switch (token) {
+		case ARRAY_START: // Inlined function to avoid additional stack
 			JsonArray list = new JsonArray();
 			if (advanceToken() != Token.ARRAY_END)
 				while (true) {
@@ -181,20 +179,14 @@ public final class JsonParser {
 					if (advanceToken() == Token.ARRAY_END)
 						break;
 					if (token != Token.COMMA)
-						throw tokener.createParseException(null, "Expected a comma or end of the array instead of " + token,
-								true);
+						throw tokener.createParseException(null,
+								"Expected a comma or end of the array instead of " + token, true);
 					if (advanceToken() == Token.ARRAY_END)
 						throw tokener.createParseException(null, "Trailing comma found in array", true);
 				}
 			value = list;
 			return token = Token.ARRAY_START;
-		case ']':
-			return token = Token.ARRAY_END;
-		case ',':
-			return token = Token.COMMA;
-		case ':':
-			return token = Token.COLON;
-		case '{': // Inlined function to avoid additional stack
+		case OBJECT_START: // Inlined function to avoid additional stack
 			JsonObject map = new JsonObject();
 			if (advanceToken() != Token.OBJECT_END)
 				while (true) {
@@ -208,52 +200,31 @@ public final class JsonParser {
 					if (advanceToken() == Token.OBJECT_END)
 						break;
 					if (token != Token.COMMA)
-						throw tokener.createParseException(null, "Expected a comma or end of the object instead of " + token,
-								true);
+						throw tokener.createParseException(null,
+								"Expected a comma or end of the object instead of " + token, true);
 					if (advanceToken() == Token.OBJECT_END)
 						throw tokener.createParseException(null, "Trailing object found in array", true);
 				}
 			value = map;
 			return token = Token.OBJECT_START;
-		case '}':
-			return token = Token.OBJECT_END;
-		case 't':
-			tokener.consumeKeyword((char)c, JsonTokener.TRUE);
+		case TRUE:
 			value = Boolean.TRUE;
-			return token = Token.TRUE;
-		case 'f':
-			tokener.consumeKeyword((char)c, JsonTokener.FALSE);
+			break;
+		case FALSE:
 			value = Boolean.FALSE;
-			return token = Token.FALSE;
-		case 'n':
-			tokener.consumeKeyword((char)c, JsonTokener.NULL);
+			break;
+		case NULL:
 			value = null;
-			return token = Token.NULL;
-		case '\"':
+			break;
+		case STRING:
 			value = tokener.consumeTokenString();
-			return token = Token.STRING;
-		case '-':
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-			value = tokener.consumeTokenNumber((char)c, lazyNumbers);
-			return token = Token.NUMBER;
-		case '+':
-		case '.':
-			throw tokener.createParseException(null, "Numbers may not start with '" + (char)c + "'", true);
+			break;
+		case NUMBER:
+			value = tokener.consumeTokenNumber(lazyNumbers ? new JsonLazyNumber(null) : null);
+			break;
 		default:
-			if (tokener.isAsciiLetter(c))
-				throw tokener.createHelpfulException((char)c, null, 0);
-
-			throw tokener.createParseException(null, "Unexpected character: " + (char)c, true);
 		}
-	}
 
+		return token;
+	}
 }

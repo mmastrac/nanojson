@@ -52,6 +52,32 @@ public class JsonParserTest {
 	}
 
 	@Test
+	public void testWriterOutput() throws JsonParserException {
+		//@formatter:off
+		String json = JsonWriter.string()
+				.object()
+					.object("a")
+						.array("b")
+							.object()
+								.value("a", 1)
+								.value("b", 2)
+							.end()
+							.object()
+								.value("c", 1.0)
+								.value("d", 2.0)
+							.end()
+						.end()
+						.value("c", JsonArray.from("v0", "v1", "v2"))
+					.end()
+				.end()
+			.done();
+		//@formatter:on
+		
+		// Just make sure it can be read - don't validate
+		JsonParser.object().from(json);
+	}
+	
+	@Test
 	public void testEmptyObject() throws JsonParserException {
 		assertEquals(JsonObject.class, JsonParser.object().from("{}").getClass());
 		assertEquals("{}", JsonParser.object().from("{}").toString());

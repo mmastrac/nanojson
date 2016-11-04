@@ -3,7 +3,6 @@ package com.grack.nanojson;
 import java.util.List;
 
 public class Users {
-
     public List<User> users;
 
     @Override
@@ -60,8 +59,6 @@ public class Users {
             if (index != user.index) return false;
             if (isActive != user.isActive) return false;
             if (age != user.age) return false;
-//        if (Double.compare(user.latitude, latitude) != 0) return false;
-//        if (Double.compare(user.longitude, longitude) != 0) return false;
             if (_id != null ? !_id.equals(user._id) : user._id != null) return false;
             if (guid != null ? !guid.equals(user.guid) : user.guid != null) return false;
             if (balance != null ? !balance.equals(user.balance) : user.balance != null) return false;
@@ -84,7 +81,6 @@ public class Users {
         @Override
         public int hashCode() {
             int result;
-            long temp;
             result = _id != null ? _id.hashCode() : 0;
             result = 31 * result + index;
             result = 31 * result + (guid != null ? guid.hashCode() : 0);
@@ -101,10 +97,6 @@ public class Users {
             result = 31 * result + (address != null ? address.hashCode() : 0);
             result = 31 * result + (about != null ? about.hashCode() : 0);
             result = 31 * result + (registered != null ? registered.hashCode() : 0);
-//        temp = Double.doubleToLongBits(latitude);
-//        result = 31 * result + (int) (temp ^ (temp >>> 32));
-//        temp = Double.doubleToLongBits(longitude);
-//        result = 31 * result + (int) (temp ^ (temp >>> 32));
             result = 31 * result + (tags != null ? tags.hashCode() : 0);
             result = 31 * result + (friends != null ? friends.hashCode() : 0);
             result = 31 * result + (greeting != null ? greeting.hashCode() : 0);

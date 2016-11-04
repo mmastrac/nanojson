@@ -18,7 +18,7 @@ final class JsonTokener {
 	private static final int BUFFER_ROOM = 20;
 
 	private int linePos = 1, rowPos, charOffset, utf8adjust;
-	private int tokenLinePos, tokenCharPos, tokenCharOffset;
+	private int tokenCharPos, tokenCharOffset;
 	private StringBuilder reusableBuffer = new StringBuilder();
 
 	private boolean eof;
@@ -28,6 +28,8 @@ final class JsonTokener {
 	private int bufferLength;
 
 	private final boolean utf8;
+
+	private int savedChar;
 
 	static final char[] TRUE = { 'r', 'u', 'e' };
 	static final char[] FALSE = { 'a', 'l', 's', 'e' };
@@ -39,7 +41,9 @@ final class JsonTokener {
 	enum Token {
 		EOF(false), NULL(true), TRUE(true), FALSE(true), STRING(true), NUMBER(true), COMMA(false), COLON(false), //
 		OBJECT_START(true), OBJECT_END(false), ARRAY_START(true), ARRAY_END(false);
-		public boolean isValue;
+		// CHECKSTYLE_OFF: VisibilityModifierCheck
+		final boolean isValue;
+		// CHECKSTYLE_ON: VisibilityModifierCheck
 
 		Token(boolean isValue) {
 			this.isValue = isValue;
@@ -157,9 +161,9 @@ final class JsonTokener {
 	/**
 	 * Steps through to the end of the current number token (a non-digit token).
 	 */
-	Number consumeTokenNumber(char c, boolean lazyNumbers) throws JsonParserException {
+	Number consumeTokenNumber(JsonLazyNumber lazyNumber) throws JsonParserException {
 		reusableBuffer.setLength(0);
-		reusableBuffer.append(c);
+		reusableBuffer.append((char)savedChar);
 		boolean isDouble = false;
 
 		outer: while (true) {
@@ -258,7 +262,11 @@ final class JsonTokener {
 					state = ns;
 				}
 
-				return lazyNumbers ? new JsonLazyNumber(number) : Double.parseDouble(number);
+				if (lazyNumber != null) {
+					lazyNumber.set(number);
+					return lazyNumber;
+				}
+				return Double.parseDouble(number);
 			}
 
 			// Quick parse/reject for single-digits
@@ -276,8 +284,10 @@ final class JsonTokener {
 				throw createParseException(null, "Malformed number: " + number, true);
 			}
 
-			if (lazyNumbers)
-				return new JsonLazyNumber(number);
+			if (lazyNumber != null) {
+				lazyNumber.set(number);
+				return lazyNumber;
+			}
 
 			// HACK: Attempt to parse using the approximate best type for this
 			boolean firstMinus = number.charAt(0) == '-';
@@ -564,15 +574,66 @@ final class JsonTokener {
 		return c;
 	}
 	
-	int advanceToNext() throws JsonParserException {
+	/**
+	 * Consumes a token, first eating up any whitespace ahead of it. Note that number tokens are not necessarily valid
+	 * numbers.
+	 */
+	Token advanceToToken() throws JsonParserException {
 		int c = advanceChar();
 		while (isWhitespace(c))
 			c = advanceChar();
 
-		tokenLinePos = linePos;
 		tokenCharPos = index + charOffset - rowPos - utf8adjust;
 		tokenCharOffset = charOffset + index;
-		return c;
+		
+		switch (c) {
+		case -1:
+			return Token.EOF;
+		case '[':
+			return Token.ARRAY_START;
+		case ']':
+			return Token.ARRAY_END;
+		case ',':
+			return Token.COMMA;
+		case ':':
+			return Token.COLON;
+		case '{':
+			return Token.OBJECT_START;
+		case '}':
+			return Token.OBJECT_END;
+		case 't':
+			consumeKeyword((char)c, JsonTokener.TRUE);
+			return Token.TRUE;
+		case 'f':
+			consumeKeyword((char)c, JsonTokener.FALSE);
+			return Token.FALSE;
+		case 'n':
+			consumeKeyword((char)c, JsonTokener.NULL);
+			return Token.NULL;
+		case '\"':
+			return Token.STRING;
+		case '-':
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			savedChar = c;
+			return Token.NUMBER;
+		case '+':
+		case '.':
+			throw createParseException(null, "Numbers may not start with '" + (char)c + "'", true);
+		default:
+			if (isAsciiLetter(c))
+				throw createHelpfulException((char)c, null, 0);
+
+			throw createParseException(null, "Unexpected character: " + (char)c, true);
+		}
 	}
 
 	/**
@@ -605,8 +666,8 @@ final class JsonTokener {
 	 */
 	JsonParserException createParseException(Exception e, String message, boolean tokenPos) {
 		if (tokenPos)
-			return new JsonParserException(e, message + " on line " + tokenLinePos + ", char " + tokenCharPos,
-					tokenLinePos, tokenCharPos, tokenCharOffset);
+			return new JsonParserException(e, message + " on line " + linePos + ", char " + tokenCharPos,
+					linePos, tokenCharPos, tokenCharOffset);
 		else {
 			int charPos = Math.max(1, index + charOffset - rowPos - utf8adjust);
 			return new JsonParserException(e, message + " on line " + linePos + ", char " + charPos, linePos, charPos,

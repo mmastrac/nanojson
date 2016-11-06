@@ -29,13 +29,12 @@ public class JsonReaderTest {
 		JsonReader reader = JsonReader.from("{\"a\":1}");
 		assertEquals(JsonReader.Type.OBJECT, reader.current());
 		reader.object();
-		assertFalse(reader.done());
+		assertTrue(reader.next());
 		assertEquals("a", reader.key());
-		assertFalse(reader.done());
 		assertEquals(JsonReader.Type.NUMBER, reader.current());
 		assertEquals(1, reader.intVal());
-		assertTrue(reader.done());
-		assertFalse(reader.pop());
+		assertFalse(reader.next());
+		assertFalse(reader.next()); // up to top level
 	}
 
 	/**
@@ -46,20 +45,20 @@ public class JsonReaderTest {
 		JsonReader reader = JsonReader.from("[\"a\",1,null]");
 		assertEquals(JsonReader.Type.ARRAY, reader.current());
 		reader.array();
-		assertFalse(reader.done());
+		assertTrue(reader.next());
 		assertEquals(JsonReader.Type.STRING, reader.current());
 		assertEquals("a", reader.string());
 		
-		assertFalse(reader.done());
+		assertTrue(reader.next());
 		assertEquals(JsonReader.Type.NUMBER, reader.current());
 		assertEquals(1, reader.intVal());
 
-		assertFalse(reader.done());
+		assertTrue(reader.next());
 		assertEquals(JsonReader.Type.NULL, reader.current());
 		reader.nul();
 		
-		assertTrue(reader.done());
-		assertFalse(reader.pop());
+		assertFalse(reader.next());
+		assertFalse(reader.next()); // up to top level
 	}
 	
 	/**
@@ -74,48 +73,44 @@ public class JsonReaderTest {
 		assertEquals(JsonReader.Type.OBJECT, reader.current());
 		reader.object();
 		
+		assertTrue(reader.next());
 		assertEquals("a", reader.key());
 		assertEquals(JsonReader.Type.OBJECT, reader.current());
 		reader.object();
-		
+		assertTrue(reader.next());
+
 		assertEquals("b", reader.key());
 		assertEquals(JsonReader.Type.ARRAY, reader.current());
 		reader.array();
 
 		for (int i = 0; i < 2; i++) {
-			assertFalse(reader.done());
+			assertTrue(reader.next());
 			assertEquals(JsonReader.Type.OBJECT, reader.current());
 			reader.object();
 	
-			assertFalse(reader.done());
+			assertTrue(reader.next());
 			assertEquals(JsonReader.Type.NUMBER, reader.current());
 			assertEquals(1, reader.intVal());
-			assertFalse(reader.done());
+			assertTrue(reader.next());
 			assertEquals(JsonReader.Type.NUMBER, reader.current());
 			assertEquals(2, reader.intVal());
-			assertTrue(reader.done());
-	
-			assertTrue(reader.pop());
+			assertFalse(reader.next());
 		}
 		
-		assertTrue(reader.done());
-		assertTrue(reader.pop());
-	
+		assertFalse(reader.next());
+		assertTrue(reader.next());
+
 		assertEquals("c", reader.key());
 		assertEquals(JsonReader.Type.ARRAY, reader.current());
 		reader.array();
 
 		for (int i = 0; i < 3; i++) {
-			assertFalse(reader.done());
+			assertTrue(reader.next());
 			assertEquals(JsonReader.Type.STRING, reader.current());
 			assertEquals("v" + i, reader.string());
 		}
 		
-		assertTrue(reader.done());
-		assertTrue(reader.pop());
-		
-		assertTrue(reader.pop());
-		assertFalse(reader.pop());
+		assertFalse(reader.next());
 	}
 	
 	/**
@@ -128,32 +123,37 @@ public class JsonReaderTest {
 
 		JsonReader reader = JsonReader.from(json);
 		reader.object();
-		
+		assertTrue(reader.next());
 		assertEquals("a", reader.key());
 		reader.object();
-		
+		assertTrue(reader.next());
 		assertEquals("b", reader.key());
 		reader.array();
 
 		for (int i = 0; i < 2; i++) {
+			assertTrue(reader.next());
+
 			reader.object();
+			assertTrue(reader.next());
 			assertEquals(1, reader.intVal());
+			assertTrue(reader.next());
 			assertEquals(2, reader.intVal());
-			assertTrue(reader.pop());
+			assertFalse(reader.next());
 		}
 		
-		assertTrue(reader.pop());
-	
+		assertFalse(reader.next());
+		assertTrue(reader.next());
+
 		assertEquals("c", reader.key());
 		reader.array();
 
 		for (int i = 0; i < 3; i++) {
+			assertTrue(reader.next());
 			assertEquals("v" + i, reader.string());
 		}
 		
-		assertTrue(reader.pop());		
-		assertTrue(reader.pop());
-		assertFalse(reader.pop());
+		assertFalse(reader.next());
+		assertFalse(reader.next());
 	}
 	
 	/**
@@ -167,72 +167,118 @@ public class JsonReaderTest {
 	}
 
 	private static void parseUsers(JsonReader reader) throws JsonParserException {
-		Users users = new Users();
-		
-		reader.object();
-		while (!reader.done()) {
-			if (reader.key().equals("users")) {
-				users.users = new ArrayList<User>();
-				reader.array();
-				while (!reader.done()) {
-					reader.object();
-					User u = new User();
-					users.users.add(u);
-					
-					while (!reader.done()) {
-						switch (reader.key()) {
-						case "_id":
-							u._id = reader.string();
-							break;
-						case "age":
-							u.age = reader.intVal();
-							break;
-						case "isActive":
-							u.isActive = reader.bool();
-							break;
-						case "tags":
-							u.tags = new ArrayList<String>();
-							reader.array();
-							while (!reader.done()) {
-								u.tags.add(reader.string());
-							}
-							reader.pop();
-							break;
-						case "friends":
-							u.friends = new ArrayList<Friend>();
-							reader.array();
-							while (!reader.done()) {
-								reader.object();
-								Friend f = new Friend();
-								u.friends.add(f);
-								while (!reader.done()) {
-									switch (reader.key()) {
-									case "id":
-										f.id = reader.string();
-										break;
-									case "name":
-										f.name = reader.string();
-										break;
-									default:
-										fail();
-									}
-								}
-								reader.pop();
-							}
-							break;
-						default:
-							fail();
-						}
-					}
-					
-					reader.pop();
-				}
-				reader.pop();
-			}
-		}
-		reader.pop();
+        Users uc = new Users();
+        uc.users = new ArrayList<>();
+        reader.object();
+        while (reader.next()) {
+            if (reader.key().equals("users")) {
+                reader.array();
+                while (reader.next()) {
+                    uc.users.add(parseUser(reader));
+                }
+            }
+        }
 	}
 
+    private static User parseUser(JsonReader reader) throws JsonParserException {
+        User u = new User();
+
+        reader.object();
+
+        while (reader.next()) {
+            switch (reader.key()) {
+                case "_id":
+                    u._id = reader.string();
+                    break;
+                case "index":
+                    u.index = reader.intVal();
+                    break;
+                case "guid":
+                    u.guid = reader.string();
+                    break;
+                case "isActive":
+                    u.isActive = reader.bool();
+                    break;
+                case "balance":
+                    u.balance = reader.string();
+                    break;
+                case "picture":
+                    u.picture = reader.string();
+                    break;
+                case "age":
+                    u.age = reader.intVal();
+                    break;
+                case "eyeColor":
+                    u.eyeColor = reader.string();
+                    break;
+                case "name":
+                    u.name = reader.string();
+                    break;
+                case "gender":
+                    u.gender = reader.string();
+                    break;
+                case "company":
+                    u.company = reader.string();
+                    break;
+                case "email":
+                    u.email = reader.string();
+                    break;
+                case "phone":
+                    u.phone = reader.string();
+                    break;
+                case "address":
+                    u.address = reader.string();
+                    break;
+                case "about":
+                    u.about = reader.string();
+                    break;
+                case "registered":
+                    u.registered = reader.string();
+                    break;
+                case "latitude":
+                    u.latitude = reader.doubleVal();
+                    break;
+                case "longitude":
+                    u.longitude = reader.doubleVal();
+                    break;
+                case "tags":
+                    u.tags = new ArrayList<String>();
+                    reader.array();
+                    while (reader.next()) {
+                        u.tags.add(reader.string());
+                    }
+                    break;
+                case "friends":
+                    u.friends = new ArrayList<Friend>();
+                    reader.array();
+                    while (reader.next()) {
+                        reader.object();
+                        Friend f = new Friend();
+                        u.friends.add(f);
+                        while (reader.next()) {
+                            switch (reader.key()) {
+                                case "id":
+                                    f.id = reader.string();
+                                    break;
+                                case "name":
+                                    f.name = reader.string();
+                                    break;
+                            }
+                        }
+                    }
+                    break;
+                case "greeting":
+                    u.greeting = reader.string();
+                    break;
+                case "favoriteFruit":
+                    u.favoriteFruit = reader.string();
+                    break;
+            }
+        }
+
+        return u;
+    }
+	
 	/**
 	 * Useful method to generate a deeply nested JSON object.
 	 */
@@ -272,7 +318,7 @@ public class JsonReaderTest {
 		 
 		 byte[] data = out.toByteArray();
 		 
-		 for (int i = 0; i < 10000; i++) {
+		 for (int i = 0; i < 100000; i++) {
 			 parseUsers(JsonReader.from(new ByteArrayInputStream(data)));
 		 }
 	}

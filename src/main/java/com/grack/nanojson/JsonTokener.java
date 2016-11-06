@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.math.BigInteger;
 import java.nio.charset.Charset;
 
 /**
@@ -19,9 +18,8 @@ final class JsonTokener {
 
 	private int linePos = 1, rowPos, charOffset, utf8adjust;
 	private int tokenCharPos, tokenCharOffset;
-	private StringBuilder reusableBuffer = new StringBuilder();
 
-	private boolean eof;
+	boolean eof;
 	private int index;
 	private final Reader reader;
 	private final char[] buffer = new char[BUFFER_SIZE];
@@ -29,26 +27,26 @@ final class JsonTokener {
 
 	private final boolean utf8;
 
-	private int savedChar;
+	StringBuilder reusableBuffer = new StringBuilder();
+	boolean isDouble;
 
 	static final char[] TRUE = { 'r', 'u', 'e' };
 	static final char[] FALSE = { 'a', 'l', 's', 'e' };
 	static final char[] NULL = { 'u', 'l', 'l' };
 
-	/**
-	 * The tokens available in JSON.
-	 */
-	enum Token {
-		EOF(false), NULL(true), TRUE(true), FALSE(true), STRING(true), NUMBER(true), COMMA(false), COLON(false), //
-		OBJECT_START(true), OBJECT_END(false), ARRAY_START(true), ARRAY_END(false);
-		// CHECKSTYLE_OFF: VisibilityModifierCheck
-		final boolean isValue;
-		// CHECKSTYLE_ON: VisibilityModifierCheck
-
-		Token(boolean isValue) {
-			this.isValue = isValue;
-		}
-	}
+	static final int TOKEN_EOF = 0;
+	static final int TOKEN_COMMA = 1;
+	static final int TOKEN_COLON = 2;
+	static final int TOKEN_OBJECT_END = 3;
+	static final int TOKEN_ARRAY_END = 4;
+	static final int TOKEN_NULL = 5;
+	static final int TOKEN_TRUE = 6;
+	static final int TOKEN_FALSE = 7;
+	static final int TOKEN_STRING = 8;
+	static final int TOKEN_NUMBER = 9;
+	static final int TOKEN_OBJECT_START = 10;
+	static final int TOKEN_ARRAY_START = 11;
+	static final int TOKEN_VALUE_MIN = TOKEN_NULL;
 
 	/**
 	 * A {@link Reader} that reads a UTF8 stream without decoding it for performance.
@@ -161,10 +159,10 @@ final class JsonTokener {
 	/**
 	 * Steps through to the end of the current number token (a non-digit token).
 	 */
-	Number consumeTokenNumber(JsonLazyNumber lazyNumber) throws JsonParserException {
+	private void consumeTokenNumber(char savedChar) throws JsonParserException {
 		reusableBuffer.setLength(0);
-		reusableBuffer.append((char)savedChar);
-		boolean isDouble = false;
+		reusableBuffer.append(savedChar);
+		isDouble = false;
 
 		// The JSON spec is way stricter about number formats than
 		// Double.parseDouble(). This is a hand-rolled pseudo-parser that
@@ -259,42 +257,12 @@ final class JsonTokener {
 			isDouble = true;
 		
 		fixupAfterRawBufferRead();
-
-		String number = reusableBuffer.toString();
-
-		try {
-			if (lazyNumber != null) {
-				lazyNumber.set(number, isDouble);
-				return lazyNumber;
-			}
-
-			if (isDouble)
-				return Double.parseDouble(number);
-
-			// Quick parse for single-digits
-			if (number.length() == 1) {
-				return number.charAt(0) - '0';
-			} else if (number.length() == 2 && number.charAt(0) == '-') {
-				return '0' - number.charAt(1);
-			}
-
-			// HACK: Attempt to parse using the approximate best type for this
-			boolean firstMinus = number.charAt(0) == '-';
-			int length = firstMinus ? number.length() - 1 : number.length();
-			if (length < 10 || (length == 10 && number.charAt(firstMinus ? 1 : 0) < '2')) // 2 147 483 647
-				return Integer.parseInt(number);
-			if (length < 19 || (length == 19 && number.charAt(firstMinus ? 1 : 0) < '9')) // 9 223 372 036 854 775 807
-				return Long.parseLong(number);
-			return new BigInteger(number);
-		} catch (NumberFormatException e) {
-			throw createParseException(e, "Malformed number: " + number, true);
-		}
 	}
 
 	/**
 	 * Steps through to the end of the current string token (the unescaped double quote).
 	 */
-	String consumeTokenString() throws JsonParserException {
+	private void consumeTokenString() throws JsonParserException {
 		reusableBuffer.setLength(0);
 		outer: while (true) {
 			if (ensureBuffer(BUFFER_ROOM) == 0)
@@ -311,7 +279,7 @@ final class JsonTokener {
 			switch (c) {
 			case '\"':
 				fixupAfterRawBufferRead();
-				return reusableBuffer.toString();
+				return;
 			case '\\':
 				char escape = buffer[index++];
 				switch (escape) {
@@ -543,7 +511,7 @@ final class JsonTokener {
 	/**
 	 * Advance one character ahead, or return {@link Token#EOF} on end of input.
 	 */
-	int advanceChar() throws JsonParserException {
+	private int advanceChar() throws JsonParserException {
 		if (eof)
 			return -1;
 
@@ -567,7 +535,7 @@ final class JsonTokener {
 	 * Consumes a token, first eating up any whitespace ahead of it. Note that number tokens are not necessarily valid
 	 * numbers.
 	 */
-	Token advanceToToken() throws JsonParserException {
+	int advanceToToken() throws JsonParserException {
 		int c = advanceChar();
 		while (isWhitespace(c))
 			c = advanceChar();
@@ -577,30 +545,31 @@ final class JsonTokener {
 		
 		switch (c) {
 		case -1:
-			return Token.EOF;
+			return TOKEN_EOF;
 		case '[':
-			return Token.ARRAY_START;
+			return TOKEN_ARRAY_START;
 		case ']':
-			return Token.ARRAY_END;
+			return TOKEN_ARRAY_END;
 		case ',':
-			return Token.COMMA;
+			return TOKEN_COMMA;
 		case ':':
-			return Token.COLON;
+			return TOKEN_COLON;
 		case '{':
-			return Token.OBJECT_START;
+			return TOKEN_OBJECT_START;
 		case '}':
-			return Token.OBJECT_END;
+			return TOKEN_OBJECT_END;
 		case 't':
 			consumeKeyword((char)c, JsonTokener.TRUE);
-			return Token.TRUE;
+			return TOKEN_TRUE;
 		case 'f':
 			consumeKeyword((char)c, JsonTokener.FALSE);
-			return Token.FALSE;
+			return TOKEN_FALSE;
 		case 'n':
 			consumeKeyword((char)c, JsonTokener.NULL);
-			return Token.NULL;
+			return TOKEN_NULL;
 		case '\"':
-			return Token.STRING;
+			consumeTokenString();
+			return TOKEN_STRING;
 		case '-':
 		case '0':
 		case '1':
@@ -612,8 +581,8 @@ final class JsonTokener {
 		case '7':
 		case '8':
 		case '9':
-			savedChar = c;
-			return Token.NUMBER;
+			consumeTokenNumber((char)c);
+			return TOKEN_NUMBER;
 		case '+':
 		case '.':
 			throw createParseException(null, "Numbers may not start with '" + (char)c + "'", true);
@@ -623,6 +592,13 @@ final class JsonTokener {
 
 			throw createParseException(null, "Unexpected character: " + (char)c, true);
 		}
+	}
+
+	int tokenChar() throws JsonParserException {
+		int c = advanceChar();
+		while (isWhitespace(c))
+			c = advanceChar();
+		return c;
 	}
 
 	/**

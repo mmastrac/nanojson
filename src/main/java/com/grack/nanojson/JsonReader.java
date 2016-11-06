@@ -18,7 +18,7 @@ public final class JsonReader {
 	private boolean inObject;
 	private boolean first = true;
 	private String key;
-	private JsonLazyNumber reusableNumber = new JsonLazyNumber(null);
+	private JsonLazyNumber reusableNumber = new JsonLazyNumber();
 
 	/**
 	 * The type of value that the {@link JsonReader} is positioned over.
@@ -223,15 +223,15 @@ public final class JsonReader {
 			nul();
 			return null;
 		}
-		return number(new JsonLazyNumber(null));
+		return number(new JsonLazyNumber());
 	}
 
-	private Number number(JsonLazyNumber n) throws JsonParserException {
+	private JsonLazyNumber number(JsonLazyNumber n) throws JsonParserException {
 		if (token != Token.NUMBER)
 			throw createTokenMismatchException(Token.NULL, Token.NUMBER);
-		Number number = tokener.consumeTokenNumber(n);
+		tokener.consumeTokenNumber(n);
 		advance();
-		return number;
+		return n;
 	}
 
 	/**

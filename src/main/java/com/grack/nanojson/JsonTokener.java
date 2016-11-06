@@ -166,127 +166,116 @@ final class JsonTokener {
 		reusableBuffer.append((char)savedChar);
 		boolean isDouble = false;
 
+		// The JSON spec is way stricter about number formats than
+		// Double.parseDouble(). This is a hand-rolled pseudo-parser that
+		// verifies numbers we read.
+		int state;
+		if (savedChar == '-') {
+			state = 1;
+		} else if (savedChar == '0') {
+			state = 3;
+		} else {
+			state = 2;
+		}
+		
 		outer: while (true) {
 			int n = ensureBuffer(BUFFER_ROOM);
 			if (n == 0)
 				break outer;
 
 			for (int i = 0; i < n; i++) {
-				char next = buffer[index];
-				if (!isDigitCharacter(next))
+				char nc = buffer[index];
+				if (!isDigitCharacter(nc))
 					break outer;
 
-				isDouble |= next == '.' || next == 'e' || next == 'E';
-				reusableBuffer.append(next);
+				int ns = -1;
+				sw:
+				switch (state) {
+				case 1: // start leading negative
+					if (nc == '-' && state == 0) {
+						ns = 1; break sw;
+					}
+					if (nc == '0') {
+						ns = 3; break sw;
+					}
+					if (nc >= '0' && nc <= '9') {
+						ns = 2; break sw;
+					}
+					break;
+				case 2: // no leading zero
+				case 3: // leading zero
+					if ((nc >= '0' && nc <= '9') && state == 2) {
+						ns = 2; break sw;
+					}
+					if (nc == '.') {
+						isDouble = true;
+						ns = 4; break sw;
+					}
+					if (nc == 'e' || nc == 'E') {
+						isDouble = true;
+						ns = 6; break sw;
+					}
+					break;
+				case 4: // after period
+				case 5: // after period, one digit read
+					if (nc >= '0' && nc <= '9') {
+						ns = 5; break sw;
+					}
+					if ((nc == 'e' || nc == 'E') && state == 5) {
+						isDouble = true;
+						ns = 6; break sw;
+					}
+					break;
+				case 6: // after exponent
+				case 7: // after exponent and sign
+					if (nc == '+' || nc == '-' && state == 6) {
+						ns = 7; break sw;
+					}
+					if (nc >= '0' && nc <= '9') {
+						ns = 8; break sw;
+					}
+					break;
+				case 8: // after digits
+					if (nc >= '0' && nc <= '9') {
+						ns = 8; break sw;
+					}
+					break;
+				default:
+					assert false : "Impossible"; // will throw malformed number
+				}
+				reusableBuffer.append(nc);
 				index++;
+				if (ns == -1)
+					throw createParseException(null, "Malformed number: " + reusableBuffer, true);
+				state = ns;
 			}
 		}
+		
+		if (state != 2 && state != 3 && state != 5 && state != 8)
+			throw createParseException(null, "Malformed number: " + reusableBuffer, true);
+		
+		// Special case for -0
+		if (state == 3 && savedChar == '-')
+			isDouble = true;
+		
 		fixupAfterRawBufferRead();
 
 		String number = reusableBuffer.toString();
 
 		try {
-			if (isDouble) {
-				// The JSON spec is way stricter about number formats than
-				// Double.parseDouble(). This is a hand-rolled pseudo-parser that
-				// verifies numbers we read.
-				int state = 0;
-				int idx = 0;
-				outer:
-				while (true) {
-					char nc = idx >= number.length() ? 0 : number.charAt(idx++);
-					int ns = -1;
-					sw:
-					switch (state) {
-					case 0: // start
-					case 1: // start leading negative
-						if (nc == '-' && state == 0) {
-							ns = 1; break sw;
-						}
-						if (nc == '0') {
-							ns = 3; break sw;
-						}
-						if (nc >= '0' && nc <= '9') {
-							ns = 2; break sw;
-						}
-						break;
-					case 2: // no leading zero
-					case 3: // leading zero
-						if ((nc >= '0' && nc <= '9') && state == 2) {
-							ns = 2; break sw;
-						}
-						if (nc == '.') {
-							ns = 4; break sw;
-						}
-						if (nc == 'e' || nc == 'E') {
-							ns = 6; break sw;
-						}
-						if (nc == 0) {
-							break outer; // legal ending
-						}
-						break;
-					case 4: // after period
-					case 5: // after period, one digit read
-						if (nc >= '0' && nc <= '9') {
-							ns = 5; break sw;
-						}
-						if (nc == 0 && state == 5) {
-							break outer; // legal ending
-						}
-						if ((nc == 'e' || nc == 'E') && state == 5) {
-							ns = 6; break sw;
-						}
-						break;
-					case 6: // after exponent
-					case 7: // after exponent and sign
-						if (nc == '+' || nc == '-' && state == 6) {
-							ns = 7; break sw;
-						}
-						if (nc >= '0' && nc <= '9') {
-							ns = 8; break sw;
-						}
-						break;
-					case 8: // after digits
-						if (nc >= '0' && nc <= '9') {
-							ns = 8; break sw;
-						}
-						if (nc == 0) {
-							break outer; // legal ending
-						}
-						break;
-					default:
-						assert false : "Impossible"; // will throw malformed number
-					}
-					if (ns == -1)
-						throw new NumberFormatException("Malformed number: " + number);
-					state = ns;
-				}
-
-				if (lazyNumber != null) {
-					lazyNumber.set(number);
-					return lazyNumber;
-				}
-				return Double.parseDouble(number);
-			}
-
-			// Quick parse/reject for single-digits
-			if (number.length() == 1) {
-				if (number.charAt(0) >= '0' && number.charAt(0) <= '9')
-					return number.charAt(0) - '0';
-				throw createParseException(null, "Malformed number: " + number, true);
-			}
-			// Special zero handling to match JSON spec. No leading zeros allowed for integers.
-			if (number.charAt(0) == '0')
-				throw createParseException(null, "Malformed number: " + number, true);
-			if (number.length() > 1 && number.charAt(0) == '-' && number.charAt(1) == '0') {
-				if (number.length() == 2)
-					return -0.0;
-				throw createParseException(null, "Malformed number: " + number, true);
-			}
-
 			if (lazyNumber != null) {
-				lazyNumber.set(number);
+				lazyNumber.set(number, isDouble);
 				return lazyNumber;
+			}
+
+			if (isDouble)
+				return Double.parseDouble(number);
+
+			// Quick parse for single-digits
+			if (number.length() == 1) {
+				return number.charAt(0) - '0';
+			} else if (number.length() == 2 && number.charAt(0) == '-') {
+				return '0' - number.charAt(1);
 			}
 
 			// HACK: Attempt to parse using the approximate best type for this

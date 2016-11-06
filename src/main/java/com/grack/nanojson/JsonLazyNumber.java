@@ -8,13 +8,14 @@ import java.math.BigDecimal;
 @SuppressWarnings("serial")
 class JsonLazyNumber extends Number {
 	private String value;
+	private boolean isDouble;
 
-	public JsonLazyNumber(String value) {
-		this.value = value;
+	public JsonLazyNumber() {
 	}
 
-	public void set(String number) {
+	public void set(String number, boolean isDoubleValue) {
 		this.value = number;
+		this.isDouble = isDoubleValue;
 	}
 	
 	@Override
@@ -29,24 +30,12 @@ class JsonLazyNumber extends Number {
 
 	@Override
 	public int intValue() {
-		try {
-			return Integer.parseInt(value);
-		} catch (NumberFormatException e) {
-			try {
-				return (int)Long.parseLong(value);
-			} catch (NumberFormatException e2) {
-				return new BigDecimal(value).intValue();
-			}
-		}
+		return isDouble ? (int)Double.parseDouble(value) : Integer.parseInt(value);
 	}
 
 	@Override
 	public long longValue() {
-		try {
-			return Long.parseLong(value);
-		} catch (NumberFormatException e2) {
-			return new BigDecimal(value).longValue();
-		}
+		return isDouble ? (long)Double.parseDouble(value) : Long.parseLong(value);
 	}
 
 	/**

@@ -5,6 +5,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 import org.junit.Test;
@@ -159,6 +163,10 @@ public class JsonReaderTest {
 	public void testJsonBenchmarkUser() throws JsonParserException {
 		JsonReader reader = JsonReader.from(getClass().getResourceAsStream("/users.json"));
 		
+		parseUsers(reader);
+	}
+
+	private static void parseUsers(JsonReader reader) throws JsonParserException {
 		Users users = new Users();
 		
 		reader.object();
@@ -249,5 +257,23 @@ public class JsonReaderTest {
 			.done();
 		//@formatter:on
 		return json;
+	}
+	
+	public static void main(String[] args) throws IOException, JsonParserException {
+		 InputStream stm = JsonReaderTest.class.getResourceAsStream("/users.json");
+		 ByteArrayOutputStream out = new ByteArrayOutputStream();
+		 byte[] buf = new byte[10 * 1024];
+		 while (true) {
+			 int n = stm.read(buf);
+			 if (n <= 0)
+				 break;
+			 out.write(buf, 0, n);
+		 }
+		 
+		 byte[] data = out.toByteArray();
+		 
+		 for (int i = 0; i < 10000; i++) {
+			 parseUsers(JsonReader.from(new ByteArrayInputStream(data)));
+		 }
 	}
 }

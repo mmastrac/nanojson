@@ -220,7 +220,7 @@ public final class JsonParser {
 			value = tokener.consumeTokenString();
 			break;
 		case NUMBER:
-			value = tokener.consumeTokenNumber(lazyNumbers ? new JsonLazyNumber(null) : null);
+			value = tokener.consumeTokenNumber(lazyNumbers ? new JsonLazyNumber() : null);
 			break;
 		default:
 		}

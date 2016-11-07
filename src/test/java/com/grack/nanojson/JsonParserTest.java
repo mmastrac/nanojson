@@ -50,6 +50,14 @@ public class JsonParserTest {
 						.getClass());
 		assertEquals("{}", JsonParser.object().from("{}").toString());
 	}
+	
+	@Test
+	public void testWhitespaceSimpler() throws JsonParserException {
+		assertEquals(JsonObject.class,
+				JsonParser.object().from(" {} ")
+						.getClass());
+	}
+
 
 	@Test
 	public void testWriterOutput() throws JsonParserException {

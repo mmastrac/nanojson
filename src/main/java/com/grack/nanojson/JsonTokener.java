@@ -1,6 +1,7 @@
 package com.grack.nanojson;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -14,7 +15,7 @@ final class JsonTokener {
 	// Used by tests
 	static final int BUFFER_SIZE = 32 * 1024;
 
-	static final int BUFFER_ROOM = 20;
+	static final int BUFFER_ROOM = 256;
 
 	private int linePos = 1, rowPos, charOffset, utf8adjust;
 	private int tokenCharPos, tokenCharOffset;
@@ -52,10 +53,10 @@ final class JsonTokener {
 	 * A {@link Reader} that reads a UTF8 stream without decoding it for performance.
 	 */
 	private static final class PseudoUtf8Reader extends Reader {
-		private final BufferedInputStream buffered;
+		private final InputStream buffered;
 		private byte[] buf = new byte[BUFFER_SIZE];
 
-		PseudoUtf8Reader(BufferedInputStream buffered) {
+		PseudoUtf8Reader(InputStream buffered) {
 			this.buffered = buffered;
 		}
 
@@ -79,7 +80,8 @@ final class JsonTokener {
 	}
 	
 	JsonTokener(InputStream stm) throws JsonParserException {
-		final BufferedInputStream buffered = stm instanceof BufferedInputStream ? (BufferedInputStream)stm
+		final InputStream buffered = (stm instanceof BufferedInputStream || stm instanceof ByteArrayInputStream) 
+				? stm
 				: new BufferedInputStream(stm);
 		buffered.mark(4);
 
@@ -269,71 +271,99 @@ final class JsonTokener {
 	 */
 	void consumeTokenString() throws JsonParserException {
 		reusableBuffer.setLength(0);
+		
+		start:
+		while (true) {
+			int n = ensureBuffer(BUFFER_ROOM);
+			if (n == 0)
+				throw createParseException(null, "String was not terminated before end of input", true);
+			
+			for (int i = 0; i < n; i++) {
+				char c = stringChar();
+				if (c == '"') {
+					fixupAfterRawBufferRead();
+					reusableBuffer.append(buffer, index - i - 1, i);
+					return;
+				}
+				if (c == '\\' || (utf8 && (c & 0x80) != 0)) {
+					reusableBuffer.append(buffer, index - i - 1, i);
+					index--;
+					break start;
+				}
+			}
+			
+			reusableBuffer.append(buffer, index - n, n);
+		}
+		
 		outer: while (true) {
-			if (ensureBuffer(BUFFER_ROOM) == 0)
+			int n = ensureBuffer(BUFFER_ROOM);
+			if (n == 0)
 				throw createParseException(null, "String was not terminated before end of input", true);
 	
-			char c = stringChar();
-			
-			if (utf8 && (c & 0x80) != 0) {
-				// If it's a UTF-8 codepoint, we know it won't have special meaning
-				consumeTokenStringUtf8Char(c);
-				continue outer;
-			}
-
-			switch (c) {
-			case '\"':
-				fixupAfterRawBufferRead();
-				return;
-			case '\\':
-				char escape = buffer[index++];
-				switch (escape) {
-				case 'b':
-					reusableBuffer.append('\b');
-					break;
-				case 'f':
-					reusableBuffer.append('\f');
-					break;
-				case 'n':
-					reusableBuffer.append('\n');
-					break;
-				case 'r':
-					reusableBuffer.append('\r');
-					break;
-				case 't':
-					reusableBuffer.append('\t');
-					break;
-				case '"':
-				case '/':
+			int end = index + n;
+			while (index < end) {
+				char c = stringChar();
+				
+				if (utf8 && (c & 0x80) != 0) {
+					// If it's a UTF-8 codepoint, we know it won't have special meaning
+					consumeTokenStringUtf8Char(c);
+					continue outer;
+				}
+	
+				switch (c) {
+				case '\"':
+					fixupAfterRawBufferRead();
+					return;
 				case '\\':
-					reusableBuffer.append(escape);
-					break;
-				case 'u':
-					int escaped = 0;
-
-					for (int i = 0; i < 4; i++) {
-						escaped <<= 4;
-						int digit = buffer[index++];
-						if (digit >= '0' && digit <= '9') {
-							escaped |= (digit - '0');
-						} else if (digit >= 'A' && digit <= 'F') {
-							escaped |= (digit - 'A') + 10;
-						} else if (digit >= 'a' && digit <= 'f') {
-							escaped |= (digit - 'a') + 10;
-						} else {
-							throw createParseException(null, "Expected unicode hex escape character: " + (char)digit
-									+ " (" + digit + ")", false);
+					char escape = buffer[index++];
+					switch (escape) {
+					case 'b':
+						reusableBuffer.append('\b');
+						break;
+					case 'f':
+						reusableBuffer.append('\f');
+						break;
+					case 'n':
+						reusableBuffer.append('\n');
+						break;
+					case 'r':
+						reusableBuffer.append('\r');
+						break;
+					case 't':
+						reusableBuffer.append('\t');
+						break;
+					case '"':
+					case '/':
+					case '\\':
+						reusableBuffer.append(escape);
+						break;
+					case 'u':
+						int escaped = 0;
+	
+						for (int j = 0; j < 4; j++) {
+							escaped <<= 4;
+							int digit = buffer[index++];
+							if (digit >= '0' && digit <= '9') {
+								escaped |= (digit - '0');
+							} else if (digit >= 'A' && digit <= 'F') {
+								escaped |= (digit - 'A') + 10;
+							} else if (digit >= 'a' && digit <= 'f') {
+								escaped |= (digit - 'a') + 10;
+							} else {
+								throw createParseException(null, "Expected unicode hex escape character: " + (char)digit
+										+ " (" + digit + ")", false);
+							}
 						}
+	
+						reusableBuffer.append((char)escaped);
+						break;
+					default:
+						throw createParseException(null, "Invalid escape: \\" + escape, false);
 					}
-
-					reusableBuffer.append((char)escaped);
 					break;
 				default:
-					throw createParseException(null, "Invalid escape: \\" + escape, false);
+					reusableBuffer.append(c);
 				}
-				break;
-			default:
-				reusableBuffer.append(c);
 			}
 			
 			if (index > bufferLength) {
@@ -490,10 +520,12 @@ final class JsonTokener {
 		}
 
 		// Nope, we need to read more, but we also have to retain whatever buffer we have
-		charOffset += index;
-		bufferLength = bufferLength - index;
-		System.arraycopy(buffer, index, buffer, 0, bufferLength);
-		index = 0;
+		if (index > 0) {
+			charOffset += index;
+			bufferLength = bufferLength - index;
+			System.arraycopy(buffer, index, buffer, 0, bufferLength);
+			index = 0;
+		}
 		try {
 			while (buffer.length > bufferLength) {
 				int r = reader.read(buffer, bufferLength, buffer.length - bufferLength);

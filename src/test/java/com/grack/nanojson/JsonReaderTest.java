@@ -34,7 +34,6 @@ public class JsonReaderTest {
 		assertEquals(JsonReader.Type.NUMBER, reader.current());
 		assertEquals(1, reader.intVal());
 		assertFalse(reader.next());
-		assertFalse(reader.next()); // up to top level
 	}
 
 	/**
@@ -58,7 +57,6 @@ public class JsonReaderTest {
 		reader.nul();
 		
 		assertFalse(reader.next());
-		assertFalse(reader.next()); // up to top level
 	}
 	
 	/**

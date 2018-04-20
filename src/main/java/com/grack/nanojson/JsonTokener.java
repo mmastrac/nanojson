@@ -451,17 +451,20 @@ final class JsonTokener {
 	 */
 	private char stringChar() throws JsonParserException {
 		char c = buffer[index++];
-		if (c < 32) {
-			// Need to ensure that we position this at the correct location for the error
-			if (c == '\n') {
-				linePos++;
-				rowPos = index + 1 + charOffset;
-				utf8adjust = 0;
-			}
-			throw createParseException(null,
-					"Strings may not contain control characters: 0x" + Integer.toString(c, 16), false);
-		}
+		if (c < 32)
+			throwControlCharacterException(c);
 		return c;
+	}
+
+	private void throwControlCharacterException(char c) throws JsonParserException {
+		// Need to ensure that we position this at the correct location for the error
+		if (c == '\n') {
+			linePos++;
+			rowPos = index + 1 + charOffset;
+			utf8adjust = 0;
+		}
+		throw createParseException(null,
+				"Strings may not contain control characters: 0x" + Integer.toString(c, 16), false);
 	}
 
 	/**

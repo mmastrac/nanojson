@@ -219,6 +219,7 @@ public final class JsonParser {
 			value = tokener.reusableBuffer.toString();
 			break;
 		case JsonTokener.TOKEN_NUMBER:
+//			tokener.consumeTokenNumber();
 			if (lazyNumbers) {
 				value = new JsonLazyNumber(tokener.reusableBuffer.toString(), tokener.isDouble);
 			} else {

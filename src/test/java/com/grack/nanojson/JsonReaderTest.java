@@ -87,9 +87,11 @@ public class JsonReaderTest {
 			reader.object();
 	
 			assertTrue(reader.next());
+			assertEquals(i == 0 ? "a" : "c", reader.key());
 			assertEquals(JsonReader.Type.NUMBER, reader.current());
 			assertEquals(1, reader.intVal());
 			assertTrue(reader.next());
+			assertEquals(i == 0 ? "b" : "d", reader.key());
 			assertEquals(JsonReader.Type.NUMBER, reader.current());
 			assertEquals(2, reader.intVal());
 			assertFalse(reader.next());
@@ -133,8 +135,10 @@ public class JsonReaderTest {
 
 			reader.object();
 			assertTrue(reader.next());
+			assertEquals(i == 0 ? "a" : "c", reader.key());
 			assertEquals(1, reader.intVal());
 			assertTrue(reader.next());
+			assertEquals(i == 0 ? "b" : "d", reader.key());
 			assertEquals(2, reader.intVal());
 			assertFalse(reader.next());
 		}

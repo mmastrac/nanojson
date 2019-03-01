@@ -265,6 +265,9 @@ public class JsonReaderTest {
                                 case "name":
                                     f.name = reader.string();
                                     break;
+								default:
+									// Ignore unknown
+									break;
                             }
                         }
                     }
@@ -275,6 +278,9 @@ public class JsonReaderTest {
                 case "favoriteFruit":
                     u.favoriteFruit = reader.string();
                     break;
+				default:
+					// Ignore unknown
+					break;
             }
         }
 
@@ -306,7 +312,10 @@ public class JsonReaderTest {
 		//@formatter:on
 		return json;
 	}
-	
+
+	/**
+	 * Entry point for test for profiling.
+	 */
 	public static void main(String[] args) throws IOException, JsonParserException {
 		 InputStream stm = JsonReaderTest.class.getResourceAsStream("/users.json");
 		 ByteArrayOutputStream out = new ByteArrayOutputStream();

@@ -249,10 +249,12 @@ public final class JsonParser {
 			// HACK: Attempt to parse using the approximate best type for this
 			boolean firstMinus = number.charAt(0) == '-';
 			int length = firstMinus ? number.length() - 1 : number.length();
+			// CHECKSTYLE_OFF: MagicNumber
 			if (length < 10 || (length == 10 && number.charAt(firstMinus ? 1 : 0) < '2')) // 2 147 483 647
 				return Integer.parseInt(number);
 			if (length < 19 || (length == 19 && number.charAt(firstMinus ? 1 : 0) < '9')) // 9 223 372 036 854 775 807
 				return Long.parseLong(number);
+			// CHECKSTYLE_ON: MagicNumber
 			return new BigInteger(number);
 		} catch (NumberFormatException e) {
 			throw tokener.createParseException(e, "Malformed number: " + number, true);

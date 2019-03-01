@@ -73,9 +73,10 @@ public final class JsonReader {
 	 * Returns to the array or object structure above the current one, and
 	 * advances to the next key or value.
 	 */
-	public boolean xpop() throws JsonParserException {
-		while (!next()) {
-		}
+	public boolean pop() throws JsonParserException {
+		// CHECKSTYLE_OFF: EmptyStatement
+		while (!next());
+		// CHECKSTYLE_ON: EmptyStatement
 		first = false;
 		inObject = states.get(--stateIndex);
 		return token != JsonTokener.TOKEN_EOF;
@@ -101,7 +102,8 @@ public final class JsonReader {
 			return Type.ARRAY;
 		default:				
 			throw createTokenMismatchException(JsonTokener.TOKEN_NULL, JsonTokener.TOKEN_TRUE, 
-					JsonTokener.TOKEN_FALSE, JsonTokener.TOKEN_NUMBER, JsonTokener.TOKEN_STRING);
+					JsonTokener.TOKEN_FALSE, JsonTokener.TOKEN_NUMBER, JsonTokener.TOKEN_STRING,
+					JsonTokener.TOKEN_OBJECT_START, JsonTokener.TOKEN_ARRAY_START);
 		}
 	}
 
@@ -275,8 +277,13 @@ public final class JsonReader {
 			}
 		}
 
-//		if (!token.isValue)
-//			throw createTokenMismatchException();
+		if (token != JsonTokener.TOKEN_NULL && token != JsonTokener.TOKEN_STRING
+				&& token != JsonTokener.TOKEN_NUMBER && token != JsonTokener.TOKEN_TRUE
+				&& token != JsonTokener.TOKEN_FALSE && token != JsonTokener.TOKEN_OBJECT_START
+				&& token != JsonTokener.TOKEN_ARRAY_START)
+			throw createTokenMismatchException(JsonTokener.TOKEN_NULL, JsonTokener.TOKEN_STRING,
+					JsonTokener.TOKEN_NUMBER, JsonTokener.TOKEN_TRUE, JsonTokener.TOKEN_FALSE,
+					JsonTokener.TOKEN_OBJECT_START, JsonTokener.TOKEN_ARRAY_START);
 
 		first = false;
 		
@@ -284,7 +291,7 @@ public final class JsonReader {
 	}
 	
 	private JsonParserException createTokenMismatchException(int... t) {
-		return tokener.createParseException(null, "mismatch (expected " + Arrays.toString(t) + ", was " + token + ")",
+		return tokener.createParseException(null, "token mismatch (expected " + Arrays.toString(t) + ", was " + token + ")",
 				true);
 	}
 }

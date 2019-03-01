@@ -20,7 +20,7 @@ final class JsonTokener {
 	private int linePos = 1, rowPos, charOffset, utf8adjust;
 	private int tokenCharPos, tokenCharOffset;
 
-	boolean eof;
+	private boolean eof;
 	private int index;
 	private final Reader reader;
 	private final char[] buffer = new char[BUFFER_SIZE];
@@ -28,8 +28,8 @@ final class JsonTokener {
 
 	private final boolean utf8;
 
-	StringBuilder reusableBuffer = new StringBuilder();
-	boolean isDouble;
+	protected StringBuilder reusableBuffer = new StringBuilder();
+	protected boolean isDouble;
 
 	static final char[] TRUE = { 'r', 'u', 'e' };
 	static final char[] FALSE = { 'a', 'l', 's', 'e' };

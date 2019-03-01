@@ -74,6 +74,23 @@ parsed at access time rather than parse time:
 
     JsonObject obj = JsonParser.object().withLazyNumbers().from("{\"abc\":123}");
 
+## Reader example
+
+The `JsonReader` interface is a lower-level interface, but requires very few objects to be created
+when used correctly.
+
+    JsonReader reader = JsonReader.from(json);
+    reader.object();
+    assertTrue(reader.next());
+    assertEquals("a", reader.key());
+    reader.object();
+    assertTrue(reader.next());
+    assertEquals("b", reader.key());
+    reader.array();
+    // ...
+
+The `JsonReader` interface could use some better documentation!
+
 ## Writer example
 
 `JsonWriter` is a simple, stateful JSON writer that can output to a `String`, or to anything implementing the Java `Appendable` interface. The latter includes 

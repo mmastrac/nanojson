@@ -678,7 +678,6 @@ final class JsonTokener {
 			throw createParseException(null, "Unexpected character: " + (char)c, true);
 		}
 		
-//		consumeWhitespace();
 		return token;
 	}
 

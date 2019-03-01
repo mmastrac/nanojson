@@ -1,0 +1,14 @@
+{
+	"users": [
+		{ "_id": "abc", "age": 123, "isActive": true, "tags": ["hi", "there"], 
+			"friends": [ { "id": "abc", "name": "Bob" }, { "id": "def", "name": "Jon" } ] },
+		{ "_id": "abc", "age": 123, "isActive": true, "tags": ["hi", "there"], 
+			"friends": [ { "id": "abc", "name": "Bob" }, { "id": "def", "name": "Jon" } ] },
+		{ "_id": "abc", "age": 123, "isActive": true, "tags": ["hi", "there"], 
+			"friends": [ { "id": "abc", "name": "Bob" }, { "id": "def", "name": "Jon" } ] },
+		{ "_id": "abc", "age": 123, "isActive": true, "tags": ["hi", "there"], 
+			"friends": [ { "id": "abc", "name": "Bob" }, { "id": "def", "name": "Jon" } ] },
+		{ "_id": "abc", "age": 123, "isActive": true, "tags": ["hi", "there"], 
+			"friends": [ { "id": "abc", "name": "Bob" }, { "id": "def", "name": "Jon" } ] }
+	]
+}

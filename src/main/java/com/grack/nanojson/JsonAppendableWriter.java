@@ -28,7 +28,7 @@ import java.io.OutputStream;
  * 
  * <pre>
  * OutputStream out = ...;
- * JsonEmitter
+ * JsonWriter
  *     .indent("  ")
  *     .on(out)
  *     .object()

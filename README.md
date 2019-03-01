@@ -77,7 +77,7 @@ parsed at access time rather than parse time:
 ## Reader example
 
 The `JsonReader` interface is a lower-level interface, but requires very few objects to be created
-when used correctly.
+when used correctly and is even faster than the standard `JsonParser` interface.
 
     JsonReader reader = JsonReader.from(json);
     reader.object();

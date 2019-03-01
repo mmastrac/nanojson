@@ -291,7 +291,8 @@ public final class JsonReader {
 	}
 	
 	private JsonParserException createTokenMismatchException(int... t) {
-		return tokener.createParseException(null, "token mismatch (expected " + Arrays.toString(t) + ", was " + token + ")",
+		return tokener.createParseException(null, "token mismatch (expected " + Arrays.toString(t)
+						+ ", was " + token + ")",
 				true);
 	}
 }

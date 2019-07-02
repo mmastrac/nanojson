@@ -249,6 +249,7 @@ public final class JsonReader {
 		if (inObject) {
 			if (token == JsonTokener.TOKEN_OBJECT_END) {
 				inObject = states.get(--stateIndex);
+				first = false;
 				return false;
 			}
 			
@@ -268,6 +269,7 @@ public final class JsonReader {
 		} else {
 			if (token == JsonTokener.TOKEN_ARRAY_END) {
 				inObject = states.get(--stateIndex);
+				first = false;
 				return false;
 			}
 			if (!first) {

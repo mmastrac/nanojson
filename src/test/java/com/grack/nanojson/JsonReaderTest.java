@@ -157,7 +157,44 @@ public class JsonReaderTest {
 		assertFalse(reader.next());
 		assertFalse(reader.next());
 	}
-	
+
+	/**
+	 * Test reading an multiple arrays (including an empty one) in a object.
+	 */
+	@Test
+	public void testArraysInObject() throws JsonParserException {
+		String json = createArraysInObject();
+		JsonReader reader = JsonReader.from(json);
+
+		reader.object();
+		while (reader.next()) {
+			reader.key();
+
+			reader.array();
+			while (reader.next())
+				reader.intVal();
+		}
+	}
+
+	private String createArraysInObject() {
+		//@formatter:off
+		String json = JsonWriter.string()
+				.object()
+					.array("a")
+						.value(1)
+						.value(3)
+					.end()
+					.array("b")
+					.end()
+					.array("c")
+						.value(0)
+					.end()
+				.end()
+			.done();
+		//@formatter:on
+		return json;
+	}
+
 	/**
 	 * Test the {@link Users} class from java-json-benchmark.
 	 */

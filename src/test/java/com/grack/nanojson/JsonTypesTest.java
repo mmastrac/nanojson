@@ -20,6 +20,7 @@ public class JsonTypesTest {
 		JsonObject o = new JsonObject();
 		o.put("key", 1);
 		assertEquals(1, o.getInt("key"));
+		assertEquals(1L, o.getLong("key"));
 		assertEquals(1.0, o.getDouble("key"), 0.0001f);
 		assertEquals(1.0f, o.getFloat("key"), 0.0001f);
 		assertEquals(1, o.getNumber("key"));
@@ -35,6 +36,7 @@ public class JsonTypesTest {
 		JsonObject o = new JsonObject();
 		o.put("key", "1");
 		assertEquals(0, o.getInt("key"));
+		assertEquals(0L, o.getLong("key"));
 		assertEquals(0, o.getDouble("key"), 0.0001f);
 		assertEquals(0f, o.getFloat("key"), 0.0001f);
 		assertEquals(null, o.getNumber("key"));
@@ -47,6 +49,7 @@ public class JsonTypesTest {
 		JsonObject o = new JsonObject();
 		o.put("key", null);
 		assertEquals(0, o.getInt("key"));
+		assertEquals(0L, o.getLong("key"));
 		assertEquals(0, o.getDouble("key"), 0.0001f);
 		assertEquals(0f, o.getFloat("key"), 0.0001f);
 		assertEquals(null, o.getNumber("key"));
@@ -60,6 +63,7 @@ public class JsonTypesTest {
 				null));
 		o.set(3, 1);
 		assertEquals(1, o.getInt(3));
+		assertEquals(1L, o.getLong(3));
 		assertEquals(1.0, o.getDouble(3), 0.0001f);
 		assertEquals(1.0f, o.getFloat(3), 0.0001f);
 		assertEquals(1, o.getNumber(3));
@@ -76,6 +80,7 @@ public class JsonTypesTest {
 				null));
 		o.set(3, "1");
 		assertEquals(0, o.getInt(3));
+		assertEquals(0L, o.getLong(3));
 		assertEquals(0, o.getDouble(3), 0.0001f);
 		assertEquals(0, o.getFloat(3), 0.0001f);
 		assertEquals(null, o.getNumber(3));

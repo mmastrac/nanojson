@@ -153,6 +153,23 @@ public class JsonArray extends ArrayList<Object> {
 	}
 
 	/**
+	 * Returns the {@link Long} at the given index, or 0 if it does not exist or is the wrong type.
+	 */
+	public long getLong(int key) {
+		return getLong(key, 0);
+	}
+
+	/**
+	 * Returns the {@link Long} at the given index, or the default if it does not exist or is the wrong type.
+	 */
+	public long getLong(int key, long default_) {
+		Object o = get(key);
+		if (o instanceof Number)
+			return ((Number)o).longValue();
+		return default_;
+	}
+
+	/**
 	 * Returns the {@link Number} at the given index, or null if it does not exist or is the wrong type.
 	 */
 	public Number getNumber(int key) {

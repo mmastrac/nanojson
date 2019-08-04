@@ -144,6 +144,23 @@ public class JsonObject extends HashMap<String, Object> {
 	}
 
 	/**
+	 * Returns the {@link Long} at the given key, or 0 if it does not exist or is the wrong type.
+	 */
+	public long getLong(String key) {
+		return getLong(key, 0);
+	}
+
+	/**
+	 * Returns the {@link Long} at the given key, or the default if it does not exist or is the wrong type.
+	 */
+	public long getLong(String key, long default_) {
+		Object o = get(key);
+		if (o instanceof Number)
+			return ((Number)o).longValue();
+		return default_;
+	}
+
+	/**
 	 * Returns the {@link Number} at the given key, or null if it does not exist or is the wrong type.
 	 */
 	public Number getNumber(String key) {

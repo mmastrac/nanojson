@@ -42,6 +42,8 @@ public final class JsonParser {
 	/**
 	 * Returns a type-safe parser context for a {@link JsonObject}, {@link JsonArray} or "any" type from which you can
 	 * parse a {@link String} or a {@link Reader}.
+	 *
+	 * @param <T> The parsed type. 
 	 */
 	public static final class JsonParserContext<T> {
 		private final Class<T> clazz;

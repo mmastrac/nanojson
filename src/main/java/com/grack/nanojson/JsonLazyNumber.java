@@ -10,7 +10,7 @@ class JsonLazyNumber extends Number {
 	private String value;
 	private boolean isDouble;
 
-	public JsonLazyNumber(String number, boolean isDoubleValue) {
+	JsonLazyNumber(String number, boolean isDoubleValue) {
 		this.value = number;
 		this.isDouble = isDoubleValue;
 	}

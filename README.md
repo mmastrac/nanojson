@@ -150,3 +150,8 @@ These helper types also provide a builder that can be used in the same way as a 
   * Passes the sample JSON torture test from http://code.google.com/p/json-test-suite/
   * Passes the tests from the YUI browser JSON test suite
 
+## Release steps
+
+  * Ensure that `~/.m2/settings.xml` is correctly configured with username/password for `sonatype-nexus-staging`
+  * Ensure the correct version in the pom.xml
+  * `mvn -Prelease clean package deploy`

@@ -28,7 +28,7 @@ public class Perf {
 	/**
 	 * The parsing benchmark.
 	 */
-	public static class Parse extends Benchmark {
+	public static class Parse {
 		private static final int BUFFER_SIZE = 1024 * 1024;
 		private String string;
 		private URL url;

@@ -210,7 +210,8 @@
                 <version>3.8.2</version>
                 <configuration>
                 </configuration>
-            </plugin>	<plugin>
+            </plugin>
+	<plugin>
 		<groupId>org.apache.maven.plugins</groupId>
 		<artifactId>maven-jar-plugin</artifactId>
 		<configuration>

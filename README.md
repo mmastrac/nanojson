@@ -69,7 +69,7 @@ Errors can be quickly located by using `getLinePosition` and `getCharPosition` o
 
     com.grack.nanojson.JsonParserException: Trailing comma in object on line 4, char 1
 
-For performance-sensitive code, numeric values can be parsed lazily using the `withLazyNumbers` option. JSON numeric values will thehn be 
+For performance-sensitive code, numeric values can be parsed lazily using the `withLazyNumbers` option. JSON numeric values will then be 
 parsed at access time rather than parse time:
 
     JsonObject obj = JsonParser.object().withLazyNumbers().from("{\"abc\":123}");

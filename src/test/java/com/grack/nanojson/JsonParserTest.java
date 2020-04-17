@@ -207,6 +207,17 @@ public class JsonParserTest {
 	}
 
 	@Test
+	public void testStringsAroundBufferBoundary() throws JsonParserException {
+		char[] c = new char[JsonTokener.BUFFER_SIZE - 16];
+		Arrays.fill(c,  ' ');
+		String base = new String(c);
+		for (int i = 0; i < 32; i++) {
+			base += " ";
+			assertEquals(base, JsonParser.any().from('"' + base + '"'));
+		}
+	}
+
+	@Test
 	public void testNumbers() throws JsonParserException {
 		String[] testCases = new String[] { "0", "1", "-0", "-1", "0.1", "1.1", "-0.1", "0.10", "-0.10", "0e1", "0e0",
 				"-0e-1", "0.0e0", "-0.0e0", "9" };

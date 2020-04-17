@@ -283,8 +283,9 @@ final class JsonTokener {
 			for (int i = 0; i < n; i++) {
 				char c = stringChar();
 				if (c == '"') {
-					fixupAfterRawBufferRead();
+					// Use the index before we fixup
 					reusableBuffer.append(buffer, index - i - 1, i);
+					fixupAfterRawBufferRead();
 					return;
 				}
 				if (c == '\\' || (utf8 && (c & 0x80) != 0)) {

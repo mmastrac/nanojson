@@ -146,8 +146,8 @@ These helper types also provide a builder that can be used in the same way as a 
 
 ## Compliance
 
-  * Passes all of the http://www.json.org/JSON_checker/ tests, minus the test that enforces results not be a string and one that tests nesting depth for arrays
-  * Passes the sample JSON torture test from http://code.google.com/p/json-test-suite/
+  * Passes all of the https://www.json.org/JSON_checker/ tests, minus the test that enforces results not be a string and one that tests nesting depth for arrays
+  * Passes the sample JSON torture test from https://github.com/nst/JSONTestSuite
   * Passes the tests from the YUI browser JSON test suite
 
 ## Release steps

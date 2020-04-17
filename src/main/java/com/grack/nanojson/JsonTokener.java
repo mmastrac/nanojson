@@ -365,8 +365,8 @@ final class JsonTokener {
 							} else if (digit >= 'a' && digit <= 'f') {
 								escaped |= (digit - 'a') + 10;
 							} else {
-								throw createParseException(null, "Expected unicode hex escape character: " + (char)digit
-										+ " (" + digit + ")", false);
+								throw createParseException(null, "Expected unicode hex escape character: "
+									+ (char)digit + " (" + digit + ")", false);
 							}
 						}
 	

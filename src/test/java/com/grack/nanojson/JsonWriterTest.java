@@ -14,12 +14,16 @@ import java.util.Collections;
 
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
-
 /**
  * Test for {@link JsonWriter}.
  */
 public class JsonWriterTest {
+	private static final Charset UTF8;
+
+	static {
+		UTF8 = Charset.forName("UTF-8");
+	}
+
 	// CHECKSTYLE_OFF: MagicNumber
 	// CHECKSTYLE_OFF: JavadocMethod
 	// CHECKSTYLE_OFF: EmptyBlock
@@ -50,7 +54,7 @@ public class JsonWriterTest {
 			ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 			String s = base + new String(new int[] { 0x10ffff }, 0, 1);
 			JsonWriter.on(bytes).value(s).done();
-			assertEquals(s, JsonParser.any().from(new String(bytes.toByteArray(), Charsets.UTF_8)));
+			assertEquals(s, JsonParser.any().from(new String(bytes.toByteArray(), UTF8)));
 		}
 	}
 
@@ -68,7 +72,7 @@ public class JsonWriterTest {
 			ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 			String s = base + new String(new int[] { 0xffff }, 0, 1);
 			JsonWriter.on(bytes).value(s).done();
-			assertEquals(s, JsonParser.any().from(new String(bytes.toByteArray(), Charsets.UTF_8)));
+			assertEquals(s, JsonParser.any().from(new String(bytes.toByteArray(), UTF8)));
 		}
 	}
 
@@ -86,7 +90,7 @@ public class JsonWriterTest {
 			ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 			String s = base + new String(new int[] { 0x10ffff }, 0, 1);
 			JsonWriter.on(bytes).array().value(s).nul().end().done();
-			String s2 = new String(bytes.toByteArray(), Charsets.UTF_8);
+			String s2 = new String(bytes.toByteArray(), UTF8);
 			JsonArray array = JsonParser.array().from(s2);
 			assertEquals(s, array.get(0));
 			assertEquals(null, array.get(1));
@@ -179,13 +183,13 @@ public class JsonWriterTest {
 		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 		JsonWriter.on(new PrintStream(bytes, false, "UTF-8")).value(builder.toString()).done();
 		assertEquals(builder.toString(), (String)JsonParser.any().from(new String(bytes.toByteArray(),
-				Charset.forName("UTF-8"))));
+				UTF8)));
 
 		// Ensure that it also matches the stream output
 		bytes = new ByteArrayOutputStream();
 		JsonWriter.on(bytes).value(builder.toString()).done();
 		assertEquals(builder.toString(), (String)JsonParser.any().from(new String(bytes.toByteArray(),
-				Charset.forName("UTF-8"))));
+				UTF8)));
 	}
 
 	/**
@@ -206,13 +210,13 @@ public class JsonWriterTest {
 		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 		JsonWriter.on(new PrintStream(bytes, false, "UTF-8")).value(builder.toString()).done();
 		assertEquals(builder.toString(), (String)JsonParser.any().from(new String(bytes.toByteArray(),
-				Charset.forName("UTF-8"))));
+				UTF8)));
 
 		// Ensure that it also matches the stream output
 		bytes = new ByteArrayOutputStream();
 		JsonWriter.on(bytes).value(builder.toString()).done();
 		assertEquals(builder.toString(), (String)JsonParser.any().from(new String(bytes.toByteArray(),
-				Charset.forName("UTF-8"))));
+				UTF8)));
 	}
 
 	/**
@@ -224,7 +228,7 @@ public class JsonWriterTest {
 		JsonWriter.on(bytes).object().value("a\n", 1)
 				.value("b", 2).end().done();
 		assertEquals("{\"a\\n\":1,\"b\":2}", new String(bytes.toByteArray(),
-				Charset.forName("UTF-8")));
+				UTF8));
 	}
 
 	/**
@@ -237,7 +241,7 @@ public class JsonWriterTest {
 				.value("b", 2).end().done();
 
 		assertEquals("{\"a\\n\":1,\"b\":2}", new String(bytes.toByteArray(),
-				Charset.forName("UTF-8")));
+				UTF8));
 	}
 
 	/**
@@ -407,7 +411,7 @@ public class JsonWriterTest {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		JsonWriter.on(out).object().value("abc", "def").end().done();
 		assertEquals("{\"abc\":\"def\"}",
-				new String(out.toByteArray(), Charset.forName("UTF-8")));
+				new String(out.toByteArray(), UTF8));
 	}
 
 	@Test

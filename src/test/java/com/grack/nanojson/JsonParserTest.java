@@ -34,12 +34,16 @@ import java.util.zip.ZipInputStream;
 
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
-
 /**
  * Test for {@link JsonParser}.
  */
 public class JsonParserTest {
+	private static final Charset UTF8;
+
+	static {
+		UTF8 = Charset.forName("UTF-8");
+	}
+
 	// CHECKSTYLE_OFF: MagicNumber
 	// CHECKSTYLE_OFF: JavadocMethod
 	// CHECKSTYLE_OFF: EmptyBlock
@@ -641,7 +645,7 @@ public class JsonParserTest {
 		ByteArrayInputStream in1 = new ByteArrayInputStream("{\n\"abc\":123,\"def\":456,}".getBytes(Charset
 				.forName("UTF-8")));
 		ByteArrayInputStream in2 = new ByteArrayInputStream(
-				"{\n\"\ub123\ub124\ub125\":123,\"def\":456,}".getBytes(Charset.forName("UTF-8")));
+				"{\n\"\ub123\ub124\ub125\":123,\"def\":456,}".getBytes(UTF8));
 		JsonParserException e1;
 
 		try {
@@ -662,9 +666,8 @@ public class JsonParserTest {
 
 	@Test
 	public void testEncodingUTF8() throws JsonParserException {
-		Charset charset = Charset.forName("UTF8");
-		testEncoding(charset);
-		testEncodingBOM(charset);
+		testEncoding(UTF8);
+		testEncodingBOM(UTF8);
 	}
 
 	@Test
@@ -698,13 +701,13 @@ public class JsonParserTest {
 	@Test
 	public void testValidUTF8Codepoint() throws JsonParserException {
 		assertEquals("\ud83d\ude8a",
-				JsonParser.any().from(new ByteArrayInputStream("\"\ud83d\ude8a\"".getBytes(Charsets.UTF_8))));
+				JsonParser.any().from(new ByteArrayInputStream("\"\ud83d\ude8a\"".getBytes(UTF8))));
 	}
 
 	@Test
 	public void testValidUTF8Codepoint2() throws JsonParserException {
 		assertEquals("\u2602",
-				JsonParser.any().from(new ByteArrayInputStream("\"\u2602\"".getBytes(Charsets.UTF_8))));
+				JsonParser.any().from(new ByteArrayInputStream("\"\u2602\"".getBytes(UTF8))));
 	}
 
 	@Test
@@ -803,8 +806,8 @@ public class JsonParserTest {
 	@Test
 	public void testIssue38() throws JsonParserException, IOException {
 		// https://github.com/mmastrac/nanojson/issues/38
-		// InputStream input = getClass().getClassLoader().getResourceAsStream("issue-38.json");
-		// JsonObject o = JsonParser.object().from(readAsUtf8(input));
+		InputStream input = getClass().getClassLoader().getResourceAsStream("issue-38.json");
+		JsonParser.any().from(readAsUtf8(input));
 	}
 
 	@Test
@@ -912,8 +915,7 @@ public class JsonParserTest {
 				break;
 			out.write(b, 0, r);
 		}
-		Charset utf8 = Charset.forName("UTF8");
-		String s = new String(out.toByteArray(), utf8);
+		String s = new String(out.toByteArray(), UTF8);
 		return s;
 	}
 

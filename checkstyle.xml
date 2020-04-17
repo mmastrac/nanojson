@@ -20,7 +20,7 @@
 	</module>
 
 	<module name="LineLength">
-		<property name="max" value="120" />
+		<property name="max" value="150" />
 	</module>
 
 	<!-- If you set the basedir property below, then all reported file names 

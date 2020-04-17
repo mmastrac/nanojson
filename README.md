@@ -17,12 +17,12 @@ Add it to your maven pom.xml:
     <dependency>
       <groupId>com.grack</groupId>
       <artifactId>nanojson</artifactId>
-      <version>1.4</version>
+      <version>1.5</version>
     </dependency>
 
 ... or to your gradle file:
 
-    compile group: 'com.grack', name: 'nanojson', version: '1.4'
+    compile group: 'com.grack', name: 'nanojson', version: '1.5'
 
 ... or just drop the files directly into your project!
 

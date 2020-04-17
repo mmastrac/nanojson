@@ -16,6 +16,7 @@ final class JsonTokener {
 	static final int BUFFER_SIZE = 32 * 1024;
 
 	static final int BUFFER_ROOM = 256;
+	static final int MAX_ESCAPE = 5; // uXXXX (don't need the leading slash)
 
 	private int linePos = 1, rowPos, charOffset, utf8adjust;
 	private int tokenCharPos, tokenCharOffset;
@@ -272,6 +273,7 @@ final class JsonTokener {
 	void consumeTokenString() throws JsonParserException {
 		reusableBuffer.setLength(0);
 		
+		// Assume no escapes or UTF-8 in the string to start (fast path)
 		start:
 		while (true) {
 			int n = ensureBuffer(BUFFER_ROOM);
@@ -315,6 +317,19 @@ final class JsonTokener {
 					fixupAfterRawBufferRead();
 					return;
 				case '\\':
+					// Ensure that we have at least MAX_ESCAPE here in the buffer
+					if (end - index < MAX_ESCAPE) {
+						// Re-adjust the buffer end, unlikely path
+						n = ensureBuffer(MAX_ESCAPE);
+						end = index + n;
+						// Make sure that there's enough chars for a \\uXXXX escape
+						if (buffer[index] == 'u' && n < MAX_ESCAPE) {
+							index = bufferLength; // Reset index to last valid location
+							throw createParseException(null,
+									"EOF encountered in the middle of a string escape",
+									false);
+						}
+					}
 					char escape = buffer[index++];
 					switch (escape) {
 					case 'b':

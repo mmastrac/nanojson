@@ -800,6 +800,53 @@ public class JsonParserTest {
 		assertNotNull(o.getObject("a").getArray("b\uecee\u8324\u007a\\\ue768.N"));
 	}
 
+	@Test
+	public void testIssue38() throws JsonParserException, IOException {
+		// https://github.com/mmastrac/nanojson/issues/38
+		// InputStream input = getClass().getClassLoader().getResourceAsStream("issue-38.json");
+		// JsonObject o = JsonParser.object().from(readAsUtf8(input));
+	}
+
+	@Test
+	public void testEscapeSequencesAcrossBufferBoundary() throws JsonParserException {
+		String s1 = "";
+		String s2 = "";
+
+		// Push the single string over one buffer size
+		for (int i = 0; i < 7000; i++) {
+			s1 = "\\u1234" + s1;
+		}
+
+		// Try a number of different alignments
+		for (int i = 0; i < 10; i++) {
+			s2 += " ";
+			JsonParser.any().from("\"" + s2 + s1 + "\\u1234\"");
+		}
+	}
+
+	@Test
+	public void testFailTruncatedEscapeAcrossBufferBoundary() {
+		String s1 = "\\u123";
+		String s2 = "";
+		for (int i = 0; i < 126; i++) {
+			s1 = "\\n" + s1;
+		}
+		for (int i = 0; i < JsonTokener.BUFFER_SIZE - 256 - 20; i++) {
+			s1 = " " + s1;
+		}
+
+		// Try a number of different alignments
+		for (int i = 0; i < 20; i++) {
+			s2 += " ";
+			try {
+				JsonParser.object().from("\"" + s2 + s1);
+				fail();
+			} catch (JsonParserException e) {
+				assertTrue(e.getMessage(), e.getMessage().contains("EOF"));
+			}
+		}
+	}
+
 	/**
 	 * Tests from json.org: http://www.json.org/JSON_checker/
 	 * 

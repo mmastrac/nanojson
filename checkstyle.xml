@@ -19,6 +19,10 @@
 		<property name="file" value="${basedir}/checkstyle-suppressions.xml" />
 	</module>
 
+	<module name="LineLength">
+		<property name="max" value="120" />
+	</module>
+
 	<!-- If you set the basedir property below, then all reported file names 
 		will be relative to the specified directory. See http://checkstyle.sourceforge.net/5.x/config.html#Checker 
 		<property name="basedir" value="${basedir}"/> -->
@@ -120,9 +124,6 @@
 
 		<!-- Checks for Size Violations. -->
 		<!-- See http://checkstyle.sf.net/config_sizes.html -->
-		<module name="LineLength">
-			<property name="max" value="120" />
-		</module>
 		<module name="MethodLength" />
 		<module name="ParameterNumber" />
 

@@ -607,7 +607,7 @@ public class JsonWriterTest {
 
 	@Test
 	public void testCustomObjectAsObject() {
-		// arrange: object (or bean) as json objct
+		// arrange: object (or bean) as json object
 		class CustomClass {
 			public int id = 42;
 		}

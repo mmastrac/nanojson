@@ -21,11 +21,11 @@ package com.grack.nanojson;
 public class JsonWriterException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 
-	JsonWriterException(String message) {
+	public JsonWriterException(String message) {
 		super(message);
 	}
 
-	JsonWriterException(Throwable t) {
+	public JsonWriterException(Throwable t) {
 		super(t);
 	}
 }

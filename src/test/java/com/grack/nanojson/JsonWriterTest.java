@@ -11,8 +11,13 @@ import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Test;
+
+import com.grack.nanojson.ext.DefaultCustomObjectConverter;
 
 /**
  * Test for {@link JsonWriter}.
@@ -582,4 +587,48 @@ public class JsonWriterTest {
 		}
 	}
 
+	@Test
+	public void testCustomObjectAsSimpleValue() {
+		// arrange: a writer support timestamp
+		JsonStringWriter writer = JsonWriter.string();
+		writer.setCustomObjectConverter(new DefaultCustomObjectConverter() {
+			@Override
+			public Object convert(Object object) {
+				if(object instanceof Date) {
+					return ((Date)object).getTime();
+				}
+				return super.convert(object);
+			}
+		});
+		
+		// action
+		assertTrue(writer.value(new Date()).done().matches("\\d+"));
+	}
+
+	@Test
+	public void testCustomObjectAsObject() {
+		// arrange: object (or bean) as json objct
+		class CustomClass {
+			public int id = 42;
+		}
+		CustomClass obj = new CustomClass();
+		
+		JsonStringWriter writer = JsonWriter.string();
+		writer.setCustomObjectConverter(new DefaultCustomObjectConverter() {
+			@Override
+			public Object convert(Object object) {
+				// user may use commons-beanutils
+				if(object instanceof CustomClass) {
+					CustomClass c = (CustomClass)object;
+					Map<String, Object> map = new HashMap<>();
+					map.put("id", c.id);
+					return map;
+				}
+				return super.convert(object);
+			}
+		});
+		
+		// action
+		assertEquals("{\"id\":42}", writer.value(obj).done());
+	}
 }

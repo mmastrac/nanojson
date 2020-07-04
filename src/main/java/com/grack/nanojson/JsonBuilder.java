@@ -19,6 +19,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Stack;
 
+import com.grack.nanojson.ext.CustomObjectConverter;
+
 /**
  * Builds a {@link JsonObject} or {@link JsonArray}.
  * 
@@ -207,5 +209,11 @@ public final class JsonBuilder<T> implements JsonSink<JsonBuilder<T>> {
 		} catch (ClassCastException e) {
 			throw new JsonWriterException("Attempted to write a non-keyed value to a JsonObject");
 		}
+	}
+
+	@Override
+	public void setCustomObjectConverter(CustomObjectConverter converter) {
+		throw new UnsupportedOperationException();
+		
 	}
 }

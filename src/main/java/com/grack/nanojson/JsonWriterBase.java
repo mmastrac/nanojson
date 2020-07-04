@@ -22,6 +22,9 @@ import java.util.BitSet;
 import java.util.Collection;
 import java.util.Map;
 
+import com.grack.nanojson.ext.CustomObjectConverter;
+import com.grack.nanojson.ext.DefaultCustomObjectConverter;
+
 /**
  * Internal class that handles emitting to an {@link Appendable}. Users only see
  * the public subclasses, {@link JsonStringWriter} and
@@ -60,6 +63,8 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 	 * Current indent amount.
 	 */
 	private int indent = 0;
+	
+	private CustomObjectConverter customObjectConverter = new DefaultCustomObjectConverter();
 
 	JsonWriterBase(Appendable appendable, String indent) {
 		this.appendable = appendable;
@@ -77,6 +82,11 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 		utf8 = true;
 		buffer = null;
 		bb = new byte[BUFFER_SIZE];
+	}
+
+	@Override
+	public void setCustomObjectConverter(CustomObjectConverter converter) {
+		this.customObjectConverter = converter;
 	}
 
 	/**
@@ -167,8 +177,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 				value(Array.get(o, i));
 			return end();
 		} else
-			throw new JsonWriterException("Unable to handle type: "
-					+ o.getClass());
+			return value(customObjectConverter.convert(o));
 	}
 
 	@Override
@@ -192,10 +201,9 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 				value(Array.get(o, i));
 			return end();
 		} else
-			throw new JsonWriterException("Unable to handle type: "
-					+ o.getClass());
+			return value(key, customObjectConverter.convert(o));
 	}
-
+	
 	@Override
 	public SELF value(String s) {
 		if (s == null)

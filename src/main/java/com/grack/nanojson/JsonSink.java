@@ -3,6 +3,8 @@ package com.grack.nanojson;
 import java.util.Collection;
 import java.util.Map;
 
+import com.grack.nanojson.ext.CustomObjectConverter;
+
 /**
  * Common interface for {@link JsonAppendableWriter}, {@link JsonStringWriter} and {@link JsonBuilder}.
  * 
@@ -144,4 +146,11 @@ public interface JsonSink<SELF extends JsonSink<SELF>> {
 	 * Ends the current array or object.
 	 */
 	SELF end();
+	
+	/**
+	 * Set custom object converter.
+	 * @param converter
+	 */
+	void setCustomObjectConverter(CustomObjectConverter converter);
+
 }

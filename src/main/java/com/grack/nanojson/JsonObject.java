@@ -15,13 +15,13 @@
  */
 package com.grack.nanojson;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Extends a {@link HashMap} with helper methods to determine the underlying JSON type of the map element.
+ * Extends a {@link LinkedHashMap} with helper methods to determine the underlying JSON type of the map element.
  */
-public class JsonObject extends HashMap<String, Object> {
+public class JsonObject extends LinkedHashMap<String, Object> {
 	private static final long serialVersionUID = 1L;
 
 	/**
@@ -71,7 +71,7 @@ public class JsonObject extends HashMap<String, Object> {
 	public JsonArray getArray(String key, JsonArray default_) {
 		Object o = get(key);
 		if (o instanceof JsonArray)
-			return (JsonArray)get(key);
+			return (JsonArray) o;
 		return default_;
 	}
 
@@ -190,7 +190,7 @@ public class JsonObject extends HashMap<String, Object> {
 	public JsonObject getObject(String key, JsonObject default_) {
 		Object o = get(key);
 		if (o instanceof JsonObject)
-			return (JsonObject)get(key);
+			return (JsonObject) o;
 		return default_;
 	}
 
@@ -207,7 +207,7 @@ public class JsonObject extends HashMap<String, Object> {
 	public String getString(String key, String default_) {
 		Object o = get(key);
 		if (o instanceof String)
-			return (String)get(key);
+			return (String) o;
 		return default_;
 	}
 

@@ -18,6 +18,7 @@ package com.grack.nanojson;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertArrayEquals;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -199,4 +200,23 @@ public class JsonTypesTest {
 		JsonObject.builder().value(1);
 	}
 
+	@Test
+	public void testJsonKeyOrder() {
+		JsonObject a = JsonObject
+			.builder()
+			.value("key01", 1)
+			.value("key02", 2)
+			.value("key03", 3)
+			.value("key04", 4)
+			.done();
+
+		assertArrayEquals(
+			new String [] {
+				"key01",
+				"key02",
+				"key03",
+				"key04"
+			},
+			a.keySet().toArray(new String[0]));
+	}
 }

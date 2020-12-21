@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Internal class for tokenizing JSON. Used by both {@link JsonParser} and {@link JsonReader}.
@@ -119,12 +120,12 @@ final class JsonTokener {
 			} else if (sig[0] == 0xFF && sig[1] == 0xFE && sig[2] == 0x00 && sig[3] == 0x00) {
 				charset = Charset.forName("UTF-32LE");
 			} else if (sig[0] == 0xFE && sig[1] == 0xFF) {
-				charset = Charset.forName("UTF-16BE");
+				charset = StandardCharsets.UTF_16BE;
 				buffered.reset();
 				buffered.read();
 				buffered.read();
 			} else if (sig[0] == 0xFF && sig[1] == 0xFE) {
-				charset = Charset.forName("UTF-16LE");
+				charset = StandardCharsets.UTF_16LE;
 				buffered.reset();
 				buffered.read();
 				buffered.read();
@@ -135,10 +136,10 @@ final class JsonTokener {
 				charset = Charset.forName("UTF-32LE");
 				buffered.reset();
 			} else if (sig[0] == 0 && sig[1] != 0 && sig[2] == 0 && sig[3] != 0) {
-				charset = Charset.forName("UTF-16BE");
+				charset = StandardCharsets.UTF_16BE;
 				buffered.reset();
 			} else if (sig[0] != 0 && sig[1] == 0 && sig[2] != 0 && sig[3] == 0) {
-				charset = Charset.forName("UTF-16LE");
+				charset = StandardCharsets.UTF_16LE;
 				buffered.reset();
 			} else {
 				buffered.reset();
@@ -538,7 +539,7 @@ final class JsonTokener {
 	}
 
 	/**
-	 * Peek one char ahead, don't advance, returns {@link Token#EOF} on end of input.
+	 * Peek one char ahead, don't advance, returns {@code EOF} (-1) on end of input.
 	 */
 	private int peekChar() {
 		return eof ? -1 : buffer[index];
@@ -580,7 +581,7 @@ final class JsonTokener {
 	}
 
 	/**
-	 * Advance one character ahead, or return {@link Token#EOF} on end of input.
+	 * Advance one character ahead, or return {@code EOF} (-1) on end of input.
 	 */
 	private int advanceChar() throws JsonParserException {
 		if (eof)

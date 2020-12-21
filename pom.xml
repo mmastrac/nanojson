@@ -169,8 +169,8 @@
                 <configuration>
                     <debug>true</debug>
                     <debuglevel>none</debuglevel>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                     <archive>
                         <manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
                     </archive>

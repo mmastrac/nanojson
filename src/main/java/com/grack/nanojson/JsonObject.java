@@ -33,7 +33,7 @@ public class JsonObject extends LinkedHashMap<String, Object> {
 	/**
 	 * Creates a {@link JsonObject} from an existing {@link Map}.
 	 */
-	public JsonObject(Map<? extends String, ? extends Object> map) {
+	public JsonObject(Map<? extends String, ?> map) {
 		super(map);
 	}
 
@@ -55,7 +55,7 @@ public class JsonObject extends LinkedHashMap<String, Object> {
 	 * Creates a {@link JsonBuilder} for a {@link JsonObject}.
 	 */
 	public static JsonBuilder<JsonObject> builder() {
-		return new JsonBuilder<JsonObject>(new JsonObject());
+		return new JsonBuilder<>(new JsonObject());
 	}
 
 	/**

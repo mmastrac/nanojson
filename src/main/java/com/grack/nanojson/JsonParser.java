@@ -113,7 +113,7 @@ public final class JsonParser {
 	 * </pre>
 	 */
 	public static JsonParserContext<JsonObject> object() {
-		return new JsonParserContext<JsonObject>(JsonObject.class);
+		return new JsonParserContext<>(JsonObject.class);
 	}
 
 	/**
@@ -124,7 +124,7 @@ public final class JsonParser {
 	 * </pre>
 	 */
 	public static JsonParserContext<JsonArray> array() {
-		return new JsonParserContext<JsonArray>(JsonArray.class);
+		return new JsonParserContext<>(JsonArray.class);
 	}
 
 	/**
@@ -137,7 +137,7 @@ public final class JsonParser {
 	 * </pre>
 	 */
 	public static JsonParserContext<Object> any() {
-		return new JsonParserContext<Object>(Object.class);
+		return new JsonParserContext<>(Object.class);
 	}
 
 	/**
@@ -221,7 +221,6 @@ public final class JsonParser {
 			value = tokener.reusableBuffer.toString();
 			break;
 		case JsonTokener.TOKEN_NUMBER:
-//			tokener.consumeTokenNumber();
 			if (lazyNumbers) {
 				value = new JsonLazyNumber(tokener.reusableBuffer.toString(), tokener.isDouble);
 			} else {

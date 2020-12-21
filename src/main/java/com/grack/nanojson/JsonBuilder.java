@@ -26,7 +26,7 @@ import java.util.Stack;
  *            The type of JSON object to build.
  */
 public final class JsonBuilder<T> implements JsonSink<JsonBuilder<T>> {
-	private Stack<Object> json = new Stack<Object>();
+	private Stack<Object> json = new Stack<>();
 	private T root;
 
 	JsonBuilder(T root) {

@@ -55,7 +55,7 @@ public final class JsonWriter {
 	 * Allows for additional configuration of the {@link JsonWriter}.
 	 */
 	public static final class JsonWriterContext {
-		private String indent;
+		private final String indent;
 
 		private JsonWriterContext(String indent) {
 			this.indent = indent;

@@ -41,7 +41,7 @@ public class JsonArray extends ArrayList<Object> {
 	/**
 	 * Creates an empty {@link JsonArray} from the given collection of objects.
 	 */
-	public JsonArray(Collection<? extends Object> collection) {
+	public JsonArray(Collection<?> collection) {
 		super(collection);
 	}
 
@@ -49,15 +49,14 @@ public class JsonArray extends ArrayList<Object> {
 	 * Creates a {@link JsonArray} from an array of contents.
 	 */
 	public static JsonArray from(Object... contents) {
-		JsonArray array = new JsonArray(Arrays.asList(contents));
-		return array;
+		return new JsonArray(Arrays.asList(contents));
 	}
 
 	/**
 	 * Creates a {@link JsonBuilder} for a {@link JsonArray}.
 	 */
 	public static JsonBuilder<JsonArray> builder() {
-		return new JsonBuilder<JsonArray>(new JsonArray());
+		return new JsonBuilder<>(new JsonArray());
 	}
 	
 	/**
@@ -80,7 +79,7 @@ public class JsonArray extends ArrayList<Object> {
 	public JsonArray getArray(int key, JsonArray default_) {
 		Object o = get(key);
 		if (o instanceof JsonArray)
-			return (JsonArray)get(key);
+			return (JsonArray) o;
 		return default_;
 	}
 
@@ -97,7 +96,7 @@ public class JsonArray extends ArrayList<Object> {
 	public boolean getBoolean(int key, Boolean default_) {
 		Object o = get(key);
 		if (o instanceof Boolean)
-			return (Boolean)o;
+			return (Boolean) o;
 		return default_;
 	}
 
@@ -199,7 +198,7 @@ public class JsonArray extends ArrayList<Object> {
 	public JsonObject getObject(int key, JsonObject default_) {
 		Object o = get(key);
 		if (o instanceof JsonObject)
-			return (JsonObject)get(key);
+			return (JsonObject) o;
 		return default_;
 	}
 
@@ -216,7 +215,7 @@ public class JsonArray extends ArrayList<Object> {
 	public String getString(int key, String default_) {
 		Object o = get(key);
 		if (o instanceof String)
-			return (String)get(key);
+			return (String) o;
 		return default_;
 	}
 

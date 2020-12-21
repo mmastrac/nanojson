@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -33,11 +34,7 @@ import org.junit.Test;
  * Test for {@link JsonWriter}.
  */
 public class JsonWriterTest {
-	private static final Charset UTF8;
-
-	static {
-		UTF8 = Charset.forName("UTF-8");
-	}
+	private static final Charset UTF8 = StandardCharsets.UTF_8;
 
 	// CHECKSTYLE_OFF: MagicNumber
 	// CHECKSTYLE_OFF: JavadocMethod

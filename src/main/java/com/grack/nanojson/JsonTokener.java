@@ -214,13 +214,10 @@ final class JsonTokener {
 				sw:
 				switch (state) {
 				case 1: // start leading negative
-					if (nc == '-' && state == 0) {
-						ns = 1; break sw;
-					}
 					if (nc == '0') {
 						ns = 3; break sw;
 					}
-					if (nc >= '0' && nc <= '9') {
+					if (nc > '0' && nc <= '9') {
 						ns = 2; break sw;
 					}
 					break;

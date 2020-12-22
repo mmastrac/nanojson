@@ -1,6 +1,5 @@
 # nanojson [![Build Status](https://travis-ci.org/mmastrac/nanojson.svg?branch=master)](https://travis-ci.org/mmastrac/nanojson) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.grack/nanojson/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.grack/nanojson) [![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/mmastrac/nanojson.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/mmastrac/nanojson/context:java)
 
-
 nanojson is a tiny, fast, and compliant JSON parser and writer for Java. 
 
 ## License
@@ -22,7 +21,7 @@ Add it to your maven pom.xml:
 
 ... or to your gradle file:
 
-    compile group: 'com.grack', name: 'nanojson', version: '1.6'
+    compile group: 'com.grack', name: 'nanojson', version: '1.7'
 
 ... or just drop the files directly into your project!
 
@@ -155,3 +154,4 @@ These helper types also provide a builder that can be used in the same way as a 
   * Ensure that `~/.m2/settings.xml` is correctly configured with username/password for `sonatype-nexus-staging`
   * Ensure the correct version in the pom.xml
   * `mvn -Prelease clean package deploy`
+  * Update README.md

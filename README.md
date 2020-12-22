@@ -1,4 +1,4 @@
-# nanojson [![Build Status](https://travis-ci.org/mmastrac/nanojson.svg?branch=master)](https://travis-ci.org/mmastrac/nanojson) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.grack/nanojson/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.grack/nanojson)
+# nanojson [![Build Status](https://travis-ci.org/mmastrac/nanojson.svg?branch=master)](https://travis-ci.org/mmastrac/nanojson) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.grack/nanojson/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.grack/nanojson) [![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/mmastrac/nanojson.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/mmastrac/nanojson/context:java)
 
 
 nanojson is a tiny, fast, and compliant JSON parser and writer for Java. 

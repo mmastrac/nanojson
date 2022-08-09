@@ -50,6 +50,11 @@ class JsonLazyNumber extends Number {
 		return isDouble ? (long)Double.parseDouble(value) : Long.parseLong(value);
 	}
 
+	@Override
+	public String toString() {
+		return value;
+	}
+
 	/**
 	 * Avoid serializing {@link JsonLazyNumber}.
 	 */

@@ -122,4 +122,11 @@ public class JsonNumberTest {
 		String json2 = JsonWriter.string().array(array2).done();
 		assertEquals(json, json2);
 	}
+
+	@Test
+	public void testTrailingDecimalLazy() throws JsonParserException {
+		Object value = JsonParser.any().withLazyNumbers().from("1.000");
+		String json = JsonWriter.string().value(value).done();
+		assertEquals("1.000", json);
+	}
 }

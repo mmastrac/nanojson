@@ -132,6 +132,16 @@ public class JsonWriterTest {
 				.end().done());
 	}
 
+	@Test
+	public void testSeparateKeyWriting() {
+		assertEquals("{\"a\":null}",
+				JsonWriter.string().object().key("a").value((Number) null).end()
+						.done());
+		assertEquals("{\"a\":{\"b\":null}}",
+				JsonWriter.string().object().key("a").object().value("b", (Number) null)
+						.end().end().done());
+	}
+
 	/**
 	 * Test escaping of chars < 256.
 	 */
@@ -521,6 +531,16 @@ public class JsonWriterTest {
 		} catch (JsonWriterException e) {
 			// OK
 		}
+	}
+
+	@Test(expected = JsonWriterException.class)
+	public void testFailureRepeatedKey() {
+		JsonWriter.string().object().key("a").value("b", 2).end().done();
+	}
+
+	@Test(expected = JsonWriterException.class)
+	public void testFailureRepeatedKey2() {
+		JsonWriter.string().object().key("a").key("b").end().done();
 	}
 
 	@Test

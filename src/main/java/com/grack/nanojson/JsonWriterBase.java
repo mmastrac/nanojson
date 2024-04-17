@@ -50,6 +50,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 	private int stateIndex = 0;
 	private boolean first = true;
 	private boolean inObject;
+	private String pendingKey;
 
 	/**
 	 * Sequence to use for indenting.
@@ -372,6 +373,17 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 		return castThis();
 	}
 
+	@Override
+	public SELF key(String key) {
+		if (key == null)
+			throw new NullPointerException("key");
+		if (pendingKey != null)
+			throw new JsonWriterException(
+					"Invalid call to emit a key immediately after emitting a key");
+		pendingKey = key;
+		return castThis();
+	}
+
 	/**
 	 * Ensures that the object is in the finished state.
 	 * 
@@ -472,6 +484,12 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 	}
 
 	private void preValue() {
+		if (pendingKey != null) {
+			String key = pendingKey;
+			pendingKey = null;
+			preValue(key);
+			return;
+		}
 		if (inObject)
 			throw new JsonWriterException(
 					"Invalid call to emit a keyless value while writing an object");
@@ -483,6 +501,9 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 		if (!inObject)
 			throw new JsonWriterException(
 					"Invalid call to emit a key value while not writing an object");
+		if (pendingKey != null)
+			throw new JsonWriterException(
+					"Invalid call to emit a key value immediately after emitting a key");
 
 		pre();
 

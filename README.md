@@ -16,7 +16,7 @@ Add it to your maven pom.xml:
     <dependency>
       <groupId>com.grack</groupId>
       <artifactId>nanojson</artifactId>
-      <version>1.7</version>
+      <version>1.9</version>
     </dependency>
 
 ... or to your gradle file:
@@ -152,6 +152,6 @@ These helper types also provide a builder that can be used in the same way as a 
 ## Release steps
 
   * Ensure that `~/.m2/settings.xml` is correctly configured with username/password for `sonatype-nexus-staging`
-  * Ensure the correct version in the pom.xml
-  * `mvn -Prelease clean package deploy`
-  * Update README.md
+  * Update the version in the `pom.xml` from `-SNAPSHOT` to 
+  * `GPG_TTY=$(tty) mvn -Prelease clean deploy`
+  * Update README.md with new release version and `pom.xml` with new `-SNAPSHOT` version

@@ -159,4 +159,9 @@ public interface JsonSink<SELF extends JsonSink<SELF>> {
 	 * Ends the current array or object.
 	 */
 	SELF end();
+
+	/**
+	 * Writes the key of a key/value pair.
+	 */
+	SELF key(String key);
 }

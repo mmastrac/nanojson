@@ -27,6 +27,7 @@ import java.util.Stack;
  */
 public final class JsonBuilder<T> implements JsonSink<JsonBuilder<T>> {
 	private Stack<Object> json = new Stack<>();
+	private String pendingKey;
 	private T root;
 
 	JsonBuilder(T root) {
@@ -73,12 +74,20 @@ public final class JsonBuilder<T> implements JsonSink<JsonBuilder<T>> {
 
 	@Override
 	public JsonBuilder<T> value(Object o) {
-		arr().add(o);
+		if (pendingKey != null) {
+			obj().put(pendingKey, o);
+			pendingKey = null;
+		} else {
+			arr().add(o);
+		}
 		return this;
 	}
 
 	@Override
 	public JsonBuilder<T> value(String key, Object o) {
+		if (pendingKey != null) {
+			throw new JsonWriterException("Invalid call to emit a key value immediately after emitting a key");
+		}
 		obj().put(key, o);
 		return this;
 	}
@@ -190,6 +199,18 @@ public final class JsonBuilder<T> implements JsonSink<JsonBuilder<T>> {
 		if (json.size() == 1)
 			throw new JsonWriterException("Cannot end the root object or array");
 		json.pop();
+		return this;
+	}
+
+	@Override
+	public JsonBuilder<T> key(String key) {
+		if (key == null)
+			throw new NullPointerException("key");
+		if (!(json.peek() instanceof JsonObject))
+			throw new JsonWriterException("Invalid call to emit a key value while not writing an object");
+		if (pendingKey != null)
+			throw new JsonWriterException("Invalid call to emit a key value immediately after emitting a key");
+		pendingKey = key;
 		return this;
 	}
 

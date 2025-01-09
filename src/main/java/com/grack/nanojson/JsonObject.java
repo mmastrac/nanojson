@@ -17,6 +17,7 @@ package com.grack.nanojson;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * Extends a {@link LinkedHashMap} with helper methods to determine the underlying JSON type of the map element.
@@ -244,5 +245,53 @@ public class JsonObject extends LinkedHashMap<String, Object> {
 	 */
 	public boolean isString(String key) {
 		return get(key) instanceof String;
+	}
+
+	public void forEachObject(BiConsumer<String, JsonObject> consumer) {
+		forEach((key, value) -> {
+			if (value instanceof JsonObject) consumer.accept(key, (JsonObject) value);
+		});
+	}
+
+	public void forEachArray(BiConsumer<String, JsonArray> consumer) {
+		forEach((key, value) -> {
+			if (value instanceof JsonArray) consumer.accept(key, (JsonArray) value);
+		});
+	}
+
+	public void forEachBoolean(BiConsumer<String, Boolean> consumer) {
+		forEach((key, value) -> {
+			if (value instanceof Boolean) consumer.accept(key, (Boolean) value);
+		});
+	}
+
+	public void forEachNumber(BiConsumer<String, Number> consumer) {
+		forEach((key, value) -> {
+			if (value instanceof Number) consumer.accept(key, (Number) value);
+		});
+	}
+
+	public void forEachInt(BiConsumer<String, Integer> consumer) {
+		forEach((key, value) -> {
+			if (value instanceof Number) consumer.accept(key, ((Number) value).intValue());
+		});
+	}
+
+	public void forEachLong(BiConsumer<String, Long> consumer) {
+		forEach((key, value) -> {
+			if (value instanceof Number) consumer.accept(key, ((Number) value).longValue());
+		});
+	}
+
+	public void forEachFloat(BiConsumer<String, Float> consumer) {
+		forEach((key, value) -> {
+			if (value instanceof Number) consumer.accept(key, ((Number) value).floatValue());
+		});
+	}
+
+	public void forEachDouble(BiConsumer<String, Double> consumer) {
+		forEach((key, value) -> {
+			if (value instanceof Number) consumer.accept(key, ((Number) value).doubleValue());
+		});
 	}
 }

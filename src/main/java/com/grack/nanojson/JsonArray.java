@@ -18,6 +18,10 @@ package com.grack.nanojson;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.function.Consumer;
+import java.util.function.DoubleConsumer;
+import java.util.function.IntConsumer;
+import java.util.function.LongConsumer;
 
 /**
  * Extends an {@link ArrayList} with helper methods to determine the underlying JSON type of the list element.
@@ -252,5 +256,53 @@ public class JsonArray extends ArrayList<Object> {
 	 */
 	public boolean isString(int key) {
 		return get(key) instanceof String;
+	}
+
+	public void forEachObject(Consumer<JsonObject> consumer) {
+		forEach(o -> {
+			if (o instanceof JsonObject) consumer.accept((JsonObject) o);
+		});
+	}
+
+	public void forEachArray(Consumer<JsonArray> consumer) {
+		forEach(o -> {
+			if (o instanceof JsonArray) consumer.accept((JsonArray) o);
+		});
+	}
+
+	public void forEachNumber(Consumer<Number> consumer) {
+		forEach(o -> {
+			if (o instanceof Number) consumer.accept((Number) o);
+		});
+	}
+
+	public void forEachBoolean(Consumer<Boolean> consumer) {
+		forEach(o -> {
+			if (o instanceof Boolean) consumer.accept((Boolean) o);
+		});
+	}
+
+	public void forEachFloat(Consumer<Float> consumer) {
+		forEach(o -> {
+			if (o instanceof Number) consumer.accept(((Number) o).floatValue());
+		});
+	}
+
+	public void forEachDouble(DoubleConsumer consumer) {
+		forEach(o -> {
+			if (o instanceof Number) consumer.accept(((Number) o).doubleValue());
+		});
+	}
+
+	public void forEachInt(IntConsumer consumer) {
+		forEach(o -> {
+			if (o instanceof Number) consumer.accept(((Number) o).intValue());
+		});
+	}
+
+	public void forEachLong(LongConsumer consumer) {
+		forEach(o -> {
+			if (o instanceof Number) consumer.accept(((Number) o).longValue());
+		});
 	}
 }

@@ -161,6 +161,8 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 			return array((Collection<?>) o);
 		else if (o instanceof Map)
 			return object((Map<?, ?>) o);
+		else if (o instanceof JsonWritable)
+			return value(((JsonWritable) o).toJsonValue());
 		else if (o.getClass().isArray()) {
 			int length = Array.getLength(o);
 			array();

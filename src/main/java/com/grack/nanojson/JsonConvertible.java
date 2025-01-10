@@ -3,7 +3,7 @@ package com.grack.nanojson;
 /**
  * An interface for classes that can be converted into valid JSON values.
  */
-public interface JsonConvertable {
+public interface JsonConvertible {
   /**
    * Creates a view of this object as a valid JSON Type.
    *

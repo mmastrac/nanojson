@@ -36,7 +36,9 @@ public class JsonArray extends ArrayList<Object> {
 	}
 
 	/**
-	 * Creates an empty {@link JsonArray} with the default initial capacity.
+	 * Creates an empty {@link JsonArray} with the specified initial capacity.
+	 *
+	 * @param initialCapacity the initial capacity of the array
 	 */
 	public JsonArray(int initialCapacity) {
 		super(initialCapacity);
@@ -258,48 +260,112 @@ public class JsonArray extends ArrayList<Object> {
 		return get(key) instanceof String;
 	}
 
+	/**
+	 * Performs the given action for each element of the Array that represents a JsonObject
+	 * until all elements have been processed
+	 * or the action throws an exception. Actions are performed in the order of iteration.
+	 * Exceptions thrown by the action are relayed to the caller.
+	 *
+	 * @param consumer the action to perform
+	 */
 	public void forEachObject(Consumer<JsonObject> consumer) {
 		forEach(o -> {
 			if (o instanceof JsonObject) consumer.accept((JsonObject) o);
 		});
 	}
 
+	/**
+	 * Performs the given action for each element of the Array that represents a JsonArray
+	 * until all elements have been processed
+	 * or the action throws an exception. Actions are performed in the order of iteration.
+	 * Exceptions thrown by the action are relayed to the caller.
+	 *
+	 * @param consumer the action to perform
+	 */
 	public void forEachArray(Consumer<JsonArray> consumer) {
 		forEach(o -> {
 			if (o instanceof JsonArray) consumer.accept((JsonArray) o);
 		});
 	}
 
+	/**
+	 * Performs the given action for each element of the Array that represents a Number
+	 * until all elements have been processed
+	 * or the action throws an exception. Actions are performed in the order of iteration.
+	 * Exceptions thrown by the action are relayed to the caller.
+	 *
+	 * @param consumer the action to perform
+	 */
 	public void forEachNumber(Consumer<Number> consumer) {
 		forEach(o -> {
 			if (o instanceof Number) consumer.accept((Number) o);
 		});
 	}
 
+	/**
+	 * Performs the given action for each element of the Array that represents a Boolean
+	 * until all elements have been processed
+	 * or the action throws an exception. Actions are performed in the order of iteration.
+	 * Exceptions thrown by the action are relayed to the caller.
+	 *
+	 * @param consumer the action to perform
+	 */
 	public void forEachBoolean(Consumer<Boolean> consumer) {
 		forEach(o -> {
 			if (o instanceof Boolean) consumer.accept((Boolean) o);
 		});
 	}
 
+	/**
+	 * Performs the given action for each element of the Array that represents a Float
+	 * until all elements have been processed
+	 * or the action throws an exception. Actions are performed in the order of iteration.
+	 * Exceptions thrown by the action are relayed to the caller.
+	 *
+	 * @param consumer the action to perform
+	 */
 	public void forEachFloat(Consumer<Float> consumer) {
 		forEach(o -> {
 			if (o instanceof Number) consumer.accept(((Number) o).floatValue());
 		});
 	}
 
+	/**
+	 * Performs the given action for each element of the Array that represents a Double
+	 * until all elements have been processed
+	 * or the action throws an exception. Actions are performed in the order of iteration.
+	 * Exceptions thrown by the action are relayed to the caller.
+	 *
+	 * @param consumer the action to perform
+	 */
 	public void forEachDouble(DoubleConsumer consumer) {
 		forEach(o -> {
 			if (o instanceof Number) consumer.accept(((Number) o).doubleValue());
 		});
 	}
 
+	/**
+	 * Performs the given action for each element of the Array that represents an Int
+	 * until all elements have been processed
+	 * or the action throws an exception. Actions are performed in the order of iteration.
+	 * Exceptions thrown by the action are relayed to the caller.
+	 *
+	 * @param consumer the action to perform
+	 */
 	public void forEachInt(IntConsumer consumer) {
 		forEach(o -> {
 			if (o instanceof Number) consumer.accept(((Number) o).intValue());
 		});
 	}
 
+	/**
+	 * Performs the given action for each element of the Array that represents a Long
+	 * until all elements have been processed
+	 * or the action throws an exception. Actions are performed in the order of iteration.
+	 * Exceptions thrown by the action are relayed to the caller.
+	 *
+	 * @param consumer the action to perform
+	 */
 	public void forEachLong(LongConsumer consumer) {
 		forEach(o -> {
 			if (o instanceof Number) consumer.accept(((Number) o).longValue());

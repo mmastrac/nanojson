@@ -302,27 +302,27 @@ public class JsonWriterTest {
 	 */
 	@Test
 	public void testWritable() {
-		assertEquals("null", JsonWriter.string((JsonWritable) () -> null));
-		assertEquals("[]", JsonWriter.string((JsonWritable) ArrayList::new));
-		assertEquals("{}", JsonWriter.string((JsonWritable) HashMap::new));
-		assertEquals("\"\"", JsonWriter.string((JsonWritable) () -> ""));
-		assertEquals("1", JsonWriter.string((JsonWritable) () -> Integer.valueOf(1)));
-		assertEquals("1.0", JsonWriter.string((JsonWritable) () -> Double.valueOf(1.0)));
-		assertEquals("1", JsonWriter.string((JsonWritable) () -> Long.valueOf(1)));
-		assertEquals("1.0", JsonWriter.string((JsonWritable) () -> Float.valueOf(1.0f)));
+		assertEquals("null", JsonWriter.string((JsonConvertable) () -> null));
+		assertEquals("[]", JsonWriter.string((JsonConvertable) ArrayList::new));
+		assertEquals("{}", JsonWriter.string((JsonConvertable) HashMap::new));
+		assertEquals("\"\"", JsonWriter.string((JsonConvertable) () -> ""));
+		assertEquals("1", JsonWriter.string((JsonConvertable) () -> Integer.valueOf(1)));
+		assertEquals("1.0", JsonWriter.string((JsonConvertable) () -> Double.valueOf(1.0)));
+		assertEquals("1", JsonWriter.string((JsonConvertable) () -> Long.valueOf(1)));
+		assertEquals("1.0", JsonWriter.string((JsonConvertable) () -> Float.valueOf(1.0f)));
 		assertEquals(
 				"[null,[1,2,3],{\"a\":1,\"b\":2.0,\"c\":\"a\",\"d\":null,\"e\":[]}]",
-				JsonWriter.string((JsonWritable) () -> (JsonWritable) () -> {
+				JsonWriter.string((JsonConvertable) () -> (JsonConvertable) () -> {
 					ArrayList<Object> list = new ArrayList<>();
 					list.add(null);
-					list.add((JsonWritable) () -> new int[] {1, 2, 3});
-					list.add((JsonWritable) () -> {
+					list.add((JsonConvertable) () -> new int[] {1, 2, 3});
+					list.add((JsonConvertable) () -> {
 						HashMap<String, Object> map = new HashMap<>();
 						map.put("a", 1);
 						map.put("b", 2.0);
 						map.put("c", "a");
 						map.put("d", null);
-						map.put("e", (JsonWritable) ArrayList::new);
+						map.put("e", (JsonConvertable) ArrayList::new);
 						return map;
 					});
 					return list;
@@ -332,14 +332,14 @@ public class JsonWriterTest {
 				"Unable to handle type: class java.lang.Object",
 				assertThrows(
 						JsonWriterException.class,
-						() -> JsonWriter.string((JsonWritable) Object::new)
+						() -> JsonWriter.string((JsonConvertable) Object::new)
 				).getMessage()
 		);
 		assertEquals(
 				"Unable to handle type: class java.lang.Object",
 				assertThrows(
 						JsonWriterException.class,
-						() -> JsonWriter.string((JsonWritable) () -> Arrays.asList("d", 1, new Object()))
+						() -> JsonWriter.string((JsonConvertable) () -> Arrays.asList("d", 1, new Object()))
 				).getMessage()
 		);
 	}

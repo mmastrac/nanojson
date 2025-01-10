@@ -161,15 +161,16 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 			return array((Collection<?>) o);
 		else if (o instanceof Map)
 			return object((Map<?, ?>) o);
-		else if (o instanceof JsonWritable)
-			return value(((JsonWritable) o).toJsonValue());
 		else if (o.getClass().isArray()) {
 			int length = Array.getLength(o);
 			array();
 			for (int i = 0; i < length; i++)
 				value(Array.get(o, i));
 			return end();
-		} else
+		}
+		else if (o instanceof JsonConvertable)
+			return value(((JsonConvertable) o).toJsonValue());
+		else
 			throw new JsonWriterException("Unable to handle type: "
 					+ o.getClass());
 	}
@@ -188,15 +189,16 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 			return array(key, (Collection<?>) o);
 		else if (o instanceof Map)
 			return object(key, (Map<?, ?>) o);
-		else if (o instanceof JsonWritable)
-			return value(key, ((JsonWritable) o).toJsonValue());
 		else if (o.getClass().isArray()) {
 			int length = Array.getLength(o);
 			array(key);
 			for (int i = 0; i < length; i++)
 				value(Array.get(o, i));
 			return end();
-		} else
+		}
+		else if (o instanceof JsonConvertable)
+			return value(key, ((JsonConvertable) o).toJsonValue());
+		else
 			throw new JsonWriterException("Unable to handle type: "
 					+ o.getClass());
 	}

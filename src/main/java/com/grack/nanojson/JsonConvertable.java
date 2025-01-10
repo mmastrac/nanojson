@@ -1,11 +1,11 @@
 package com.grack.nanojson;
 
 /**
- * An interface for classes that can be converted into valid Json values.
+ * An interface for classes that can be converted into valid JSON values.
  */
-public interface JsonWritable {
+public interface JsonConvertable {
   /**
-   * Creates a view of this object as a valid Json Type.
+   * Creates a view of this object as a valid JSON Type.
    *
    * @return an instance of Map, Collection, String, Number or Boolean or {@code null}
    */

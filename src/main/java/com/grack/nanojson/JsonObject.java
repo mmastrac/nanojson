@@ -15,8 +15,11 @@
  */
 package com.grack.nanojson;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.NoSuchElementException;
 import java.util.function.BiConsumer;
 
 /**
@@ -358,4 +361,8 @@ public class JsonObject extends LinkedHashMap<String, Object> {
 			if (value instanceof Number) consumer.accept(key, ((Number) value).doubleValue());
 		});
 	}
+
+	public <V> Iterable<Map.Entry<String, V>> asIterable(Class<V> cls) {
+		return () -> new TypesafeIterator<>(cls, entrySet(), Map.Entry::getValue);
+  }
 }

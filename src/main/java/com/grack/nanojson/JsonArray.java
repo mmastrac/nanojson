@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
+import java.util.function.Function;
 import java.util.function.IntConsumer;
 import java.util.function.LongConsumer;
 
@@ -370,5 +371,9 @@ public class JsonArray extends ArrayList<Object> {
 		forEach(o -> {
 			if (o instanceof Number) consumer.accept(((Number) o).longValue());
 		});
+	}
+
+	public <V> Iterable<V> asIterable(Class<V> cls) {
+		return () -> new TypesafeIterator<>(cls, this, Function.identity());
 	}
 }

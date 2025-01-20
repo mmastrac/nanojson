@@ -167,7 +167,9 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 			for (int i = 0; i < length; i++)
 				value(Array.get(o, i));
 			return end();
-		} else
+		} else if (o instanceof JsonConvertible)
+			return value(((JsonConvertible) o).toJsonValue());
+		else
 			throw new JsonWriterException("Unable to handle type: "
 					+ o.getClass());
 	}
@@ -192,7 +194,9 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 			for (int i = 0; i < length; i++)
 				value(Array.get(o, i));
 			return end();
-		} else
+		} else if (o instanceof JsonConvertible)
+			return value(key, ((JsonConvertible) o).toJsonValue());
+		else
 			throw new JsonWriterException("Unable to handle type: "
 					+ o.getClass());
 	}

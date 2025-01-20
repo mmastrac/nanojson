@@ -16,6 +16,7 @@
 package com.grack.nanojson;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -25,8 +26,10 @@ import java.io.PrintStream;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 
 import org.junit.Test;
 
@@ -292,6 +295,53 @@ public class JsonWriterTest {
 	public void testArrayEmpty() {
 		String json = JsonWriter.string().array().end().done();
 		assertEquals("[]", json);
+	}
+
+	/**
+	 * Test the auto-conversion of Writables.
+	 */
+	@Test
+	public void testWritable() {
+		assertEquals("null", JsonWriter.string((JsonConvertible) () -> null));
+		assertEquals("[]", JsonWriter.string((JsonConvertible) ArrayList::new));
+		assertEquals("{}", JsonWriter.string((JsonConvertible) HashMap::new));
+		assertEquals("\"\"", JsonWriter.string((JsonConvertible) () -> ""));
+		assertEquals("1", JsonWriter.string((JsonConvertible) () -> Integer.valueOf(1)));
+		assertEquals("1.0", JsonWriter.string((JsonConvertible) () -> Double.valueOf(1.0)));
+		assertEquals("1", JsonWriter.string((JsonConvertible) () -> Long.valueOf(1)));
+		assertEquals("1.0", JsonWriter.string((JsonConvertible) () -> Float.valueOf(1.0f)));
+		assertEquals(
+				"[null,[1,2,3],{\"a\":1,\"b\":2.0,\"c\":\"a\",\"d\":null,\"e\":[]}]",
+				JsonWriter.string((JsonConvertible) () -> (JsonConvertible) () -> {
+					ArrayList<Object> list = new ArrayList<>();
+					list.add(null);
+					list.add((JsonConvertible) () -> new int[] {1, 2, 3});
+					list.add((JsonConvertible) () -> {
+						HashMap<String, Object> map = new HashMap<>();
+						map.put("a", 1);
+						map.put("b", 2.0);
+						map.put("c", "a");
+						map.put("d", null);
+						map.put("e", (JsonConvertible) ArrayList::new);
+						return map;
+					});
+					return list;
+				})
+		);
+		assertEquals(
+				"Unable to handle type: class java.lang.Object",
+				assertThrows(
+						JsonWriterException.class,
+						() -> JsonWriter.string((JsonConvertible) Object::new)
+				).getMessage()
+		);
+		assertEquals(
+				"Unable to handle type: class java.lang.Object",
+				assertThrows(
+						JsonWriterException.class,
+						() -> JsonWriter.string((JsonConvertible) () -> Arrays.asList("d", 1, new Object()))
+				).getMessage()
+		);
 	}
 
 	/**

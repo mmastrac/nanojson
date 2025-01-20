@@ -15,8 +15,12 @@
  */
 package com.grack.nanojson;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.NoSuchElementException;
+import java.util.function.BiConsumer;
 
 /**
  * Extends a {@link LinkedHashMap} with helper methods to determine the underlying JSON type of the map element.
@@ -245,4 +249,120 @@ public class JsonObject extends LinkedHashMap<String, Object> {
 	public boolean isString(String key) {
 		return get(key) instanceof String;
 	}
+
+	/**
+	 * Performs the given action for each entry in this map where the value represents a JsonObject
+	 * until all entries have been processed or the action throws an exception.
+	 * Actions are performed in the order of entry set iteration.
+	 * Exceptions thrown by the action are relayed to the caller.
+	 *
+	 * @param consumer the action to perform
+	 */
+	public void forEachObject(BiConsumer<String, JsonObject> consumer) {
+		forEach((key, value) -> {
+			if (value instanceof JsonObject) consumer.accept(key, (JsonObject) value);
+		});
+	}
+
+	/**
+	 * Performs the given action for each entry in this map where the value represents a JsonArray
+	 * until all entries have been processed or the action throws an exception.
+	 * Actions are performed in the order of entry set iteration.
+	 * Exceptions thrown by the action are relayed to the caller.
+	 *
+	 * @param consumer the action to perform
+	 */
+	public void forEachArray(BiConsumer<String, JsonArray> consumer) {
+		forEach((key, value) -> {
+			if (value instanceof JsonArray) consumer.accept(key, (JsonArray) value);
+		});
+	}
+
+	/**
+	 * Performs the given action for each entry in this map where the value represents a Boolean
+	 * until all entries have been processed or the action throws an exception.
+	 * Actions are performed in the order of entry set iteration.
+	 * Exceptions thrown by the action are relayed to the caller.
+	 *
+	 * @param consumer the action to perform
+	 */
+	public void forEachBoolean(BiConsumer<String, Boolean> consumer) {
+		forEach((key, value) -> {
+			if (value instanceof Boolean) consumer.accept(key, (Boolean) value);
+		});
+	}
+
+	/**
+	 * Performs the given action for each entry in this map where the value represents a Number
+	 * until all entries have been processed or the action throws an exception.
+	 * Actions are performed in the order of entry set iteration.
+	 * Exceptions thrown by the action are relayed to the caller.
+	 *
+	 * @param consumer the action to perform
+	 */
+	public void forEachNumber(BiConsumer<String, Number> consumer) {
+		forEach((key, value) -> {
+			if (value instanceof Number) consumer.accept(key, (Number) value);
+		});
+	}
+
+	/**
+	 * Performs the given action for each entry in this map where the value represents an Int
+	 * until all entries have been processed or the action throws an exception.
+	 * Actions are performed in the order of entry set iteration.
+	 * Exceptions thrown by the action are relayed to the caller.
+	 *
+	 * @param consumer the action to perform
+	 */
+	public void forEachInt(BiConsumer<String, Integer> consumer) {
+		forEach((key, value) -> {
+			if (value instanceof Number) consumer.accept(key, ((Number) value).intValue());
+		});
+	}
+
+	/**
+	 * Performs the given action for each entry in this map where the value represents a Long
+	 * until all entries have been processed or the action throws an exception.
+	 * Actions are performed in the order of entry set iteration.
+	 * Exceptions thrown by the action are relayed to the caller.
+	 *
+	 * @param consumer the action to perform
+	 */
+	public void forEachLong(BiConsumer<String, Long> consumer) {
+		forEach((key, value) -> {
+			if (value instanceof Number) consumer.accept(key, ((Number) value).longValue());
+		});
+	}
+
+	/**
+	 * Performs the given action for each entry in this map where the value represents a Float
+	 * until all entries have been processed or the action throws an exception.
+	 * Actions are performed in the order of entry set iteration.
+	 * Exceptions thrown by the action are relayed to the caller.
+	 *
+	 * @param consumer the action to perform
+	 */
+	public void forEachFloat(BiConsumer<String, Float> consumer) {
+		forEach((key, value) -> {
+			if (value instanceof Number) consumer.accept(key, ((Number) value).floatValue());
+		});
+	}
+
+	/**
+	 * Performs the given action for each entry in this map where the value represents a Double
+	 * until all entries have been processed or the action throws an exception.
+	 * Actions are performed in the order of entry set iteration.
+	 * Exceptions thrown by the action are relayed to the caller.
+	 *
+	 * @param consumer the action to perform
+	 */
+	public void forEachDouble(BiConsumer<String, Double> consumer) {
+		forEach((key, value) -> {
+			if (value instanceof Number) consumer.accept(key, ((Number) value).doubleValue());
+		});
+	}
+
+	public <V> Iterable<Map.Entry<String, V>> asIterable(Class<V> cls) {
+		return () -> new TypesafeIterator<>(cls, entrySet(), Map.Entry::getValue);
+  }
 }

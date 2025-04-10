@@ -248,7 +248,7 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 	@Override
 	public SELF value(Number n) {
 		preValue();
-		if (n == null)
+		if (n == null || nullish(n))
 			raw(NULL);
 		else
 			raw(n.toString());
@@ -618,5 +618,23 @@ class JsonWriterBase<SELF extends JsonWriterBase<SELF>> implements
 	private boolean shouldBeEscaped(char c) {
 		return c < ' ' || (c >= '\u0080' && c < '\u00a0')
 				|| (c >= '\u2000' && c < '\u2100');
+	}
+
+	/**
+	 * Returns true if the number becomes null when converted to JSON. json.org spec does not specify
+	 * NaN or Infinity as numbers, and modern JavaScript engines convert them to null.
+	 * @param n a number
+	 * @return true if the number is nullish.
+	 */
+	private boolean nullish(Number n) {
+		if (n instanceof Double) {
+			Double d = (Double) n;
+			return d.isNaN() || d.isInfinite();
+		}
+        if (n instanceof Float) {
+			Float f = (Float) n;
+			return f.isNaN() || f.isInfinite();
+        }
+        return false;
 	}
 }

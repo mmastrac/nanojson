@@ -16,6 +16,7 @@
 package com.grack.nanojson;
 
 import java.io.InputStream;
+import java.io.Reader;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -74,6 +75,13 @@ public final class JsonReader {
 	 */
 	public static JsonReader from(String s) throws JsonParserException {
 		return new JsonReader(new JsonTokener(new StringReader(s)));
+	}
+
+	/**
+	 * Create a {@link JsonReader} from a {@link Reader}.
+	 */
+	public static JsonReader from(Reader reader) throws JsonParserException {
+		return new JsonReader(new JsonTokener(reader));
 	}
 
 	/**

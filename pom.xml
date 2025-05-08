@@ -169,8 +169,7 @@
                 <configuration>
                     <debug>true</debug>
                     <debuglevel>none</debuglevel>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <release>8</release>
                     <archive>
                         <manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
                     </archive>

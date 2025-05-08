@@ -15,24 +15,26 @@
  */
 package com.grack.nanojson;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test for the various JSON types.
  */
-public class JsonTypesTest {
+class JsonTypesTest {
 	// CHECKSTYLE_OFF: MagicNumber
 	// CHECKSTYLE_OFF: JavadocMethod
 	@Test
-	public void testObjectInt() {
+	void objectInt() {
 		JsonObject o = new JsonObject();
 		o.put("key", 1);
 		assertEquals(1, o.getInt("key"));
@@ -42,39 +44,39 @@ public class JsonTypesTest {
 		assertEquals(1, o.getNumber("key"));
 		assertEquals(1, o.get("key"));
 
-		assertEquals(null, o.getString("key"));
+		assertNull(o.getString("key"));
 		assertEquals("foo", o.getString("key", "foo"));
 		assertFalse(o.isNull("key"));
 	}
 
 	@Test
-	public void testObjectString() {
+	void objectString() {
 		JsonObject o = new JsonObject();
 		o.put("key", "1");
 		assertEquals(0, o.getInt("key"));
 		assertEquals(0L, o.getLong("key"));
 		assertEquals(0, o.getDouble("key"), 0.0001f);
 		assertEquals(0f, o.getFloat("key"), 0.0001f);
-		assertEquals(null, o.getNumber("key"));
+		assertNull(o.getNumber("key"));
 		assertEquals("1", o.get("key"));
 		assertFalse(o.isNull("key"));
 	}
 
 	@Test
-	public void testObjectNull() {
+	void objectNull() {
 		JsonObject o = new JsonObject();
 		o.put("key", null);
 		assertEquals(0, o.getInt("key"));
 		assertEquals(0L, o.getLong("key"));
 		assertEquals(0, o.getDouble("key"), 0.0001f);
 		assertEquals(0f, o.getFloat("key"), 0.0001f);
-		assertEquals(null, o.getNumber("key"));
-		assertEquals(null, o.get("key"));
+		assertNull(o.getNumber("key"));
+		assertNull(o.get("key"));
 		assertTrue(o.isNull("key"));
 	}
 
 	@Test
-	public void testArrayInt() {
+	void arrayInt() {
 		JsonArray o = new JsonArray(Arrays.asList((String) null, null, null,
 				null));
 		o.set(3, 1);
@@ -85,13 +87,13 @@ public class JsonTypesTest {
 		assertEquals(1, o.getNumber(3));
 		assertEquals(1, o.get(3));
 
-		assertEquals(null, o.getString(3));
+		assertNull(o.getString(3));
 		assertEquals("foo", o.getString(3, "foo"));
 		assertFalse(o.isNull(3));
 	}
 
 	@Test
-	public void testArrayString() {
+	void arrayString() {
 		JsonArray o = new JsonArray(Arrays.asList((String) null, null, null,
 				null));
 		o.set(3, "1");
@@ -99,40 +101,40 @@ public class JsonTypesTest {
 		assertEquals(0L, o.getLong(3));
 		assertEquals(0, o.getDouble(3), 0.0001f);
 		assertEquals(0, o.getFloat(3), 0.0001f);
-		assertEquals(null, o.getNumber(3));
+		assertNull(o.getNumber(3));
 		assertEquals("1", o.get(3));
 		assertFalse(o.isNull(3));
 	}
 
 	@Test
-	public void testArrayNull() {
+	void arrayNull() {
 		JsonArray o = new JsonArray(Arrays.asList((String) null, null, null,
 				null));
 		o.set(3, null);
 		assertEquals(0, o.getInt(3));
 		assertEquals(0, o.getDouble(3), 0.0001f);
 		assertEquals(0, o.getFloat(3), 0.0001f);
-		assertEquals(null, o.getNumber(3));
-		assertEquals(null, o.get(3));
+		assertNull(o.getNumber(3));
+		assertNull(o.get(3));
 		assertTrue(o.isNull(3));
 		assertTrue(o.has(3));
 	}
 
 	@Test
-	public void testArrayBounds() {
+	void arrayBounds() {
 		JsonArray o = new JsonArray(Arrays.asList((String) null, null, null,
 				null));
 		assertEquals(0, o.getInt(4));
 		assertEquals(0, o.getDouble(4), 0.0001f);
 		assertEquals(0, o.getFloat(4), 0.0001f);
-		assertEquals(null, o.getNumber(4));
-		assertEquals(null, o.get(4));
+		assertNull(o.getNumber(4));
+		assertNull(o.get(4));
 		assertFalse(o.isNull(4));
 		assertFalse(o.has(4));
 	}
 
 	@Test
-	public void testJsonArrayBuilder() {
+	void jsonArrayBuilder() {
 		// @formatter:off
 		JsonArray a = JsonArray.builder().value(true).value(1.0).value(1.0f)
 				.value(1).value(new BigInteger("1234567890")).value("hi")
@@ -147,7 +149,7 @@ public class JsonTypesTest {
 	}
 
 	@Test
-	public void testJsonObjectBuilder() {
+	void jsonObjectBuilder() {
 		// @formatter:off
 		JsonObject a = JsonObject
 				.builder()
@@ -185,23 +187,26 @@ public class JsonTypesTest {
 		}
 	}
 
-	@Test(expected = JsonWriterException.class)
-	public void testJsonArrayBuilderFailCantCloseRoot() {
-		JsonArray.builder().end();
-	}
-
-	@Test(expected = JsonWriterException.class)
-	public void testJsonArrayBuilderFailCantAddKeyToArray() {
-		JsonArray.builder().value("abc", 1);
-	}
-
-	@Test(expected = JsonWriterException.class)
-	public void testJsonArrayBuilderFailCantAddNonKeyToObject() {
-		JsonObject.builder().value(1);
+	@Test
+	void jsonArrayBuilderFailCantCloseRoot() {
+		assertThrows(JsonWriterException.class, () ->
+			JsonArray.builder().end());
 	}
 
 	@Test
-	public void testJsonKeyOrder() {
+	void jsonArrayBuilderFailCantAddKeyToArray() {
+		assertThrows(JsonWriterException.class, () ->
+			JsonArray.builder().value("abc", 1));
+	}
+
+	@Test
+	void jsonArrayBuilderFailCantAddNonKeyToObject() {
+		assertThrows(JsonWriterException.class, () ->
+			JsonObject.builder().value(1));
+	}
+
+	@Test
+	void jsonKeyOrder() {
 		JsonObject a = JsonObject
 			.builder()
 			.value("key01", 1)

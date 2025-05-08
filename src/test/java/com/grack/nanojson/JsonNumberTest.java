@@ -15,20 +15,20 @@
  */
 package com.grack.nanojson;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.math.BigInteger;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Attempts to test that numbers are correctly round-tripped.
  */
-public class JsonNumberTest {
+class JsonNumberTest {
 	// CHECKSTYLE_OFF: MagicNumber
 	// CHECKSTYLE_OFF: JavadocMethod
 	@Test
-	public void testBasicNumberRead() throws JsonParserException {
+	void basicNumberRead() throws JsonParserException {
 		JsonArray array = JsonParser.array().from("[1, 1.0, 1.00]");
 		assertEquals(Integer.class, array.get(0).getClass());
 		assertEquals(Double.class, array.get(1).getClass());
@@ -36,13 +36,13 @@ public class JsonNumberTest {
 	}
 
 	@Test
-	public void testBasicNumberWrite() {
+	void basicNumberWrite() {
 		JsonArray array = JsonArray.from(1, 1.0, 1.0f);
 		assertEquals("[1,1.0,1.0]", JsonWriter.string().array(array).done());
 	}
 
 	@Test
-	public void testLargeIntRead() throws JsonParserException {
+	void largeIntRead() throws JsonParserException {
 		JsonArray array = JsonParser.array().from("[-300000000,300000000]");
 		assertEquals(Integer.class, array.get(0).getClass());
 		assertEquals(-300000000, array.get(0));
@@ -51,14 +51,14 @@ public class JsonNumberTest {
 	}
 
 	@Test
-	public void testLargeIntWrite() {
+	void largeIntWrite() {
 		JsonArray array = JsonArray.from(-300000000, 300000000);
 		assertEquals("[-300000000,300000000]", JsonWriter.string().array(array)
 				.done());
 	}
 
 	@Test
-	public void testLongRead() throws JsonParserException {
+	void longRead() throws JsonParserException {
 		JsonArray array = JsonParser.array().from("[-3000000000,3000000000]");
 		assertEquals(Long.class, array.get(0).getClass());
 		assertEquals(-3000000000L, array.get(0));
@@ -67,14 +67,14 @@ public class JsonNumberTest {
 	}
 
 	@Test
-	public void testLongWrite() {
+	void longWrite() {
 		JsonArray array = JsonArray.from(1L, -3000000000L, 3000000000L);
 		assertEquals("[1,-3000000000,3000000000]",
 				JsonWriter.string().array(array).done());
 	}
 
 	@Test
-	public void testBigIntRead() throws JsonParserException {
+	void bigIntRead() throws JsonParserException {
 		JsonArray array = JsonParser.array().from(
 				"[-30000000000000000000,30000000000000000000]");
 		assertEquals(BigInteger.class, array.get(0).getClass());
@@ -84,7 +84,7 @@ public class JsonNumberTest {
 	}
 
 	@Test
-	public void testBigIntWrite() {
+	void bigIntWrite() {
 		JsonArray array = JsonArray.from(BigInteger.ONE, new BigInteger(
 				"-30000000000000000000"),
 				new BigInteger("30000000000000000000"));
@@ -96,7 +96,7 @@ public class JsonNumberTest {
 	 * Tests a bug where longs were silently truncated to floats.
 	 */
 	@Test
-	public void testLongBuilder() {
+	void longBuilder() {
 		JsonObject o = JsonObject.builder().value("long", 0xffffffffffffL)
 				.done();
 		assertEquals(0xffffffffffffL, o.getNumber("long").longValue());
@@ -106,7 +106,7 @@ public class JsonNumberTest {
 	 * Test around the edges of the integral types.
 	 */
 	@Test
-	public void testAroundEdges() throws JsonParserException {
+	void aroundEdges() throws JsonParserException {
 		JsonArray array = JsonArray.from(Integer.MAX_VALUE,
 				((long) Integer.MAX_VALUE) + 1, Integer.MIN_VALUE,
 				((long) Integer.MIN_VALUE) - 1, Long.MAX_VALUE, BigInteger
@@ -124,7 +124,7 @@ public class JsonNumberTest {
 	}
 
 	@Test
-	public void testTrailingDecimalLazy() throws JsonParserException {
+	void trailingDecimalLazy() throws JsonParserException {
 		Object value = JsonParser.any().withLazyNumbers().from("1.000");
 		String json = JsonWriter.string().value(value).done();
 		assertEquals("1.000", json);

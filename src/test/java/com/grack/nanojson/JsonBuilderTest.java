@@ -1,22 +1,25 @@
 package com.grack.nanojson;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
 
-public class JsonBuilderTest {
-	@Test(expected = JsonWriterException.class)
-	public void testFailureKeyInArray() {
-		new JsonBuilder<>(new JsonArray()).key("a");
-	}
-
-	@Test(expected = JsonWriterException.class)
-	public void testFailureKeyWhileKeyPending() {
-		new JsonBuilder<>(new JsonObject()).key("a").key("b");
+class JsonBuilderTest {
+	@Test
+	void failureKeyInArray() {
+		assertThrows(JsonWriterException.class, () ->
+			new JsonBuilder<>(new JsonArray()).key("a"));
 	}
 
 	@Test
-	public void testSeparateKeyWriting() {
+	void failureKeyWhileKeyPending() {
+		assertThrows(JsonWriterException.class, () ->
+			new JsonBuilder<>(new JsonObject()).key("a").key("b"));
+	}
+
+	@Test
+	void separateKeyWriting() {
 		JsonObject actual = new JsonBuilder<>(new JsonObject()).key("a").value(1).key("b").value(2).done();
 		JsonObject expected = new JsonObject();
 		expected.put("a", 1);

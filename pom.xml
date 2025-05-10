@@ -170,9 +170,6 @@
                     <debug>true</debug>
                     <debuglevel>none</debuglevel>
                     <release>8</release>
-                    <archive>
-                        <manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
-                    </archive>
                     <compilerArgument>-Xlint:all</compilerArgument>
                     <compilerArguments>
                         <Werror />
@@ -186,17 +183,40 @@
                 <configuration>
                 </configuration>
             </plugin>
-	<plugin>
-		<groupId>org.apache.maven.plugins</groupId>
-		<artifactId>maven-jar-plugin</artifactId>
-		<configuration>
-			<archive>
-				<manifestEntries>
-					<Automatic-Module-Name>com.grack.nanojson</Automatic-Module-Name>
-				</manifestEntries>
-			</archive>
-		</configuration>
-	</plugin>
+          <plugin>
+              <groupId>biz.aQute.bnd</groupId>
+              <artifactId>bnd-maven-plugin</artifactId>
+              <extensions>true</extensions>
+              <executions>
+                  <execution>
+                      <id>jar</id>
+                      <goals>
+                          <goal>jar</goal>
+                      </goals>
+                          <configuration>
+                              <bnd><![CDATA[
+                                  Bundle-SymbolicName: ${groupId}.${artifactId}
+                                  Export-Package: com.grack.nanojson
+                                  -jpms-module-info: com.grack.nanojson
+                                  -noextraheaders: 
+                                  -removeheaders: \
+                                    Tool, \
+                                    Bnd-LastModified, \
+                                    Bnd-ManifestVersion, \
+                                    Build-Jdk, \
+                                    Built-By, \
+                                    Created-By, \
+                                    Private-Package, \
+                                    Bundle-DocURL, \
+                                    Bundle-Name, \
+                                    Bundle-Vendor,\
+                                    Bundle-Description,\
+                                    Bundle-SCM
+                              ]]></bnd>
+                          </configuration>
+                  </execution>
+              </executions>
+          </plugin>
         </plugins>
     </build>
 

@@ -15,9 +15,9 @@
  */
 package com.grack.nanojson;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -25,9 +25,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-import org.junit.Test;
-
 import com.grack.nanojson.Users.Friend;
+
+import org.junit.jupiter.api.Test;
 import com.grack.nanojson.Users.User;
 
 /**
@@ -39,7 +39,7 @@ public class JsonReaderTest {
 	 * Read a simple object.
 	 */
 	@Test
-	public void testObject() throws JsonParserException {
+	void object() throws JsonParserException {
 		JsonReader reader = JsonReader.from("{\"a\":1}");
 		assertEquals(JsonReader.Type.OBJECT, reader.current());
 		reader.object();
@@ -54,7 +54,7 @@ public class JsonReaderTest {
 	 * Read a simple array.
 	 */
 	@Test
-	public void testArray() throws JsonParserException {
+	void array() throws JsonParserException {
 		JsonReader reader = JsonReader.from("[\"a\",1,null]");
 		assertEquals(JsonReader.Type.ARRAY, reader.current());
 		reader.array();
@@ -72,12 +72,12 @@ public class JsonReaderTest {
 		
 		assertFalse(reader.next());
 	}
-	
+
 	/**
 	 * Assert all the things.
 	 */
 	@Test
-	public void testNestedDetailed() throws JsonParserException {
+	void nestedDetailed() throws JsonParserException {
 		String json = createNestedJson();
 
 		JsonReader reader = JsonReader.from(json);
@@ -126,13 +126,13 @@ public class JsonReaderTest {
 		
 		assertFalse(reader.next());
 	}
-	
+
 	/**
-	 * Same test as {@link JsonReaderTest#testNestedDetailed()}, less assertions to get a better
+	 * Same test as {@link JsonReaderTest#nestedDetailed()}, less assertions to get a better
 	 * feel for the API.
 	 */
 	@Test
-	public void testNestedLight() throws JsonParserException {
+	void nestedLight() throws JsonParserException {
 		String json = createNestedJson();
 
 		JsonReader reader = JsonReader.from(json);
@@ -176,7 +176,7 @@ public class JsonReaderTest {
 	 * Test reading an multiple arrays (including an empty one) in a object.
 	 */
 	@Test
-	public void testArraysInObject() throws JsonParserException {
+	void arraysInObject() throws JsonParserException {
 		String json = createArraysInObject();
 		JsonReader reader = JsonReader.from(json);
 
@@ -213,7 +213,7 @@ public class JsonReaderTest {
 	 * Test the {@link Users} class from java-json-benchmark.
 	 */
 	@Test
-	public void testJsonBenchmarkUser() throws JsonParserException {
+	void jsonBenchmarkUser() throws JsonParserException {
 		JsonReader reader = JsonReader.from(getClass().getResourceAsStream("/users.json"));
 		
 		parseUsers(reader);

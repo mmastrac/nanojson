@@ -15,10 +15,11 @@
  */
 package com.grack.nanojson;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -31,12 +32,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test for {@link JsonWriter}.
  */
-public class JsonWriterTest {
+class JsonWriterTest {
 	private static final Charset UTF8 = StandardCharsets.UTF_8;
 
 	// CHECKSTYLE_OFF: MagicNumber
@@ -46,7 +47,7 @@ public class JsonWriterTest {
 	 * Test emitting simple values.
 	 */
 	@Test
-	public void testSimpleValues() {
+	void simpleValues() {
 		assertEquals("true", JsonWriter.string().value(true).done());
 		assertEquals("null", JsonWriter.string().nul().done());
 		assertEquals("1.0", JsonWriter.string().value(1.0).done());
@@ -60,7 +61,7 @@ public class JsonWriterTest {
 	 * exception.
 	 */
 	@Test
-	public void testStreamWriterWithNonBMPStringAroundBufferSize() throws JsonParserException {
+	void streamWriterWithNonBMPStringAroundBufferSize() throws JsonParserException {
 		char[] c = new char[JsonWriterBase.BUFFER_SIZE - 128];
 		Arrays.fill(c, ' ');
 		String base = new String(c);
@@ -78,7 +79,7 @@ public class JsonWriterTest {
 	 * exception.
 	 */
 	@Test
-	public void testStreamWriterWithBMPStringAroundBufferSize() throws JsonParserException {
+	void streamWriterWithBMPStringAroundBufferSize() throws JsonParserException {
 		char[] c = new char[JsonWriterBase.BUFFER_SIZE - 128];
 		Arrays.fill(c, ' ');
 		String base = new String(c);
@@ -96,7 +97,7 @@ public class JsonWriterTest {
 	 * boundary exception.
 	 */
 	@Test
-	public void testStreamWriterWithArrayAroundBufferSize() throws JsonParserException {
+	void streamWriterWithArrayAroundBufferSize() throws JsonParserException {
 		char[] c = new char[JsonWriterBase.BUFFER_SIZE - 128];
 		Arrays.fill(c,  ' ');
 		String base = new String(c);
@@ -108,7 +109,7 @@ public class JsonWriterTest {
 			String s2 = new String(bytes.toByteArray(), UTF8);
 			JsonArray array = JsonParser.array().from(s2);
 			assertEquals(s, array.get(0));
-			assertEquals(null, array.get(1));
+			assertNull(array.get(1));
 		}
 	}
 
@@ -116,7 +117,7 @@ public class JsonWriterTest {
 	 * Test various ways of writing null, as well as various situations.
 	 */
 	@Test
-	public void testNull() {
+	void testNull() {
 		assertEquals("null", JsonWriter.string().value((String) null).done());
 		assertEquals("null", JsonWriter.string().value((Number) null).done());
 		assertEquals("null", JsonWriter.string().nul().done());
@@ -136,7 +137,7 @@ public class JsonWriterTest {
 	}
 
 	@Test
-	public void testSeparateKeyWriting() {
+	void separateKeyWriting() {
 		assertEquals("{\"a\":null}",
 				JsonWriter.string().object().key("a").value((Number) null).end()
 						.done());
@@ -149,7 +150,7 @@ public class JsonWriterTest {
 	 * Test escaping of chars < 256.
 	 */
 	@Test
-	public void testStringControlCharacters() {
+	void stringControlCharacters() {
 		StringBuilder chars = new StringBuilder();
 		for (int i = 0; i < 0xa0; i++)
 			chars.append((char) i);
@@ -170,7 +171,7 @@ public class JsonWriterTest {
 	 * Test escaping of chars < 256.
 	 */
 	@Test
-	public void testEscape() {
+	void escape() {
 		StringBuilder chars = new StringBuilder();
 		for (int i = 0; i < 0xa0; i++)
 			chars.append((char) i);
@@ -190,7 +191,7 @@ public class JsonWriterTest {
 	 * Torture test for UTF8 character encoding.
 	 */
 	@Test
-	public void testBMPCharacters() throws Exception {
+	void bmpCharacters() throws Exception {
 		StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < 0xD000; i++) {
 			builder.append((char)i);
@@ -221,7 +222,7 @@ public class JsonWriterTest {
 	 * Torture test for UTF8 character encoding outside the basic multilingual plane.
 	 */
 	@Test
-	public void testNonBMP() throws Exception {
+	void nonBMP() throws Exception {
 		StringBuilder builder = new StringBuilder();
 		builder.appendCodePoint(0x10000); // Start of non-BMP
 		builder.appendCodePoint(0x1f601); // GRINNING FACE WITH SMILING EYES
@@ -248,7 +249,7 @@ public class JsonWriterTest {
 	 * Basic {@link OutputStream} smoke test.
 	 */
 	@Test
-	public void testWriteToUTF8Stream() {
+	void writeToUTF8Stream() {
 		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 		JsonWriter.on(bytes).object().value("a\n", 1)
 				.value("b", 2).end().done();
@@ -260,7 +261,7 @@ public class JsonWriterTest {
 	 * Basic {@link PrintStream} smoke test.
 	 */
 	@Test
-	public void testWriteToSystemOutLikeStream() throws Exception {
+	void writeToSystemOutLikeStream() throws Exception {
 		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 		JsonWriter.on(new PrintStream(bytes, false, "UTF-8")).object().value("a\n", 1)
 				.value("b", 2).end().done();
@@ -273,7 +274,7 @@ public class JsonWriterTest {
 	 * Test escaping of / when following < to handle &lt;/script&gt;.
 	 */
 	@Test
-	public void testScriptEndEscaping() {
+	void scriptEndEscaping() {
 		assertEquals("\"<\\/script>\"", JsonWriter.string("</script>"));
 		assertEquals("\"/script\"", JsonWriter.string("/script"));
 	}
@@ -282,7 +283,7 @@ public class JsonWriterTest {
 	 * Test a simple array.
 	 */
 	@Test
-	public void testArray() {
+	void array() {
 		String json = JsonWriter.string().array().value(true).value(false)
 				.value(true).end().done();
 		assertEquals("[true,false,true]", json);
@@ -292,7 +293,7 @@ public class JsonWriterTest {
 	 * Test an empty array.
 	 */
 	@Test
-	public void testArrayEmpty() {
+	void arrayEmpty() {
 		String json = JsonWriter.string().array().end().done();
 		assertEquals("[]", json);
 	}
@@ -301,7 +302,7 @@ public class JsonWriterTest {
 	 * Test the auto-conversion of Writables.
 	 */
 	@Test
-	public void testWritable() {
+	void writable() {
 		assertEquals("null", JsonWriter.string((JsonConvertible) () -> null));
 		assertEquals("[]", JsonWriter.string((JsonConvertible) ArrayList::new));
 		assertEquals("{}", JsonWriter.string((JsonConvertible) HashMap::new));
@@ -348,7 +349,7 @@ public class JsonWriterTest {
 	 * Test an array of empty arrays.
 	 */
 	@Test
-	public void testArrayOfEmpty() {
+	void arrayOfEmpty() {
 		String json = JsonWriter.string().array().array().end().array().end()
 				.end().done();
 		assertEquals("[[],[]]", json);
@@ -358,7 +359,7 @@ public class JsonWriterTest {
 	 * Test a nested array.
 	 */
 	@Test
-	public void testNestedArray() {
+	void nestedArray() {
 		String json = JsonWriter.string().array().array().array().value(true)
 				.value(false).value(true).end().end().end().done();
 		assertEquals("[[[true,false,true]]]", json);
@@ -368,7 +369,7 @@ public class JsonWriterTest {
 	 * Test a nested array.
 	 */
 	@Test
-	public void testNestedArray2() {
+	void nestedArray2() {
 		String json = JsonWriter.string().array().value(true).array().array()
 				.value(false).end().end().value(true).end().done();
 		assertEquals("[true,[[false]],true]", json);
@@ -378,7 +379,7 @@ public class JsonWriterTest {
 	 * Test a simple object.
 	 */
 	@Test
-	public void testObject() {
+	void object() {
 		String json = JsonWriter.string().object().value("a", true)
 				.value("b", false).value("c", true).end().done();
 		assertEquals("{\"a\":true,\"b\":false,\"c\":true}", json);
@@ -388,7 +389,7 @@ public class JsonWriterTest {
 	 * Test a simple object with indent.
 	 */
 	@Test
-	public void testObjectIndent() {
+	void objectIndent() {
 		String json = JsonWriter.indent("  ").string().object()
 				.value("a", true).value("b", false).value("c", true).end()
 				.done();
@@ -399,7 +400,7 @@ public class JsonWriterTest {
 	 * Test a nested object.
 	 */
 	@Test
-	public void testNestedObject() {
+	void nestedObject() {
 		String json = JsonWriter.string().object().object("a")
 				.value("b", false).value("c", true).end().end().done();
 		assertEquals("{\"a\":{\"b\":false,\"c\":true}}", json);
@@ -409,7 +410,7 @@ public class JsonWriterTest {
 	 * Test a nested object and array.
 	 */
 	@Test
-	public void testNestedObjectArray() {
+	void nestedObjectArray() {
 		//@formatter:off
 		String json = JsonWriter.string()
 				.object()
@@ -438,7 +439,7 @@ public class JsonWriterTest {
 	 * Test a nested object and array.
 	 */
 	@Test
-	public void testNestedObjectArrayIndent() {
+	void nestedObjectArrayIndent() {
 		//@formatter:off
 		String json = JsonWriter.indent("  ").string()
 				.object()
@@ -469,7 +470,7 @@ public class JsonWriterTest {
 	 * Tests the {@link Appendable} code.
 	 */
 	@Test
-	public void testAppendable() {
+	void appendable() {
 		StringWriter writer = new StringWriter();
 		JsonWriter.on(writer).object().value("abc", "def").end().done();
 		assertEquals("{\"abc\":\"def\"}", writer.toString());
@@ -479,7 +480,7 @@ public class JsonWriterTest {
 	 * Tests the {@link OutputStream} code.
 	 */
 	@Test
-	public void testOutputStream() {
+	void outputStream() {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		JsonWriter.on(out).object().value("abc", "def").end().done();
 		assertEquals("{\"abc\":\"def\"}",
@@ -487,32 +488,32 @@ public class JsonWriterTest {
 	}
 
 	@Test
-	public void testQuickJson() {
+	void quickJson() {
 		assertEquals("true", JsonWriter.string(true));
 	}
 
 	@Test
-	public void testQuickJsonArray() {
+	void quickJsonArray() {
 		assertEquals("[1,2,3]", JsonWriter.string(JsonArray.from(1, 2, 3)));
 	}
 
 	@Test
-	public void testQuickArray() {
+	void quickArray() {
 		assertEquals("[1,2,3]", JsonWriter.string(Arrays.asList(1, 2, 3)));
 	}
 
 	@Test
-	public void testQuickArrayEmpty() {
+	void quickArrayEmpty() {
 		assertEquals("[]", JsonWriter.string(Collections.emptyList()));
 	}
 
 	@Test
-	public void testQuickObjectArray() {
+	void quickObjectArray() {
 		assertEquals("[1,2,3]", JsonWriter.string(new Object[] { 1, 2, 3 }));
 	}
 
 	@Test
-	public void testQuickObjectArrayNested() {
+	void quickObjectArrayNested() {
 		assertEquals(
 				"[[1,2],[[3]]]",
 				JsonWriter.string(new Object[] { new Object[] { 1, 2 },
@@ -520,12 +521,12 @@ public class JsonWriterTest {
 	}
 
 	@Test
-	public void testQuickObjectArrayEmpty() {
+	void quickObjectArrayEmpty() {
 		assertEquals("[]", JsonWriter.string(new Object[0]));
 	}
 
 	@Test
-	public void testObjectArrayInMap() {
+	void objectArrayInMap() {
 		JsonObject o = new JsonObject();
 		o.put("array of string", new String[] { "a", "b", "c" });
 		o.put("array of Boolean", new Boolean[] { true, false });
@@ -539,12 +540,12 @@ public class JsonWriterTest {
 				"\"array of int\":[1,2,3]" };
 		String s = JsonWriter.string(o);
 		for (String bit : bits) {
-			assertTrue("Didn't contain " + bit, s.contains(bit));
+			assertTrue(s.contains(bit), "Didn't contain " + bit);
 		}
 	}
 
 	@Test
-	public void testFailureNoKeyInObject() {
+	void failureNoKeyInObject() {
 		try {
 			JsonWriter.string().object().value(true).end().done();
 			fail();
@@ -554,7 +555,7 @@ public class JsonWriterTest {
 	}
 
 	@Test
-	public void testFailureNoKeyInObject2() {
+	void failureNoKeyInObject2() {
 		try {
 			JsonWriter.string().object().value("a", 1).value(true).end().done();
 			fail();
@@ -564,7 +565,7 @@ public class JsonWriterTest {
 	}
 
 	@Test
-	public void testFailureKeyInArray() {
+	void failureKeyInArray() {
 		try {
 			JsonWriter.string().array().value("x", true).end().done();
 			fail();
@@ -574,7 +575,7 @@ public class JsonWriterTest {
 	}
 
 	@Test
-	public void testFailureKeyInArray2() {
+	void failureKeyInArray2() {
 		try {
 			JsonWriter.string().array().value(1).value("x", true).end().done();
 			fail();
@@ -583,18 +584,20 @@ public class JsonWriterTest {
 		}
 	}
 
-	@Test(expected = JsonWriterException.class)
-	public void testFailureRepeatedKey() {
-		JsonWriter.string().object().key("a").value("b", 2).end().done();
-	}
-
-	@Test(expected = JsonWriterException.class)
-	public void testFailureRepeatedKey2() {
-		JsonWriter.string().object().key("a").key("b").end().done();
+	@Test
+	void failureRepeatedKey() {
+		assertThrows(JsonWriterException.class, () ->
+			JsonWriter.string().object().key("a").value("b", 2).end().done());
 	}
 
 	@Test
-	public void testFailureNotFullyClosed() {
+	void failureRepeatedKey2() {
+		assertThrows(JsonWriterException.class, () ->
+			JsonWriter.string().object().key("a").key("b").end().done());
+	}
+
+	@Test
+	void failureNotFullyClosed() {
 		try {
 			JsonWriter.string().array().value(1).done();
 			fail();
@@ -604,7 +607,7 @@ public class JsonWriterTest {
 	}
 
 	@Test
-	public void testFailureNotFullyClosed2() {
+	void failureNotFullyClosed2() {
 		try {
 			JsonWriter.string().array().done();
 			fail();
@@ -614,7 +617,7 @@ public class JsonWriterTest {
 	}
 
 	@Test
-	public void testFailureEmpty() {
+	void failureEmpty() {
 		try {
 			JsonWriter.string().done();
 			fail();
@@ -624,7 +627,7 @@ public class JsonWriterTest {
 	}
 
 	@Test
-	public void testFailureEmpty2() {
+	void failureEmpty2() {
 		try {
 			JsonWriter.string().end();
 			fail();
@@ -634,7 +637,7 @@ public class JsonWriterTest {
 	}
 
 	@Test
-	public void testFailureMoreThanOneRoot() {
+	void failureMoreThanOneRoot() {
 		try {
 			JsonWriter.string().value(1).value(1).done();
 			fail();
@@ -644,7 +647,7 @@ public class JsonWriterTest {
 	}
 
 	@Test
-	public void testFailureMoreThanOneRoot2() {
+	void failureMoreThanOneRoot2() {
 		try {
 			JsonWriter.string().array().value(1).end().value(1).done();
 			fail();
@@ -654,7 +657,7 @@ public class JsonWriterTest {
 	}
 
 	@Test
-	public void testFailureMoreThanOneRoot3() {
+	void failureMoreThanOneRoot3() {
 		try {
 			JsonWriter.string().array().value(1).end().array().value(1).end()
 					.done();

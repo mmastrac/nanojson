@@ -129,4 +129,26 @@ class JsonNumberTest {
 		String json = JsonWriter.string().value(value).done();
 		assertEquals("1.000", json);
 	}
+
+	@Test
+	void lazyIntegerConversionsMatchEagerNumbers() throws JsonParserException {
+		String json = "[0,2147483647,2147483648,-2147483649,9223372036854775807,"
+				+ "-9223372036854775808,9223372036854775808,-9223372036854775809,"
+				+ "30000000000000000000,-30000000000000000000]";
+		JsonArray eager = JsonParser.array().from(json);
+		JsonArray lazy = JsonParser.array().withLazyNumbers().from(json);
+		for (int i = 0; i < eager.size(); i++) {
+			assertEquals(eager.getInt(i), lazy.getInt(i));
+			assertEquals(eager.getLong(i), lazy.getLong(i));
+		}
+	}
+
+	@Test
+	void lazyLongConversionOfBigIntegerMatchesEagerNumber() throws JsonParserException {
+		String json = "{\"value\":9223372036854775808}";
+		JsonObject eager = JsonParser.object().from(json);
+		JsonObject lazy = JsonParser.object().withLazyNumbers().from(json);
+		assertEquals(eager.getLong("value"), lazy.getLong("value"));
+	}
+
 }

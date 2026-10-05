@@ -16,6 +16,7 @@
 package com.grack.nanojson;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 /**
  * Lazily-parsed number for performance.
@@ -42,12 +43,24 @@ class JsonLazyNumber extends Number {
 
 	@Override
 	public int intValue() {
-		return isDouble ? (int)Double.parseDouble(value) : Integer.parseInt(value);
+		if (isDouble)
+			return (int)Double.parseDouble(value);
+		try {
+			return Integer.parseInt(value);
+		} catch (NumberFormatException e) {
+			return new BigInteger(value).intValue();
+		}
 	}
 
 	@Override
 	public long longValue() {
-		return isDouble ? (long)Double.parseDouble(value) : Long.parseLong(value);
+		if (isDouble)
+			return (long)Double.parseDouble(value);
+		try {
+			return Long.parseLong(value);
+		} catch (NumberFormatException e) {
+			return new BigInteger(value).longValue();
+		}
 	}
 
 	@Override
